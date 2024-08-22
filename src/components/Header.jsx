@@ -7,7 +7,7 @@ export const Header = () => {
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-            MiTienda
+            Un Topic
           </Link>
           <button
             className="navbar-toggler"
