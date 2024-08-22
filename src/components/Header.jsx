@@ -1,7 +1,23 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { signOut, getAuth } from "firebase/auth"; // Import the signOut function from firebaseConfig
+import { app } from "../firebaseConfig";
 
 export const Header = () => {
+  const navigate = useNavigate(); // Initialize the navigate function
+  const auth = getAuth(app); // Initialize the auth object
+  const handleSignOut = async () => {
+    try {
+      signOut(auth).then(()=>{
+        navigate("/");
+      }) // Call the signOut function
+      // Redirect or perform any other action after successful sign out
+      
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <header>
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
@@ -39,9 +55,9 @@ export const Header = () => {
               </li>
             </ul>
             <div className="d-flex">
-              <Link className="btn btn-outline-success me-2" to="/login">
-                Login
-              </Link>
+              <button className="btn btn-outline-success me-2" onClick={handleSignOut}>
+                Logout
+              </button>
               <Link className="btn btn-outline-primary" to="/signup">
                 Sign Up
               </Link>
