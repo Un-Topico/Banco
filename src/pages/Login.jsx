@@ -1,5 +1,5 @@
 import React from "react";
-import { signInWithGoogle } from "../auth"; 
+import { signInWithGoogle } from "../auth/auth"; 
 import { useNavigate } from "react-router-dom";
 
 export const  Login=()=> {
