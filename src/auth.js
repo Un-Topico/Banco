@@ -1,4 +1,4 @@
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { app } from "./firebaseConfig"; 
 
 const auth = getAuth(app);
@@ -14,12 +14,5 @@ const signInWithGoogle = async () => {
   }
 };
 
-const logout = async () => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    console.error("Error al cerrar sesión:", error);
-  }
-};
 
-export { auth, signInWithGoogle, logout };
+export { auth, signInWithGoogle };

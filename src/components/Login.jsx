@@ -8,7 +8,7 @@ export const  Login=()=> {
 
   const handleLogin = async () => {
     await signInWithGoogle();
-    navigate("/perfil");
+    navigate("/profile");
   };
 
   return (
