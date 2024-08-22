@@ -1,6 +1,6 @@
 // src/pages/Login.js
 import React from "react";
-import { signInWithGoogle } from "../auth"; // Importamos la función desde auth.js
+import { signInWithGoogle } from "../auth"; 
 import { useNavigate } from "react-router-dom";
 
 export const  Login=()=> {
