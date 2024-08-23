@@ -58,8 +58,8 @@ export const Header = () => {
               <button className="btn btn-outline-success me-2" onClick={handleSignOut}>
                 Logout
               </button>
-              <Link className="btn btn-outline-primary" to="/signup">
-                Sign Up
+              <Link className="btn btn-outline-primary" to="/login">
+                Login
               </Link>
             </div>
           </div>
