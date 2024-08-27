@@ -1,20 +1,18 @@
 import './App.css';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Home } from './pages/Home';
-import { Login } from './pages/Login'; 
-import { Profile } from './pages/Profile';
 import { Header } from './components/Header';
+import { rutas } from './routers/appRoutes';
 
 function App() {
   return (
     <Router>
-      <Header/>
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/profile" element={<Profile />} />
-    </Routes>
-  </Router>
+      <Header />
+      <Routes>
+        {rutas.map((ruta, i) => (
+          <Route path={ruta.path} element={ruta.element} key={i} />
+        ))}
+      </Routes>
+    </Router>
   );
 }
 
