@@ -1,9 +1,16 @@
-import React from "react";
+import React,{useEffect} from "react";
 import { signInWithGoogle } from "../auth/auth"; 
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "../auth/authContex";
 export const  Login=()=> {
+  const {currentUser} = useAuth();
   const navigate = useNavigate();
+
+  useEffect(()=> {
+    if(currentUser) {
+      navigate('/perfil') 
+    }
+  },[])
 
   const handleLogin = async () => {
     await signInWithGoogle();
