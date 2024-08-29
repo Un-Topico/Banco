@@ -1,9 +1,6 @@
 import { Login } from '../pages/Login';
 import { Home } from '../pages/Home';
-import { Profile } from '../pages/Profile';
-
 export const rutas = [
-    { path: "/home", element: <Home /> },
-    { path: "/login", element: <Login /> },
-    { path: "/profile", element: <Profile /> }
+    { path: "/", element: <Home  />,  protected:false },
+    { path: "/login", element: <Login />,  protected:false  },
 ];

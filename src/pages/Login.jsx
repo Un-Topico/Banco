@@ -7,11 +7,11 @@ export const  Login=()=> {
 
   const handleLogin = async () => {
     await signInWithGoogle();
-    navigate("/profile");
+    navigate("/perfil");
   };
 
   return (
-    <div className="login-page">
+    <div className="container text-center ">
       <h2>Iniciar sesión</h2>
       <button onClick={handleLogin} className="btn btn-primary">
         Iniciar sesión con Google
