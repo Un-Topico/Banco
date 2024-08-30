@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { app } from "../firebaseConfig";
-
+import { Transfers } from "../components/Transfers";
+import { Transactions } from "../components/Transactions";
 export const Profile = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ export const Profile = () => {
           <p>Balance: ${accountData.balance}</p>
         </div>
       )}
+    <Transactions/>
     </div>
   );
 };
