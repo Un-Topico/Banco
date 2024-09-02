@@ -1,4 +1,4 @@
-// src/components/Profile.jsx
+import React from "react";
 import { FaUserCircle } from "react-icons/fa";
 import { useAuth } from "../auth/authContex";
 import { useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import { app } from "../firebaseConfig";
 import { Transactions } from "../components/Transactions";
 import { Chat } from "../components/Chat";
 import { SoporteChat } from "../components/SoporteChat";
+import { TransactionHistory } from "../components/TransactionHistory";
 
 export const Profile = () => {
   const { currentUser } = useAuth();
@@ -71,8 +72,9 @@ export const Profile = () => {
         </div>
       )}
       <Transactions updateBalance={(newBalance) => setAccountData(prevState => ({ ...prevState, balance: newBalance }))} />
+      <TransactionHistory/>
       <div className="chat-section">
-        <h3>Chat en Tiempo Real</h3>
+        <h3>Chat con el Soporte</h3>
         {userRole === 'soporte' ? <SoporteChat /> : <Chat />}
       </div>
     </div>

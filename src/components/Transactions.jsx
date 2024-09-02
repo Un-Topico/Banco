@@ -175,7 +175,7 @@ export const Transactions = ({ updateBalance }) => {
 
   return (
     <div className="container text-center">
-      <h1>Transferencia</h1>
+      <h1>Transacciones</h1>
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="transactionType">Selecciona el tipo de transferencia</label>
