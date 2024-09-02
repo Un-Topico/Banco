@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import { useAuth } from "../auth/authContex";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { app } from "../firebaseConfig";
@@ -9,6 +8,7 @@ import { Transactions } from "../components/Transactions";
 import { Chat } from "../components/Chat";
 import { SoporteChat } from "../components/SoporteChat";
 import { TransactionHistory } from "../components/TransactionHistory";
+import { downloadPDF } from "../utils/downloadPDF"; 
 
 export const Profile = () => {
   const { currentUser } = useAuth();
@@ -16,6 +16,7 @@ export const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
   const [accountData, setAccountData] = useState(null);
+  const [transactions, setTransactions] = useState([]); // Estado para las transacciones
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -44,8 +45,21 @@ export const Profile = () => {
       if (querySnapshot.empty) {
         navigate('/crear-cuenta');
       } else {
-        const accountInfo = querySnapshot.docs[0].data(); // Suponiendo que solo hay una cuenta por usuario
+        const accountInfo = querySnapshot.docs[0].data();
         setAccountData(accountInfo);
+
+        // Obtener transacciones
+        const transactionsRef = collection(db, "transactions");
+        const q3 = query(transactionsRef, where("account_id", "==", `account_${currentUser.uid}`));
+        const transactionsSnapshot = await getDocs(q3);
+        
+        const transactionsData = [];
+        transactionsSnapshot.forEach((doc) => {
+          transactionsData.push(doc.data());
+        });
+
+        transactionsData.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
+        setTransactions(transactionsData);
       }
 
       setLoading(false);
@@ -58,7 +72,6 @@ export const Profile = () => {
     return <p>Cargando...</p>;
   }
 
-  // Mostrar interfaz basada en el rol del usuario
   return (
     <div className="container text-center">
       <h2>Perfil</h2>
@@ -68,13 +81,18 @@ export const Profile = () => {
       {accountData && (
         <div>
           <p>Tipo de cuenta: {accountData.accountType}</p>
-          <p>Balance: ${accountData.balance}</p>
+          <p>Saldo: ${accountData.balance} MXN</p>
         </div>
       )}
+      <button 
+        className="btn btn-primary"
+        onClick={() => downloadPDF(accountData, currentUser, transactions)}>
+        Descargar Estado de Cuenta
+      </button>
       <Transactions updateBalance={(newBalance) => setAccountData(prevState => ({ ...prevState, balance: newBalance }))} />
       <TransactionHistory/>
       <div className="chat-section">
-        <h3>Chat con el Soporte</h3>
+        <h3>Chat en Tiempo Real</h3>
         {userRole === 'soporte' ? <SoporteChat /> : <Chat />}
       </div>
     </div>

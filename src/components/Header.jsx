@@ -49,7 +49,7 @@ export const Header = () => {
         </li>
         {currentUser && (
           <li className="nav-item">
-            <Link className="nav-link" to="/profile">
+            <Link className="nav-link" to="/perfil">
               Perfil
             </Link>
           </li>
