@@ -80,15 +80,18 @@ export const Transactions = ({ updateBalance }) => {
         // Actualizar el balance del destinatario
         await updateRecipientBalance(recipientDoc, amount);
 
-      } else if (transactionType === "Retiro") {
-        if (newBalance < amount) {
-          alert("No tienes suficiente balance para realizar este retiro.");
-          return false;
-        }
-        newBalance -= parseFloat(amount);
-      } else if (transactionType === "Deposito") {
-        newBalance += parseFloat(amount);
-      }
+        // Guardar la información en la colección de "transfers"
+        const transferData = {
+          transfer_id: `transfer_${Date.now()}`,
+          from_account_id: accountDoc.id,
+          to_account_id: recipientDoc.id,
+          amount: parseFloat(amount),
+          transfer_date: new Date(),
+          description: description || "Sin descripción",
+        };
+
+        await saveTransfer(transferData);
+      } 
 
       // Actualizar el balance del usuario en la colección "accounts"
       await setDoc(accountDoc.ref, { balance: newBalance }, { merge: true });
@@ -97,6 +100,18 @@ export const Transactions = ({ updateBalance }) => {
       // Actualizar el balance en el componente Profile
       updateBalance(newBalance);
       
+      // Guardar la transacción en la colección "transactions"
+      const transactionData = {
+        transaction_id: `transaction_${Date.now()}`,
+        account_id: accountDoc.id,
+        transaction_type: transactionType,
+        amount: parseFloat(amount),
+        transaction_date: new Date(),
+        description: description || "Sin descripción",
+      };
+
+      await saveTransaction(transactionData);
+
       return true;
     } catch (error) {
       console.error("Error al manejar la transacción:", error);
@@ -107,15 +122,30 @@ export const Transactions = ({ updateBalance }) => {
 
   const saveTransaction = async (transactionData) => {
     try {
-      const transactionId = `transaction_${Date.now()}`;
       const transactionsCollection = collection(db, "transactions");
-      const transactionDocRef = doc(transactionsCollection, transactionId);
+      const transactionDocRef = doc(transactionsCollection, transactionData.transaction_id);
 
       await setDoc(transactionDocRef, transactionData);
-      alert("Transacción realizada con éxito."); //Aqui en el futuro debera manera un estado cuando la transaccion es un exito o hay un error
+      console.log("Transacción guardada con éxito.");
       
     } catch (error) {
+      console.error("Error al guardar la transacción:", error);
       alert("Hubo un error al guardar la transacción.");
+      throw error;
+    }
+  };
+
+  const saveTransfer = async (transferData) => {
+    try {
+      const transfersCollection = collection(db, "transfers");
+      const transferDocRef = doc(transfersCollection, transferData.transfer_id);
+
+      await setDoc(transferDocRef, transferData);
+      console.log("Transferencia guardada con éxito.");
+      
+    } catch (error) {
+      console.error("Error al guardar la transferencia:", error);
+      alert("Hubo un error al guardar la transferencia.");
       throw error;
     }
   };
@@ -132,19 +162,9 @@ export const Transactions = ({ updateBalance }) => {
       const accountDoc = await getAccountDoc();
       if (!accountDoc) return; // Si no se obtiene el documento, se termina la ejecución
 
-      const datos= await handleTransaction(accountDoc);
-      if(datos){
-        const transactionData = {
-          transaction_id: `transaction_${Date.now()}`,
-          sender_email: currentUser.email,
-          recipient_email: transactionType === "Transferencia" ? recipientEmail : null,
-          transaction_type: transactionType,
-          amount: parseFloat(amount),
-          transaction_date: new Date(),
-          description: description || "Sin descripción",
-        };
-  
-        await saveTransaction(transactionData);
+      const datos = await handleTransaction(accountDoc);
+      if (datos) {
+        alert("Transacción realizada con éxito.");
       }
       
     } catch (error) {
