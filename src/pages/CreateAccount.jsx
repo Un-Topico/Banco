@@ -20,16 +20,17 @@ export const CreateAccount = () => {
     }
   }, [navigate]);
 
-  const createAccount = async (userEmail) => {
+  const createAccount = async (userUid, userEmail) => {
     try {
       // identificador único para la cuenta
-      const accountId = `account_${Date.now()}`; 
+      const accountId = `account_${userUid}`; 
 
       const accountData = {
         accountId: accountId,
         accountType: accountType,
         balance: 100, // Saldo inicial
-        ownerId: userEmail,
+        ownerId: userUid, 
+        email: userEmail,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -54,7 +55,7 @@ export const CreateAccount = () => {
       return;
     }
 
-    await createAccount(user.email);
+    await createAccount(user.uid, user.email);
   };
 
   return (

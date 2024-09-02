@@ -3,14 +3,122 @@ import { getFirestore, collection, doc, getDoc, setDoc, query, where, getDocs } 
 import { useAuth } from "../auth/authContex";
 import { app } from "../firebaseConfig";
 
-export const Transactions = () => {
+export const Transactions = ({ updateBalance }) => {
   const [transactionType, setTransactionType] = useState('Deposito');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [recipientEmail, setRecipientEmail] = useState(''); // Correo de la cuenta de destino para Transferencia
+  const [recipientEmail, setRecipientEmail] = useState(''); // Correo del destinatario
   const { currentUser } = useAuth();
   
   const db = getFirestore(app);
+
+  const getAccountDoc = async () => {
+    try {
+      const accountId = `account_${currentUser.uid}`;
+      console.log("Account ID:", accountId);
+
+      const accountDocRef = doc(db, "accounts", accountId);
+      const accountDoc = await getDoc(accountDocRef);
+      console.log("Account Document:", accountDoc);
+
+      if (!accountDoc.exists()) {
+        console.log("El documento de la cuenta no existe.");
+        alert("La cuenta del usuario no existe.");
+        return null;
+      }
+      return accountDoc;
+    } catch (error) {
+      console.error("Error al obtener el documento de la cuenta:", error);
+      alert("Hubo un error al obtener la cuenta.");
+      return null;
+    }
+  };
+
+  const updateRecipientBalance = async (recipientDoc, amount) => {
+    try {
+      const recipientData = recipientDoc.data();
+      const recipientNewBalance = recipientData.balance + parseFloat(amount);
+      
+      await setDoc(recipientDoc.ref, { balance: recipientNewBalance }, { merge: true });
+      console.log("Balance del destinatario actualizado.");
+    } catch (error) {
+      console.error("Error al actualizar el balance del destinatario:", error);
+      alert("Hubo un error al actualizar el balance del destinatario.");
+      throw error; // Volvemos a lanzar el error para que la función principal lo capture
+    }
+  };
+
+  const handleTransaction = async (accountDoc) => {
+    try {
+      let newBalance = accountDoc.data().balance;
+
+      if (transactionType === "Transferencia") {
+        if (recipientEmail === currentUser.email) {
+          alert("No puedes enviarte dinero a ti mismo.");
+          return false;
+        }
+
+        // Verificar que la cuenta de destino exista
+        const recipientQuery = query(collection(db, "accounts"), where("email", "==", recipientEmail));
+        const recipientDocs = await getDocs(recipientQuery);
+
+        if (recipientDocs.empty) {
+          alert("No se pudo encontrar el destinatario.");
+          return false;
+        }
+
+        const recipientDoc = recipientDocs.docs[0];
+
+        if (newBalance < amount) {
+          alert("No tienes suficiente balance para realizar esta transferencia.");
+          return false;
+        }
+
+        // Restar el monto del balance del remitente
+        newBalance -= parseFloat(amount);
+
+        // Actualizar el balance del destinatario
+        await updateRecipientBalance(recipientDoc, amount);
+
+      } else if (transactionType === "Retiro") {
+        if (newBalance < amount) {
+          alert("No tienes suficiente balance para realizar este retiro.");
+          return false;
+        }
+        newBalance -= parseFloat(amount);
+      } else if (transactionType === "Deposito") {
+        newBalance += parseFloat(amount);
+      }
+
+      // Actualizar el balance del usuario en la colección "accounts"
+      await setDoc(accountDoc.ref, { balance: newBalance }, { merge: true });
+      console.log("Balance del usuario actualizado.");
+      
+      // Actualizar el balance en el componente Profile
+      updateBalance(newBalance);
+      
+      return true;
+    } catch (error) {
+      console.error("Error al manejar la transacción:", error);
+      alert("Hubo un error al realizar la transacción.");
+      throw error;
+    }
+  };
+
+  const saveTransaction = async (transactionData) => {
+    try {
+      const transactionId = `transaction_${Date.now()}`;
+      const transactionsCollection = collection(db, "transactions");
+      const transactionDocRef = doc(transactionsCollection, transactionId);
+
+      await setDoc(transactionDocRef, transactionData);
+      alert("Transacción realizada con éxito."); //Aqui en el futuro debera manera un estado cuando la transaccion es un exito o hay un error
+      
+    } catch (error) {
+      alert("Hubo un error al guardar la transacción.");
+      throw error;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,84 +129,27 @@ export const Transactions = () => {
     }
 
     try {
-      const accountId = `account_${currentUser.uid}`; // Supongo que ya tienes el accountId del usuario
-      const accountDocRef = doc(db, "accounts", accountId);
-      const accountDoc = await getDoc(accountDocRef);
+      const accountDoc = await getAccountDoc();
+      if (!accountDoc) return; // Si no se obtiene el documento, se termina la ejecución
 
-      if (!accountDoc.exists()) {
-        alert("La cuenta del usuario no existe.");
-        return;
+      const datos= await handleTransaction(accountDoc);
+      if(datos){
+        const transactionData = {
+          transaction_id: `transaction_${Date.now()}`,
+          sender_email: currentUser.email,
+          recipient_email: transactionType === "Transferencia" ? recipientEmail : null,
+          transaction_type: transactionType,
+          amount: parseFloat(amount),
+          transaction_date: new Date(),
+          description: description || "Sin descripción",
+        };
+  
+        await saveTransaction(transactionData);
       }
-
-      const accountData = accountDoc.data();
-      let newBalance = accountData.balance;
-
-      // Verificar si es una Transferencia
-      if (transactionType === "Transferencia") {
-        if (recipientEmail === currentUser.email) {
-          alert("No puedes enviarte dinero a ti mismo.");
-          return;
-        }
-
-        // Verificar que la cuenta de destino exista
-        const recipientQuery = query(collection(db, "accounts"), where("email", "==", recipientEmail));
-        const recipientDocs = await getDocs(recipientQuery);
-
-        if (recipientDocs.empty) {
-          alert("La cuenta de destino no existe.");
-          return;
-        }
-
-        const recipientDoc = recipientDocs.docs[0];
-        const recipientData = recipientDoc.data();
-
-        // Verificar que el monto no exceda el balance
-        if (newBalance < amount) {
-          alert("No tienes suficiente balance para realizar esta transferencia.");
-          return;
-        }
-
-        // Restar el monto del balance del remitente
-        newBalance -= parseFloat(amount);
-
-        // Agregar el monto al balance del destinatario
-        const recipientNewBalance = recipientData.balance + parseFloat(amount);
-        await setDoc(recipientDoc.ref, { balance: recipientNewBalance }, { merge: true });
-      } else if (transactionType === "Retiro") {
-        // Verificar que el monto no exceda el balance en caso de Retiro
-        if (newBalance < amount) {
-          alert("No tienes suficiente balance para realizar este retiro.");
-          return;
-        }
-        newBalance -= parseFloat(amount);
-      } else if (transactionType === "Deposito") {
-        // Para depósitos, solo sumamos el monto al balance
-        newBalance += parseFloat(amount);
-      }
-
-      // Actualizar el balance del usuario en la colección "accounts"
-      await setDoc(accountDocRef, { balance: newBalance }, { merge: true });
-
-      // Guardar la transacción en la colección "transactions"
-      const transactionId = `transaction_${Date.now()}`;
-      const transactionData = {
-        transaction_id: transactionId,
-        account_id: accountId,
-        transaction_type: transactionType,
-        amount: parseFloat(amount),
-        transaction_date: new Date(),
-        description: description || "Sin descripción",
-        recipient_email: transactionType === "Transferencia" ? recipientEmail : null, // Guardar el correo del destinatario
-      };
-
-      const transactionsCollection = collection(db, "transactions");
-      const transactionDocRef = doc(transactionsCollection, transactionId);
-
-      await setDoc(transactionDocRef, transactionData);
-      alert("Transacción realizada con éxito.");
+      
     } catch (error) {
-      console.error("Error al realizar la transacción:", error);
-      alert("Hubo un error al realizar la transacción.");
+      console.error("Error en el proceso de la transacción:", error);
+      alert("Hubo un error en el proceso de la transacción.");
     }
   };
 
@@ -149,7 +200,7 @@ export const Transactions = () => {
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
-        <button type="submit">Realizar Transacción</button>
+        <button type="submit">Realizar transacción</button>
       </form>
     </div>
   );
