@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
 import { app } from '../firebaseConfig';
 
 const db = getFirestore(app);
-const auth = getAuth(app);
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [newUser, setNewUser] = useState({ email: '', role: 'user' });
