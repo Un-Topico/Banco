@@ -91,26 +91,65 @@ export const Transactions = ({ updateBalance }) => {
         };
 
         await saveTransfer(transferData);
-      } 
 
-      // Actualizar el balance del usuario en la colección "accounts"
-      await setDoc(accountDoc.ref, { balance: newBalance }, { merge: true });
-      console.log("Balance del usuario actualizado.");
-      
-      // Actualizar el balance en el componente Profile
-      updateBalance(newBalance);
-      
-      // Guardar la transacción en la colección "transactions"
-      const transactionData = {
-        transaction_id: `transaction_${Date.now()}`,
-        account_id: accountDoc.id,
-        transaction_type: transactionType,
-        amount: parseFloat(amount),
-        transaction_date: new Date(),
-        description: description || "Sin descripción",
-      };
+        // Guardar la transacción para el remitente
+        const senderTransactionData = {
+          transaction_id: `transaction_${Date.now()}`,
+          account_id: accountDoc.id,
+          transaction_type: transactionType,
+          amount: parseFloat(amount),
+          transaction_date: new Date(),
+          description: description || "Sin descripción",
+          status: "sent",
+        };
 
-      await saveTransaction(transactionData);
+        await saveTransaction(senderTransactionData);
+
+        // Guardar la transacción para el destinatario
+        const recipientTransactionData = {
+          transaction_id: `transaction_${Date.now() + 1}`, // Asegurarse de que la ID sea única
+          account_id: recipientDoc.id,
+          transaction_type: transactionType,
+          amount: parseFloat(amount),
+          transaction_date: new Date(),
+          description: description || "Sin descripción",
+          status: "received",
+        };
+
+        await saveTransaction(recipientTransactionData);
+
+      } else {
+        // Manejo de otros tipos de transacciones (Depósito o Retiro)
+        if (transactionType === "Deposito") {
+          newBalance += parseFloat(amount);
+        } else if (transactionType === "Retiro") {
+          if (newBalance < amount) {
+            alert("No tienes suficiente balance para realizar este retiro.");
+            return false;
+          }
+          newBalance -= parseFloat(amount);
+        }
+
+        // Guardar la transacción en la colección "transactions"
+        const transactionData = {
+          transaction_id: `transaction_${Date.now()}`,
+          account_id: accountDoc.id,
+          transaction_type: transactionType,
+          amount: parseFloat(amount),
+          transaction_date: new Date(),
+          description: description || "Sin descripción",
+          status: transactionType === "Deposito" ? "received" : "sent",
+        };
+
+        await saveTransaction(transactionData);
+
+        // Actualizar el balance del usuario en la colección "accounts"
+        await setDoc(accountDoc.ref, { balance: newBalance }, { merge: true });
+        console.log("Balance del usuario actualizado.");
+        
+        // Actualizar el balance en el componente Profile
+        updateBalance(newBalance);
+      }
 
       return true;
     } catch (error) {
