@@ -71,7 +71,7 @@ export const Profile = () => {
   if (loading) {
     return <p>Cargando...</p>;
   }
-
+  
   return (
     <div className="container text-center">
       <h2>Perfil</h2>
