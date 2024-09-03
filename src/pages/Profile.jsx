@@ -95,6 +95,14 @@ export const Profile = () => {
         <h3>Chat en Tiempo Real</h3>
         {userRole === 'soporte' ? <SoporteChat /> : <Chat />}
       </div>
+      {/* Botón solo para administradores */}
+      {userRole === 'admin' && (
+        <button 
+          className="btn btn-secondary mt-3"
+          onClick={() => navigate('/admin/users')}>
+          Panel de Administración
+        </button>
+      )}
     </div>
   );
 };
