@@ -1,3 +1,4 @@
+import React from 'react';
 import './App.css';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Header } from './components/Header';
@@ -6,6 +7,7 @@ import { privateRoutes } from './routers/privateRoutes';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { AuthProvider } from './auth/authContex';
 import { Error } from './pages/Error';
+
 function App() {
   return (
     <AuthProvider>
@@ -23,10 +25,7 @@ function App() {
               key={i}
             />
           ))}
-          <Route
-              path='*'
-              element={ <Error  />}
-            />
+          <Route path="*" element={<Error />} />
         </Routes>
       </Router>
     </AuthProvider>

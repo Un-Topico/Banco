@@ -1,3 +1,4 @@
+import React from 'react';
 import { Profile } from "../pages/Profile";
 import { CreateAccount } from '../pages/CreateAccount';
 
