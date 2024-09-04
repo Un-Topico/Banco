@@ -21,13 +21,15 @@ export const downloadPDF = (account, user, transactions) => {
   const transactionRows = transactions.map((tx) => [
     tx.transaction_id,
     tx.transaction_type,
-    `$${tx.amount.toFixed(2)}`,
+    `$${tx.amount.toFixed(2)}`, 
     tx.transaction_date.toDate().toLocaleString(),
     tx.description,
+    tx.status,
+
   ]);
 
   doc.autoTable({
-    head: [['ID de Transacción', 'Tipo', 'Monto', 'Fecha', 'Descripción']],
+    head: [['ID de Transacción', 'Tipo', 'Monto', 'Fecha', 'Descripción', 'Estado']],
     body: transactionRows,
     startY: 80,
   });
