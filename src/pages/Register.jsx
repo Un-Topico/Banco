@@ -1,7 +1,11 @@
-import React, { useState } from "react";
-import { signUpWithEmail } from "../auth/auth"; // Importa la función de registro de cuentas
+import React, { useState,useEffect } from "react";
+import { signUpWithEmail, signInWithGoogle } from "../auth/auth"; // Importa la función de registro de cuentas
 import { useNavigate } from "react-router-dom";
 
+import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { useAuth } from "../auth/authContex";
+import {app} from '../firebaseConfig'
+const db = getFirestore(app);
 export const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -9,6 +13,28 @@ export const Register = () => {
   const [error, setError] = useState("");  // Para error de validación de contraseña 
   const [errorMessage, setErrorMessage] = useState("");  // Para errores de Firebase
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  useEffect(() => {
+    const checkUserAccount = async () => {
+      if (currentUser) {
+        // Verificar si el usuario ya tiene una cuenta
+        const accountsCollection = collection(db, "accounts");
+        const q = query(accountsCollection, where("ownerId", "==", currentUser.email));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          // Si no tiene cuenta, redirigir a la página de crear cuenta
+          navigate("/configurar-cuenta");
+        } else {
+          // Si ya tiene cuenta, redirigir al perfil
+          navigate("/perfil");
+        }
+      }
+    };
+
+    checkUserAccount();
+  }, [currentUser, navigate]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -28,6 +54,9 @@ export const Register = () => {
       // Muestra el mensaje de error si ocurre un error de Firebase
       setErrorMessage(result.message);
     }
+  };
+  const handleLoginWithGoogle = async () => {
+    await signInWithGoogle();
   };
 
   return (
@@ -74,6 +103,10 @@ export const Register = () => {
         <button type="submit" className="btn btn-primary">
           Registrar
         </button>
+        
+      <button onClick={handleLoginWithGoogle} className="btn btn-secondary">
+        Crear cuenta con Google
+      </button>
       </form>
     </div>
   );

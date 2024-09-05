@@ -15,6 +15,7 @@ export const CreateAccount = () => {
   useEffect(() => {
     // Verifica si hay un usuario autenticado
     const user = auth.currentUser;
+    console.log("Usuario ", user)
     if (!user) {
       navigate('/login'); // Redirige al login si no hay usuario autenticado
     }
@@ -39,7 +40,7 @@ export const CreateAccount = () => {
       const accountDocRef = doc(accountsCollection, accountId);
 
       await setDoc(accountDocRef, accountData);
-      console.log("Cuenta creada con éxito:", accountId);
+      
       navigate('/perfil'); // Redirige al perfil después de crear la cuenta
     } catch (error) {
       console.error("Error al crear la cuenta:", error);

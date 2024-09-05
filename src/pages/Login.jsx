@@ -16,26 +16,6 @@ export const Login = () => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    const checkUserAccount = async () => {
-      if (currentUser) {
-        // Verificar si el usuario ya tiene una cuenta
-        const accountsCollection = collection(db, "accounts");
-        const q = query(accountsCollection, where("ownerId", "==", currentUser.email));
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-          // Si no tiene cuenta, redirigir a la página de crear cuenta
-          navigate("/configurar-cuenta");
-        } else {
-          // Si ya tiene cuenta, redirigir al perfil
-          navigate("/perfil");
-        }
-      }
-    };
-
-    checkUserAccount();
-  }, [currentUser, navigate]);
 
   const handleLoginWithEmail = async (e) => {
     e.preventDefault();
