@@ -61,9 +61,16 @@ export const Header = () => {
             Logout
           </button>
         ) : (
-          <Link className="btn btn-outline-primary" to="/login">
+          <div>
+              <Link className="btn btn-outline-primary" to="/login">
             Login
           </Link>
+            <Link className="btn btn-outline-primary" to="/crear-cuenta">
+            Crear cuenta
+          </Link>
+          </div>
+        
+          
         )}
       </div>
     </div>
