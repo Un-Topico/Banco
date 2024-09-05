@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from 'firebase/firestore';
 import { Modal, Button } from 'react-bootstrap'; // Aquí importas Modal y Button
-import { getAuth } from 'firebase/auth';
 import { app } from '../firebaseConfig';
 
 const db = getFirestore(app);
-const auth = getAuth(app);
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
