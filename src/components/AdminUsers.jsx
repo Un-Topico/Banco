@@ -1,15 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from 'firebase/firestore';
-import { Modal, Button } from 'react-bootstrap'; // Aquí importas Modal y Button
+import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
+import { Modal, Button } from 'react-bootstrap';
 import { app } from '../firebaseConfig';
+import { getAuth } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [editRole, setEditRole] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCurrentUserRole = async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const userDocRef = doc(db, 'roles', currentUser.email); // Referencia al documento específico
+        const userDoc = await getDoc(userDocRef); // Obtener el documento individual
+
+        if (userDoc.exists() && userDoc.data().role === 'admin') {
+          setIsAdmin(true); // Usuario es admin
+        } else {
+          navigate('/not-authorized'); // Redirigir si no es admin
+        }
+      } else {
+        navigate('/login'); // Redirigir si no hay sesión activa
+      }
+    };
+
+    fetchCurrentUserRole();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -21,8 +46,11 @@ const AdminUsers = () => {
       }));
       setUsers(usersList);
     };
-    fetchUsers();
-  }, []);
+
+    if (isAdmin) {
+      fetchUsers();
+    }
+  }, [isAdmin]);
 
   // Mostrar modal para ver detalles del usuario
   const handleShowModal = (user) => {
@@ -59,6 +87,10 @@ const AdminUsers = () => {
     }
   };
 
+  if (!isAdmin) {
+    return <p>Cargando...</p>;
+  }
+
   return (
     <div>
       <h2>Administrar Usuarios</h2>
@@ -84,7 +116,6 @@ const AdminUsers = () => {
           <Modal.Body>
             <p>Email: {selectedUser.email}</p>
             <p>Role: {selectedUser.role}</p>
-            {/* Aquí puedes agregar más detalles */}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleCloseModal}>
