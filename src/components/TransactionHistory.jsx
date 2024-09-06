@@ -4,25 +4,31 @@ import { useAuth } from "../auth/authContex";
 import { app } from "../firebaseConfig";
 import { Table, Container, Row, Col, Form, Alert } from "react-bootstrap";
 
-export const TransactionHistory = () => {
+export const TransactionHistory = ({ selectedCardId }) => {
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState("all"); // Estado para el filtro
   const [error, setError] = useState(null); // Estado para mostrar errores
-  const { currentUser } = useAuth();
+  const { currentUser } = useAuth(); // Necesario para futuras ampliaciones, si es necesario
 
   const db = getFirestore(app);
 
   useEffect(() => {
+    // No hacer nada si no hay una tarjeta seleccionada
+    if (!selectedCardId) {
+      setTransactions([]);
+      return;
+    }
+
     // Construir la consulta basada en el filtro seleccionado
     let q = query(
       collection(db, "transactions"),
-      where("account_id", "==", `account_${currentUser.uid}`)
+      where("card_id", "==", selectedCardId)
     );
 
     if (filter !== "all") {
       q = query(
         collection(db, "transactions"),
-        where("account_id", "==", `account_${currentUser.uid}`),
+        where("card_id", "==", selectedCardId),
         where("status", "==", filter)
       );
     }
@@ -49,7 +55,7 @@ export const TransactionHistory = () => {
 
     // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [currentUser.uid, db, filter]); // Se añade 'filter' como dependencia
+  }, [db, selectedCardId, filter]); // Se añade 'selectedCardId' como dependencia
 
   return (
     <Container className="text-center mt-5">

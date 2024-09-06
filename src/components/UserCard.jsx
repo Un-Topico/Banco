@@ -5,9 +5,10 @@ import { app } from '../firebaseConfig';
 import CardComponent from './Card';
 import { Container, Row, Alert } from 'react-bootstrap';
 
-const UserCards = () => {
+const UserCards = ({ onSelectCard }) => {
   const [cards, setCards] = useState([]);
   const [error, setError] = useState(null);
+  const [activeCard, setActiveCard] = useState(null); // Estado para la tarjeta activa
   const { currentUser } = useAuth();
   const db = getFirestore(app);
 
@@ -36,6 +37,13 @@ const UserCards = () => {
     return () => unsubscribe();
   }, [currentUser.uid, db]);
 
+  const handleCardClick = (card) => {
+    setActiveCard(card);
+    if (onSelectCard) {
+      onSelectCard(card);
+    }
+  };
+
   return (
     <Container className="text-center mt-5">
       <h2>Mis Tarjetas</h2>
@@ -47,7 +55,12 @@ const UserCards = () => {
       ) : (
         <Row>
           {cards.map((card) => (
-            <CardComponent key={card.id} card={card} />
+            <CardComponent
+              key={card.id}
+              card={card}
+              onClick={handleCardClick}
+              isActive={activeCard === card} // Pasa la tarjeta activa a CardComponent
+            />
           ))}
         </Row>
       )}

@@ -50,6 +50,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
         cardNumber: cardNumber.replace(/\s/g, ''), // Quitar espacios
         expiryDate: expiryDate,
         cvv: cvv,
+        balance:100,
         cardHolderName: cardHolderName,
         ownerId: user.uid, // ID del usuario
         createdAt: new Date(),
