@@ -1,36 +1,47 @@
-// CreateAccount.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, doc, setDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { app } from '../firebaseConfig';
+import { CreditCardForm } from '../components/CreditCardForm';
+import { Form, Button, Container, Card } from 'react-bootstrap';
 
 const db = getFirestore(app);
 const auth = getAuth(app);
 
 export const CreateAccount = () => {
   const [accountType, setAccountType] = useState('Ahorro');
+  const [isCardSaved, setIsCardSaved] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Verifica si hay un usuario autenticado
     const user = auth.currentUser;
-    console.log("Usuario ", user)
     if (!user) {
       navigate('/login'); // Redirige al login si no hay usuario autenticado
     }
   }, [navigate]);
 
+  useEffect(() => {
+    // Habilita el botón si la tarjeta ha sido guardada y el tipo de cuenta está seleccionado
+    if (isCardSaved && accountType) {
+      setIsButtonDisabled(false);
+    } else {
+      setIsButtonDisabled(true);
+    }
+  }, [isCardSaved, accountType]);
+
   const createAccount = async (userUid, userEmail) => {
     try {
-      // identificador único para la cuenta
-      const accountId = `account_${userUid}`; 
+      // Identificador único para la cuenta
+      const accountId = `account_${userUid}`;
 
       const accountData = {
         accountId: accountId,
         accountType: accountType,
         balance: 100, // Saldo inicial
-        ownerId: userUid, 
+        ownerId: userUid,
         email: userEmail,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -40,7 +51,7 @@ export const CreateAccount = () => {
       const accountDocRef = doc(accountsCollection, accountId);
 
       await setDoc(accountDocRef, accountData);
-      
+
       navigate('/perfil'); // Redirige al perfil después de crear la cuenta
     } catch (error) {
       console.error("Error al crear la cuenta:", error);
@@ -60,22 +71,36 @@ export const CreateAccount = () => {
   };
 
   return (
-    <div>
-      <h2>Crear Cuenta</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="accountType">Tipo de Cuenta:</label>
-          <select
-            id="accountType"
-            value={accountType}
-            onChange={(e) => setAccountType(e.target.value)}
+    <Container className="my-4">
+      <Card className="p-4 shadow-sm">
+        <Card.Title as="h2" className="mb-4">Crear Cuenta</Card.Title>
+        <Form >
+          <Form.Group controlId="accountType" className="mb-3">
+            <Form.Label>Tipo de Cuenta</Form.Label>
+            <Form.Control
+              as="select"
+              value={accountType}
+              onChange={(e) => setAccountType(e.target.value)}
+            >
+              <option value="Ahorro">Ahorro</option>
+              <option value="Corriente">Corriente</option>
+            </Form.Control>
+          </Form.Group>
+          
+          
+        </Form>
+        <CreditCardForm onCardSaved={setIsCardSaved} />
+        <Button
+            variant="primary"
+            type="button"
+            disabled={isButtonDisabled}
+            className='mt-3'
+            onClick={handleSubmit}
           >
-            <option value="Ahorro">Ahorro</option>
-            <option value="Corriente">Corriente</option>
-          </select>
-        </div>
-        <button type="submit">Crear Cuenta</button>
-      </form>
-    </div>
+            Crear Cuenta
+          
+          </Button>
+      </Card>
+    </Container>
   );
 };
