@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import { getFirestore, collection, doc, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../auth/authContex";
 import { app } from "../firebaseConfig";
+import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
 
 export const Transactions = ({ updateBalance }) => {
   const [transactionType, setTransactionType] = useState('Deposito');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [recipientEmail, setRecipientEmail] = useState(''); // Correo del destinatario
+  const [error, setError] = useState(null); // Estado para mostrar errores
+  const [success, setSuccess] = useState(null); // Estado para mostrar éxito
   const { currentUser } = useAuth();
   
   const db = getFirestore(app);
@@ -23,13 +26,13 @@ export const Transactions = ({ updateBalance }) => {
 
       if (!accountDoc.exists()) {
         console.log("El documento de la cuenta no existe.");
-        alert("La cuenta del usuario no existe.");
+        setError("La cuenta del usuario no existe.");
         return null;
       }
       return accountDoc;
     } catch (error) {
       console.error("Error al obtener el documento de la cuenta:", error);
-      alert("Hubo un error al obtener la cuenta.");
+      setError("Hubo un error al obtener la cuenta.");
       return null;
     }
   };
@@ -43,7 +46,7 @@ export const Transactions = ({ updateBalance }) => {
       console.log("Balance del destinatario actualizado.");
     } catch (error) {
       console.error("Error al actualizar el balance del destinatario:", error);
-      alert("Hubo un error al actualizar el balance del destinatario.");
+      setError("Hubo un error al actualizar el balance del destinatario.");
       throw error; // Volvemos a lanzar el error para que la función principal lo capture
     }
   };
@@ -54,7 +57,7 @@ export const Transactions = ({ updateBalance }) => {
 
       if (transactionType === "Transferencia") {
         if (recipientEmail === currentUser.email) {
-          alert("No puedes enviarte dinero a ti mismo.");
+          setError("No puedes enviarte dinero a ti mismo.");
           return false;
         }
 
@@ -63,14 +66,14 @@ export const Transactions = ({ updateBalance }) => {
         const recipientDocs = await getDocs(recipientQuery);
 
         if (recipientDocs.empty) {
-          alert("No se pudo encontrar el destinatario.");
+          setError("No se pudo encontrar el destinatario.");
           return false;
         }
 
         const recipientDoc = recipientDocs.docs[0];
 
         if (newBalance < amount) {
-          alert("No tienes suficiente balance para realizar esta transferencia.");
+          setError("No tienes suficiente balance para realizar esta transferencia.");
           return false;
         }
 
@@ -124,7 +127,7 @@ export const Transactions = ({ updateBalance }) => {
           newBalance += parseFloat(amount);
         } else if (transactionType === "Retiro") {
           if (newBalance < amount) {
-            alert("No tienes suficiente balance para realizar este retiro.");
+            setError("No tienes suficiente balance para realizar este retiro.");
             return false;
           }
           newBalance -= parseFloat(amount);
@@ -151,10 +154,11 @@ export const Transactions = ({ updateBalance }) => {
         updateBalance(newBalance);
       }
 
+      setSuccess("Transacción realizada con éxito.");
       return true;
     } catch (error) {
       console.error("Error al manejar la transacción:", error);
-      alert("Hubo un error al realizar la transacción.");
+      setError("Hubo un error al realizar la transacción.");
       throw error;
     }
   };
@@ -169,7 +173,7 @@ export const Transactions = ({ updateBalance }) => {
       
     } catch (error) {
       console.error("Error al guardar la transacción:", error);
-      alert("Hubo un error al guardar la transacción.");
+      setError("Hubo un error al guardar la transacción.");
       throw error;
     }
   };
@@ -184,7 +188,7 @@ export const Transactions = ({ updateBalance }) => {
       
     } catch (error) {
       console.error("Error al guardar la transferencia:", error);
-      alert("Hubo un error al guardar la transferencia.");
+      setError("Hubo un error al guardar la transferencia.");
       throw error;
     }
   };
@@ -193,7 +197,7 @@ export const Transactions = ({ updateBalance }) => {
     e.preventDefault();
 
     if (!amount || isNaN(amount) || amount <= 0) {
-      alert("Por favor, ingresa un monto válido.");
+      setError("Por favor, ingresa un monto válido.");
       return;
     }
 
@@ -203,64 +207,74 @@ export const Transactions = ({ updateBalance }) => {
 
       const datos = await handleTransaction(accountDoc);
       if (datos) {
-        alert("Transacción realizada con éxito.");
+        setSuccess("Transacción realizada con éxito.");
       }
       
     } catch (error) {
       console.error("Error en el proceso de la transacción:", error);
-      alert("Hubo un error en el proceso de la transacción.");
+      setError("Hubo un error en el proceso de la transacción.");
     }
   };
 
   return (
-    <div className="container text-center">
+    <Container className="text-center mt-5">
       <h1>Transacciones</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="transactionType">Selecciona el tipo de transferencia</label>
-          <select
-            id="transactionType"
-            value={transactionType}
-            onChange={(e) => setTransactionType(e.target.value)}
-          >
-            <option value="Deposito">Depósito</option>
-            <option value="Retiro">Retiro</option>
-            <option value="Transferencia">Transferencia</option>
-          </select>
-        </div>
+      {error && <Alert variant="danger">{error}</Alert>}
+      {success && <Alert variant="success">{success}</Alert>}
+      <Form onSubmit={handleSubmit}>
+        <Form.Group as={Row} className="mb-3">
+          <Form.Label column sm={4}>Selecciona el tipo de transferencia</Form.Label>
+          <Col sm={8}>
+            <Form.Select
+              id="transactionType"
+              value={transactionType}
+              onChange={(e) => setTransactionType(e.target.value)}
+            >
+              <option value="Deposito">Depósito</option>
+              <option value="Retiro">Retiro</option>
+              <option value="Transferencia">Transferencia</option>
+            </Form.Select>
+          </Col>
+        </Form.Group>
         {transactionType === "Transferencia" && (
-          <div>
-            <label htmlFor="recipientEmail">Correo electrónico del destinatario</label>
-            <input
-              type="email"
-              id="recipientEmail"
-              value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
+          <Form.Group as={Row} className="mb-3">
+            <Form.Label column sm={4}>Correo electrónico del destinatario</Form.Label>
+            <Col sm={8}>
+              <Form.Control
+                type="email"
+                id="recipientEmail"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                required
+              />
+            </Col>
+          </Form.Group>
+        )}
+        <Form.Group as={Row} className="mb-3">
+          <Form.Label column sm={4}>Monto</Form.Label>
+          <Col sm={8}>
+            <Form.Control
+              type="number"
+              id="amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               required
             />
-          </div>
-        )}
-        <div>
-          <label htmlFor="amount">Monto</label>
-          <input
-            type="number"
-            id="amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="description">Descripción</label>
-          <input
-            type="text"
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-        <button type="submit">Realizar transacción</button>
-      </form>
-    </div>
+          </Col>
+        </Form.Group>
+        <Form.Group as={Row} className="mb-3">
+          <Form.Label column sm={4}>Descripción</Form.Label>
+          <Col sm={8}>
+            <Form.Control
+              type="text"
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Col>
+        </Form.Group>
+        <Button type="submit" variant="primary">Enviar Transacción</Button>
+      </Form>
+    </Container>
   );
 };

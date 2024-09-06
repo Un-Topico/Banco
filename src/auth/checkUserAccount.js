@@ -4,7 +4,6 @@ const db = getFirestore(app);
 
 export const checkUserAccount = async (currentUser) => {
     if (currentUser) {
-        console.log(currentUser.email)
       // Verificar si el usuario ya tiene una cuenta
       const accountsCollection = collection(db, "accounts");
       const q = query(accountsCollection, where("email", "==", currentUser.email));

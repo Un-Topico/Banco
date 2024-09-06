@@ -8,7 +8,9 @@ import { Transactions } from "../components/Transactions";
 import { Chat } from "../components/Chat";
 import { SoporteChat } from "../components/SoporteChat";
 import { TransactionHistory } from "../components/TransactionHistory";
-import { downloadPDF } from "../utils/downloadPDF"; 
+import { downloadPDF } from "../utils/downloadPDF";
+import UserCards from "../components/UserCard";
+import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
 
 export const Profile = () => {
   const { currentUser } = useAuth();
@@ -69,40 +71,84 @@ export const Profile = () => {
   }, [currentUser, navigate]);
 
   if (loading) {
-    return <p>Cargando...</p>;
+    return (
+      <Container className="text-center my-5">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </Spinner>
+      </Container>
+    );
   }
-  
+
   return (
-    <div className="container text-center">
-      <h2>Perfil</h2>
-      <FaUserCircle size={50} />       
-      <p>Bienvenido, {currentUser.displayName}</p>
-      <p>{currentUser.email}</p>
-      {accountData && (
-        <div>
-          <p>Tipo de cuenta: {accountData.accountType}</p>
-          <p>Saldo: ${accountData.balance} MXN</p>
-        </div>
-      )}
-      <button 
-        className="btn btn-primary"
-        onClick={() => downloadPDF(accountData, currentUser, transactions)}>
-        Descargar Estado de Cuenta
-      </button>
-      <Transactions updateBalance={(newBalance) => setAccountData(prevState => ({ ...prevState, balance: newBalance }))} />
-      <TransactionHistory/>
-      <div className="chat-section">
-        <h3>Chat en Tiempo Real</h3>
-        {userRole === 'soporte' ? <SoporteChat /> : <Chat />}
-      </div>
-      {/* Botón solo para administradores */}
-      {userRole === 'admin' && (
-        <button 
-          className="btn btn-secondary mt-3"
-          onClick={() => navigate('/admin/users')}>
-          Panel de Administración
-        </button>
-      )}
-    </div>
+    <Container className="my-5">
+      <Card className="p-4 shadow-sm">
+        <Card.Body>
+          <Row className="text-center mb-4">
+            <Col>
+              <FaUserCircle size={100} className="mb-3" />
+              <h2>Perfil</h2>
+              <p className="h4">Bienvenido, {currentUser.displayName}</p>
+              <p className="text-muted">{currentUser.email}</p>
+            </Col>
+          </Row>
+          <UserCards />
+          {accountData && (
+            <Card className="mb-4">
+              <Card.Body>
+                <Card.Title>Información de la Cuenta</Card.Title>
+                <Card.Text>
+                  <p><strong>Tipo de cuenta:</strong> {accountData.accountType}</p>
+                  <p><strong>Saldo:</strong> ${accountData.balance} MXN</p>
+                </Card.Text>
+                <Button 
+                  variant="primary"
+                  onClick={() => downloadPDF(accountData, currentUser, transactions)}
+                >
+                  Descargar Estado de Cuenta
+                </Button>
+              </Card.Body>
+            </Card>
+          )}
+
+          <Row>
+            <Col md={6} className="mb-4">
+              <Card>
+                <Card.Body>
+                  <Card.Title>Transacciones</Card.Title>
+                  <Transactions updateBalance={(newBalance) => setAccountData(prevState => ({ ...prevState, balance: newBalance }))} />
+                </Card.Body>
+              </Card>
+            </Col>
+
+            <Col md={6} className="mb-4">
+              <Card>
+                <Card.Body>
+                  <Card.Title>Historial de Transacciones</Card.Title>
+                  <TransactionHistory />
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          <Card className="mt-4">
+            <Card.Body>
+              <Card.Title>Chat en Tiempo Real</Card.Title>
+              {userRole === 'soporte' ? <SoporteChat /> : <Chat />}
+            </Card.Body>
+          </Card>
+
+          {userRole === 'admin' && (
+            <Button 
+              variant="secondary"
+              className="mt-4"
+              onClick={() => navigate('/admin/users')}
+            >
+              Panel de Administración
+            </Button>
+          )}
+        </Card.Body>
+      </Card>
+    </Container>
   );
 };

@@ -25,7 +25,6 @@ export const CreateAccount = () => {
   }, []);
   const checkUser=async(currentUser)=>{
     const check = await checkUserAccount(currentUser)
-    console.log(check)
     if(check) navigate('/perfil')
   }
   useEffect(() => {
