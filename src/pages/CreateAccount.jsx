@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { app } from '../firebaseConfig';
 import { CreditCardForm } from '../components/CreditCardForm';
 import { Form, Button, Container, Card } from 'react-bootstrap';
-
+import { checkUserAccount } from '../auth/checkUserAccount';
 const db = getFirestore(app);
 const auth = getAuth(app);
 
@@ -18,8 +18,13 @@ export const CreateAccount = () => {
   useEffect(() => {
     // Verifica si hay un usuario autenticado
     const user = auth.currentUser;
+    const checkUser = checkUserAccount(user);
+    
     if (!user) {
       navigate('/login'); // Redirige al login si no hay usuario autenticado
+    }
+    if(checkUser){
+      navigate('/perfil')
     }
   }, [navigate]);
 
