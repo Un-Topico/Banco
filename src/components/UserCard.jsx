@@ -14,7 +14,7 @@ const UserCards = () => {
   useEffect(() => {
     const q = query(
       collection(db, 'cards'),
-      where('user_id', '==', currentUser.uid)
+      where('ownerId', '==', currentUser.uid)
     );
 
     const unsubscribe = onSnapshot(

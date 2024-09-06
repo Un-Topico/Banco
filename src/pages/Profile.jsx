@@ -81,7 +81,7 @@ export const Profile = () => {
   }
 
   return (
-    <Container className="my-5">
+    <Container className="my-3">
       <Card className="p-4 shadow-sm">
         <Card.Body>
           <Row className="text-center mb-4">
@@ -92,7 +92,6 @@ export const Profile = () => {
               <p className="text-muted">{currentUser.email}</p>
             </Col>
           </Row>
-          <UserCards />
           {accountData && (
             <Card className="mb-4">
               <Card.Body>
@@ -110,6 +109,7 @@ export const Profile = () => {
               </Card.Body>
             </Card>
           )}
+          <UserCards />
 
           <Row>
             <Col md={6} className="mb-4">

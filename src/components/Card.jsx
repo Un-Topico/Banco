@@ -6,15 +6,15 @@ const CardComponent = ({ card }) => {
     <Col md={4} className="mb-4">
       <Card>
         <Card.Body>
-          <Card.Title>Tarjeta {card.card_number}</Card.Title>
+          <Card.Title>Tarjeta {card.cardNumber}</Card.Title>
           <Card.Text>
             <strong>Tipo:</strong> {card.card_type}
           </Card.Text>
           <Card.Text>
-            <strong>Fecha de Expiración:</strong> {card.expiry_date}
+            <strong>Fecha de Expiración:</strong> {card.expiryDate}
           </Card.Text>
           <Card.Text>
-            <strong>Saldo:</strong> ${card.balance.toFixed(2)}
+            <strong>Saldo:</strong> ${card.balance}
           </Card.Text>
         </Card.Body>
       </Card>
