@@ -18,16 +18,16 @@ export const CreateAccount = () => {
   useEffect(() => {
     // Verifica si hay un usuario autenticado
     const user = auth.currentUser;
-    const checkUser = checkUserAccount(user);
-    
     if (!user) {
       navigate('/login'); // Redirige al login si no hay usuario autenticado
     }
-    if(checkUser){
-      navigate('/perfil')
-    }
-  }, [navigate]);
-
+    checkUser(user);
+  }, []);
+  const checkUser=async(currentUser)=>{
+    const check = await checkUserAccount(currentUser)
+    console.log(check)
+    if(check) navigate('/perfil')
+  }
   useEffect(() => {
     // Habilita el botón si la tarjeta ha sido guardada y el tipo de cuenta está seleccionado
     if (isCardSaved && accountType) {
