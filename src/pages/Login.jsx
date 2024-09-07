@@ -1,14 +1,14 @@
-// src/components/Login.jsx
 import React, { useEffect, useState } from "react";
 import { signInWithGoogle, signInWithEmail } from "../auth/auth"; // Importa la función de inicio de sesión por correo
 import { useNavigate, Link } from "react-router-dom"; // Importa Link para navegación
 import { useAuth } from "../auth/authContex";
 export const Login = () => {
-  useEffect(()=>{
-    if(currentUser){
-      navigate('/perfil')
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/perfil');
     }
-  },[])
+  }, [currentUser, navigate]); 
+  
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 

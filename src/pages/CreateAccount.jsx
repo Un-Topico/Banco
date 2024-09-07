@@ -16,13 +16,13 @@ export const CreateAccount = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Verifica si hay un usuario autenticado
     const user = auth.currentUser;
     if (!user) {
-      navigate('/login'); // Redirige al login si no hay usuario autenticado
+      navigate('/login');
     }
     checkUser(user);
-  }, []);
+  }, [checkUser, navigate]); 
+  
   const checkUser=async(currentUser)=>{
     const check = await checkUserAccount(currentUser)
     if(check) navigate('/perfil')
