@@ -13,19 +13,18 @@ const auth = getAuth(app);
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const navigate = useNavigate();
-  const checkUser=async(currentUser)=>{
-    const check = await checkUserAccount(currentUser)
-    if(check) navigate('/perfil')
-  }
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
       navigate('/login');
     } else {
-      checkUser(user); // Asegúrate de que solo se ejecuta cuando hay un usuario
+      const checkUser = async (currentUser) => {
+        const check = await checkUserAccount(currentUser);
+        if (check) navigate('/perfil');
+      };
+      checkUser(user); // Solo se ejecuta si hay un usuario
     }
-  }, [auth.currentUser, navigate, checkUser]); // Añade `checkUser` a las dependencias
-  
+  }, [auth.currentUser, navigate]);
   
   
   useEffect(() => {
