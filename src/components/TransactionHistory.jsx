@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { getFirestore, collection, query, where, onSnapshot } from "firebase/firestore";
-import { useAuth } from "../auth/authContex";
 import { app } from "../firebaseConfig";
 import { Table, Container, Row, Col, Form, Alert } from "react-bootstrap";
 
@@ -8,8 +7,6 @@ export const TransactionHistory = ({ selectedCardId }) => {
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState("all"); // Estado para el filtro
   const [error, setError] = useState(null); // Estado para mostrar errores
-  const { currentUser } = useAuth(); // Necesario para futuras ampliaciones, si es necesario
-
   const db = getFirestore(app);
 
   useEffect(() => {

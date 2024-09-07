@@ -3,12 +3,17 @@ import React, { useEffect, useState } from "react";
 import { signInWithGoogle, signInWithEmail } from "../auth/auth"; // Importa la función de inicio de sesión por correo
 import { useNavigate, Link } from "react-router-dom"; // Importa Link para navegación
 import { useAuth } from "../auth/authContex";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore} from "firebase/firestore";
 import { app } from "../firebaseConfig";
 
 const db = getFirestore(app);
 
 export const Login = () => {
+  useEffect(()=>{
+    if(currentUser){
+      navigate('/perfil')
+    }
+  },[])
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
