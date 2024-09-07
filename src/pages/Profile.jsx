@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { FaUserCircle } from "react-icons/fa";
 import { useAuth } from "../auth/authContex";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,6 +15,7 @@ import { SoporteChat } from "../components/SoporteChat";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { downloadPDF } from "../utils/downloadPDF";
 import UserCards from "../components/UserCard";
+import { ProfileImageUpload } from "../components/ProfileImageUpload";
 import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
 
 export const Profile = () => {
@@ -90,7 +90,9 @@ export const Profile = () => {
   const handleCardSelection = (card) => {
     setSelectedCard(card); // Actualiza el estado de la tarjeta seleccionada
   };
-
+  const handleImageUpdate = (newImageUrl) => {
+    setAccountData((prevData) => ({ ...prevData, profileImage: newImageUrl }));
+  };
   if (loading) {
     return (
       <Container className="text-center my-5">
@@ -105,9 +107,12 @@ export const Profile = () => {
     <Container className="my-3">
       <Card className="p-4 shadow-sm">
         <Card.Body>
-          <Row className="text-center mb-4">
+        <Row className="text-center mb-4">
             <Col>
-              <FaUserCircle size={100} className="mb-3" />
+              <ProfileImageUpload
+                currentImageUrl={accountData?.profileImage}
+                onImageUpdate={handleImageUpdate}
+              />
               <h2>Perfil</h2>
               <p className="h4">Bienvenido, {currentUser.displayName}</p>
               <p className="text-muted">{currentUser.email}</p>
