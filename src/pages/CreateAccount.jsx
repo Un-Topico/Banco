@@ -6,22 +6,20 @@ import { app } from '../firebaseConfig';
 import { CreditCardForm } from '../components/CreditCardForm';
 import { Form, Button, Container, Card } from 'react-bootstrap';
 import { checkUserAccount } from '../auth/checkUserAccount';
-const db = getFirestore(app);
-const auth = getAuth(app);
-
 export const CreateAccount = () => {
+  const db = getFirestore(app);
+const auth = getAuth(app);
   const [accountType, setAccountType] = useState('Ahorro');
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const navigate = useNavigate();
-
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
       navigate('/login');
     }
     checkUser(user);
-  }, [checkUser, navigate]); 
+  }, [auth.currentUser, navigate]); // Añade auth.currentUser como dependencia
   
   const checkUser=async(currentUser)=>{
     const check = await checkUserAccount(currentUser)

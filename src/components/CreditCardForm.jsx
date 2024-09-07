@@ -4,11 +4,9 @@ import { Form, Button, Row, Col, Card } from 'react-bootstrap';
 import { getFirestore, collection, doc, setDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { app } from '../firebaseConfig';
-
-const db = getFirestore(app);
-const auth = getAuth(app);
-
 export const CreditCardForm = ({ onCardSaved }) => {
+  const db = getFirestore(app);
+const auth = getAuth(app);
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');

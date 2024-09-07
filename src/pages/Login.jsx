@@ -3,14 +3,15 @@ import { signInWithGoogle, signInWithEmail } from "../auth/auth"; // Importa la 
 import { useNavigate, Link } from "react-router-dom"; // Importa Link para navegación
 import { useAuth } from "../auth/authContex";
 export const Login = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
   useEffect(() => {
     if (currentUser) {
       navigate('/perfil');
     }
   }, [currentUser, navigate]); 
   
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
+  
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
