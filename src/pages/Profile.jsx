@@ -64,7 +64,7 @@ export const Profile = () => {
         const transactionsRef = collection(db, "transactions");
         const q3 = query(
           transactionsRef,
-          where("account_id", "==", `account_${currentUser.uid}`)
+          where("card_id", "==", `${selectedCard.cardId}`)
         );
         const transactionsSnapshot = await getDocs(q3);
 
