@@ -13,18 +13,21 @@ const auth = getAuth(app);
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const navigate = useNavigate();
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) {
-      navigate('/login');
-    }
-    checkUser(user);
-  }, [auth.currentUser, navigate]); // Añade auth.currentUser como dependencia
-  
   const checkUser=async(currentUser)=>{
     const check = await checkUserAccount(currentUser)
     if(check) navigate('/perfil')
   }
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) {
+      navigate('/login');
+    } else {
+      checkUser(user); // Asegúrate de que solo se ejecuta cuando hay un usuario
+    }
+  }, [auth.currentUser, navigate, checkUser]); // Añade `checkUser` a las dependencias
+  
+  
+  
   useEffect(() => {
     // Habilita el botón si la tarjeta ha sido guardada y el tipo de cuenta está seleccionado
     if (isCardSaved && accountType) {

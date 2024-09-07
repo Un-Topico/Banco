@@ -20,7 +20,7 @@ const auth = getAuth(app);
     if (!user) {
       navigate('/login');
     }
-  }, [navigate]);
+  }, [auth.currentUser,navigate]);
 
   useEffect(() => {
     // Habilita el botón si todos los campos están completos
@@ -111,7 +111,7 @@ const auth = getAuth(app);
                 placeholder="MM/AA"
                 maxLength="5"
                 value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value.replace(/[^0-9\/]/g, '').replace(/(\d{2})(\d{1,2})/, '$1/$2'))}
+                onChange={(e) => setExpiryDate(e.target.value.replace(/[^0-9/]/g, '').replace(/(\d{2})(\d{1,2})/, '$1/$2'))}
                 required
                 disabled={isCardSaved} // Deshabilitar si la tarjeta está guardada
               />
