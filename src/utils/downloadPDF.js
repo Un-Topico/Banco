@@ -35,5 +35,5 @@ export const downloadPDF = (account, user, transactions) => {
   });
 
   // Guardar el PDF
-  // doc.save(`estado_cuenta_${user.displayName}.pdf`);
+  doc.save(`estado_cuenta_${user.displayName}.pdf`);
 };

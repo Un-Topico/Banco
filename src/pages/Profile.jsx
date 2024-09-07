@@ -15,7 +15,7 @@ import { Chat } from "../components/Chat";
 import { SoporteChat } from "../components/SoporteChat";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { downloadPDF } from "../utils/downloadPDF";
-import UserCards from "../components/UserCard"; // Este es el componente modificado
+import UserCards from "../components/UserCard";
 import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
 
 export const Profile = () => {
@@ -25,7 +25,7 @@ export const Profile = () => {
   const [userRole, setUserRole] = useState(null);
   const [accountData, setAccountData] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [selectedCard, setSelectedCard] = useState(null); // Estado para la tarjeta seleccionada
+  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -60,33 +60,34 @@ export const Profile = () => {
         const accountInfo = querySnapshot.docs[0].data();
         setAccountData(accountInfo);
 
-        // Obtener transacciones
-        const transactionsRef = collection(db, "transactions");
-        const q3 = query(
-          transactionsRef,
-          where("card_id", "==", `${selectedCard.cardId}`)
-        );
-        const transactionsSnapshot = await getDocs(q3);
+        // Obtener transacciones si hay tarjeta seleccionada
+        if (selectedCard) {
+          const transactionsRef = collection(db, "transactions");
+          const q3 = query(
+            transactionsRef,
+            where("card_id", "==", `${selectedCard.cardId}`)
+          );
+          const transactionsSnapshot = await getDocs(q3);
 
-        const transactionsData = [];
-        transactionsSnapshot.forEach((doc) => {
-          transactionsData.push(doc.data());
-        });
+          const transactionsData = [];
+          transactionsSnapshot.forEach((doc) => {
+            transactionsData.push(doc.data());
+          });
 
-        transactionsData.sort(
-          (a, b) => b.transaction_date.toDate() - a.transaction_date.toDate()
-        );
-        setTransactions(transactionsData);
+          transactionsData.sort(
+            (a, b) => b.transaction_date.toDate() - a.transaction_date.toDate()
+          );
+          setTransactions(transactionsData);
+        }
       }
 
       setLoading(false);
     };
 
     fetchUserData();
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, selectedCard]);
 
   const handleCardSelection = (card) => {
-    console.log(card)
     setSelectedCard(card); // Actualiza el estado de la tarjeta seleccionada
   };
 
@@ -137,22 +138,26 @@ export const Profile = () => {
               </Card.Body>
             </Card>
           )}
-          <UserCards onSelectCard={handleCardSelection} />{" "}
-          {/* Pasamos el handler como prop */}
+          <UserCards onSelectCard={handleCardSelection} />
+          {/* Muestra las transacciones solo si hay tarjeta seleccionada */}
           <Row>
             <Col md={6} className="mb-4">
               <Card>
                 <Card.Body>
                   <Card.Title>Transacciones </Card.Title>
-                  <Transactions
-                    selectedCardId={selectedCard ? selectedCard.cardId : null} // Actualizado
-                    updateBalance={(newBalance) =>
-                      setAccountData((prevState) => ({
-                        ...prevState,
-                        balance: newBalance,
-                      }))
-                    }
-                  />
+                  {selectedCard ? (
+                    <Transactions
+                      selectedCardId={selectedCard.cardId}
+                      updateBalance={(newBalance) =>
+                        setAccountData((prevState) => ({
+                          ...prevState,
+                          balance: newBalance,
+                        }))
+                      }
+                    />
+                  ) : (
+                    <p>Selecciona una tarjeta para ver las transacciones</p>
+                  )}
                 </Card.Body>
               </Card>
             </Col>
@@ -161,7 +166,11 @@ export const Profile = () => {
               <Card>
                 <Card.Body>
                   <Card.Title>Historial de Transacciones</Card.Title>
-                  <TransactionHistory selectedCardId={selectedCard ? selectedCard.cardId : null} />
+                  {selectedCard ? (
+                    <TransactionHistory selectedCardId={selectedCard.cardId} />
+                  ) : (
+                    <p>Selecciona una tarjeta para ver el historial</p>
+                  )}
                 </Card.Body>
               </Card>
             </Col>
