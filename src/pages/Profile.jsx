@@ -90,9 +90,19 @@ export const Profile = () => {
   const handleCardSelection = (card) => {
     setSelectedCard(card); // Actualiza el estado de la tarjeta seleccionada
   };
+
   const handleImageUpdate = (newImageUrl) => {
     setAccountData((prevData) => ({ ...prevData, profileImage: newImageUrl }));
   };
+
+  const updateCardBalance = (newBalance) => {
+    // Actualiza el saldo de la tarjeta seleccionada en tiempo real
+    setSelectedCard((prevCard) => ({
+      ...prevCard,
+      balance: newBalance,
+    }));
+  };
+
   if (loading) {
     return (
       <Container className="text-center my-5">
@@ -107,7 +117,7 @@ export const Profile = () => {
     <Container className="my-3">
       <Card className="p-4 shadow-sm">
         <Card.Body>
-        <Row className="text-center mb-4">
+          <Row className="text-center mb-4">
             <Col>
               <ProfileImageUpload
                 currentImageUrl={accountData?.profileImage}
@@ -127,19 +137,24 @@ export const Profile = () => {
                     <strong>Tipo de cuenta:</strong> {accountData.accountType}
                   </p>
                   <p>
-                    <strong>Saldo:</strong> $
-                    {selectedCard ? selectedCard.balance : accountData.balance}{" "}
-                    MXN
+                    {selectedCard && (
+                      <>
+                        <strong>CLABE:</strong> {selectedCard.clabeNumber} <br />
+                        <strong>Saldo:</strong> ${selectedCard.balance} MXN
+                      </>
+                    )}
                   </p>
                 </Card.Text>
-                <Button
-                  variant="primary"
-                  onClick={() =>
-                    downloadPDF(accountData, currentUser, transactions)
-                  }
-                >
-                  Descargar Estado de Cuenta
-                </Button>
+                {selectedCard && (
+                  <Button
+                    variant="primary"
+                    onClick={() =>
+                      downloadPDF(accountData, transactions,selectedCard)
+                    }
+                  >
+                    Descargar Estado de Cuenta
+                  </Button>
+                )}
               </Card.Body>
             </Card>
           )}
@@ -153,12 +168,7 @@ export const Profile = () => {
                   {selectedCard ? (
                     <Transactions
                       selectedCardId={selectedCard.cardId}
-                      updateBalance={(newBalance) =>
-                        setAccountData((prevState) => ({
-                          ...prevState,
-                          balance: newBalance,
-                        }))
-                      }
+                      updateBalance={updateCardBalance} // Pasa la función para actualizar el saldo
                     />
                   ) : (
                     <p>Selecciona una tarjeta para ver las transacciones</p>

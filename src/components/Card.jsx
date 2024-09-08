@@ -12,13 +12,10 @@ const CardComponent = ({ card, onClick, isActive }) => {
         <Card.Body>
           <Card.Title>Tarjeta {card.cardNumber}</Card.Title>
           <Card.Text>
-            <strong>Tipo:</strong> {card.card_type}
-          </Card.Text>
-          <Card.Text>
             <strong>Fecha de Expiración:</strong> {card.expiryDate}
           </Card.Text>
           <Card.Text>
-            <strong>Saldo:</strong> ${card.balance}
+            <strong>Tipo:</strong> {card.cardType}
           </Card.Text>
         </Card.Body>
       </Card>
