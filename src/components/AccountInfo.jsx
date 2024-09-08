@@ -8,7 +8,6 @@ import { deleteCard } from "../auth/deleteCard";
 export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDelete }) => {
   const [showModal, setShowModal] = useState(false);
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   
   const handleDelete = async () => {
     let result;
@@ -84,7 +83,6 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
             ) : (
               <p>Reautentícate con tu cuenta de Google para eliminar esta tarjeta.</p>
             )}
-            {error && <p className="text-danger mt-2">{error}</p>}
           </Form>
         </Modal.Body>
         <Modal.Footer>
