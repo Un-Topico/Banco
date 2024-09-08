@@ -139,7 +139,8 @@ export const Profile = () => {
                   <p>
                     {selectedCard && (
                       <>
-                        <strong>CLABE:</strong> {selectedCard.clabeNumber} <br />
+                        <strong>CLABE:</strong> {selectedCard.clabeNumber}{" "}
+                        <br />
                         <strong>Saldo:</strong> ${selectedCard.balance} MXN
                       </>
                     )}
@@ -149,7 +150,7 @@ export const Profile = () => {
                   <Button
                     variant="primary"
                     onClick={() =>
-                      downloadPDF(accountData, transactions,selectedCard)
+                      downloadPDF(accountData, transactions, selectedCard)
                     }
                   >
                     Descargar Estado de Cuenta
@@ -159,6 +160,7 @@ export const Profile = () => {
             </Card>
           )}
           <UserCards onSelectCard={handleCardSelection} />
+         
           {/* Muestra las transacciones solo si hay tarjeta seleccionada */}
           <Row>
             <Col md={6} className="mb-4">
@@ -173,8 +175,10 @@ export const Profile = () => {
                   ) : (
                     <p>Selecciona una tarjeta para ver las transacciones</p>
                   )}
+                  
                 </Card.Body>
               </Card>
+              
             </Col>
 
             <Col md={6} className="mb-4">
