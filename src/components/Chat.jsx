@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc } from 'firebase/firestore';
-import { useAuth } from "../auth/authContex"; // Asegúrate de tener acceso al usuario autenticado
+import { useAuth } from "../auth/authContext"; // Asegúrate de tener acceso al usuario autenticado
 import { app } from "../firebaseConfig";
 import '../styles/Chat.css';
 

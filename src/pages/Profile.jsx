@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../auth/authContex";
+import { useAuth } from "../auth/authContext";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { app } from "../firebaseConfig";
@@ -7,8 +7,8 @@ import { UserProfile } from "../components/UserProfile";
 import { AccountInfo } from "../components/AccountInfo";
 import { TransactionSection } from "../components/TransactionSection";
 import { RealTimeChat } from "../components/RealTimeChat";
-import UserCards from "../components/UserCard"; // Importa UserCards aquí
-import { Container, Spinner, Button } from "react-bootstrap"; // Importa Button aquí
+import UserCards from "../components/UserCard";
+import { Container, Spinner, Button } from "react-bootstrap";
 
 export const Profile = () => {
   const { currentUser } = useAuth();
@@ -71,6 +71,11 @@ export const Profile = () => {
   const handleImageUpdate = (newImageUrl) => setAccountData((prevData) => ({ ...prevData, profileImage: newImageUrl }));
   const updateCardBalance = (newBalance) => setSelectedCard((prevCard) => ({ ...prevCard, balance: newBalance }));
 
+  const handleCardDelete = () => {
+    setSelectedCard(null); // Deselecciona la tarjeta después de eliminarla
+    // Puedes añadir lógica adicional aquí si es necesario
+  };
+
   if (loading) {
     return (
       <Container className="text-center my-5">
@@ -93,6 +98,7 @@ export const Profile = () => {
           accountData={accountData}
           selectedCard={selectedCard}
           transactions={transactions}
+          onCardDelete={handleCardDelete} // Pasa la función de eliminación aquí
         />
       )}
       <UserCards onSelectCard={handleCardSelection} />

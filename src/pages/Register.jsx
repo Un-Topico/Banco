@@ -3,7 +3,7 @@ import { signUpWithEmail, signInWithGoogle } from "../auth/auth"; // Importa la 
 import { useNavigate } from "react-router-dom";
 
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
-import { useAuth } from "../auth/authContex";
+import { useAuth } from "../auth/authContext";
 import {app} from '../firebaseConfig'
 const db = getFirestore(app);
 export const Register = () => {

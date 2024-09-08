@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { signOut, getAuth } from "firebase/auth";
 import { app } from "../firebaseConfig";
-import { useAuth } from "../auth/authContex"; 
+import { useAuth } from "../auth/authContext"; 
 
 export const Header = () => {
   const { currentUser } = useAuth(); // Obtemos el usuario actual del contexto
