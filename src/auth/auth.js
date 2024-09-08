@@ -2,7 +2,8 @@
 import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, sendPasswordResetEmail, signOut, createUserWithEmailAndPassword , signInWithEmailAndPassword} from "firebase/auth";
 import { app } from "../firebaseConfig";
 import { getFirestore, collection, query, where, getDocs, setDoc, doc } from "firebase/firestore";
-
+import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { reauthenticateWithPopup } from "firebase/auth";
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 const db = getFirestore(app); // Initialize Firestore
@@ -63,6 +64,39 @@ const resetPassword = async (email) => {
       errorMessage = "El correo no es válido.";
     }
     return { success: false, message: errorMessage };
+  }
+};
+// Accion para pedir la contraseña antes de borrar una tarjeta
+const reauthenticateUser = async (password) => {
+  const user = auth.currentUser;
+
+  if (user) {
+    const credential = EmailAuthProvider.credential(user.email, password);
+    try {
+      await reauthenticateWithCredential(user, credential);
+      console.log("Usuario reautenticado");
+      return { success: true };
+    } catch (error) {
+      console.error("Error en la reautenticación: ", error);
+      return { success: false, message: error.message };
+    }
+  }
+};
+// Accion para google 
+
+const reauthenticateWithGoogle = async () => {
+  const user = auth.currentUser;
+  const googleProvider = new GoogleAuthProvider();
+
+  if (user) {
+    try {
+      await reauthenticateWithPopup(user, googleProvider);
+      console.log("Usuario reautenticado con Google");
+      return { success: true };
+    } catch (error) {
+      console.error("Error en la reautenticación con Google: ", error);
+      return { success: false, message: error.message };
+    }
   }
 };
 
@@ -127,4 +161,4 @@ const checkSessionExpiration = () => {
 // Llama a la función cuando la app se inicie para verificar la sesión
 checkSessionExpiration();
 
-export { auth, signInWithGoogle, checkSessionExpiration , signUpWithEmail, signInWithEmail, resetPassword};
+export { auth, signInWithGoogle, checkSessionExpiration , signUpWithEmail, signInWithEmail, resetPassword, reauthenticateUser, reauthenticateWithGoogle};
