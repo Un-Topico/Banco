@@ -1,5 +1,5 @@
 // auth.js
-import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, sendPasswordResetEmail, signOut, createUserWithEmailAndPassword , signInWithEmailAndPassword} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup,updatePassword, setPersistence, browserLocalPersistence, sendPasswordResetEmail, signOut, createUserWithEmailAndPassword , signInWithEmailAndPassword} from "firebase/auth";
 import { app } from "../firebaseConfig";
 import { getFirestore, collection, query, where, getDocs, setDoc, doc } from "firebase/firestore";
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
@@ -66,6 +66,23 @@ const resetPassword = async (email) => {
     return { success: false, message: errorMessage };
   }
 };
+
+// Actualizar la contraseña
+const updatePasswordForUser = async (newPassword) => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (user) {
+    try {
+      await updatePassword(user, newPassword);
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: "Error al cambiar la contraseña." };
+    }
+  }
+  return { success: false, message: "Usuario no autenticado." };
+};
+
 // Accion para pedir la contraseña antes de borrar una tarjeta
 const reauthenticateUser = async (password) => {
   const user = auth.currentUser;
@@ -161,4 +178,4 @@ const checkSessionExpiration = () => {
 // Llama a la función cuando la app se inicie para verificar la sesión
 checkSessionExpiration();
 
-export { auth, signInWithGoogle, checkSessionExpiration , signUpWithEmail, signInWithEmail, resetPassword, reauthenticateUser, reauthenticateWithGoogle};
+export { auth, signInWithGoogle, checkSessionExpiration , signUpWithEmail,updatePasswordForUser,  signInWithEmail, resetPassword, reauthenticateUser, reauthenticateWithGoogle};
