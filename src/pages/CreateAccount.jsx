@@ -9,6 +9,7 @@ import { checkUserAccount } from '../auth/checkUserAccount';
 export const CreateAccount = () => {
   const db = getFirestore(app);
 const auth = getAuth(app);
+  const [name, setName] = useState("");
   const [accountType, setAccountType] = useState('Ahorro');
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
@@ -44,6 +45,7 @@ const auth = getAuth(app);
       const accountData = {
         accountId: accountId,
         accountType: accountType,
+        name: name,
         balance: 100, // Saldo inicial
         ownerId: userUid,
         email: userEmail,
@@ -79,6 +81,17 @@ const auth = getAuth(app);
       <Card className="p-4 shadow-sm">
         <Card.Title as="h2" className="mb-4">Crear Cuenta</Card.Title>
         <Form >
+        <Form.Group className="mb-3">
+            <Form.Label column sm={4}>Nombre de usuario</Form.Label>
+              <Form.Control
+                type="text"
+                id="name"
+                onChange={(e) => setName(e.target.value)}
+                maxLength={50}
+                required
+
+              />
+          </Form.Group>
           <Form.Group controlId="accountType" className="mb-3">
             <Form.Label>Tipo de Cuenta</Form.Label>
             <Form.Control

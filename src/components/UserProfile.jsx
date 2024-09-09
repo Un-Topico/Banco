@@ -11,7 +11,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate }) => {
           onImageUpdate={onImageUpdate}
         />
         <h2>Perfil</h2>
-        <p className="h4">Bienvenido, {currentUser.displayName}</p>
+        <p className="h4">Bienvenido, {accountData.name}</p>
         <p className="text-muted">{currentUser.email}</p>
       </Col>
     </Row>
