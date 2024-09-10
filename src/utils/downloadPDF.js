@@ -16,7 +16,7 @@ export const downloadPDF = (account, transactions, selectedCard) => {
   doc.text(`Cuenta: ${account.accountType}`, 20, 60);
   doc.text(`Numero de tarjeta: ${selectedCard.cardNumber} - Tarjeta ${selectedCard.cardType}`, 20, 70);
   doc.text(`CLABE: ${selectedCard.clabeNumber}`, 20, 80);
-  doc.text(`Saldo: $${account.balance} MXN`, 20, 90);
+  doc.text(`Saldo: $${selectedCard.balance} MXN`, 20, 90);
   
 
   // Espacio
