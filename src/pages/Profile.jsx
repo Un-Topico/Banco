@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { FaUserCircle } from "react-icons/fa";
-import { useAuth } from "../auth/authContex";
+import { useAuth } from "../auth/authContext";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { app } from "../firebaseConfig";
-import { Transactions } from "../components/Transactions";
-import { Chat } from "../components/Chat";
-import { SoporteChat } from "../components/SoporteChat";
-import { TransactionHistory } from "../components/TransactionHistory";
-import { downloadPDF } from "../utils/downloadPDF"; 
+import { UserProfile } from "../components/UserProfile";
+import { AccountInfo } from "../components/AccountInfo";
+import { TransactionSection } from "../components/TransactionSection";
+import { RealTimeChat } from "../components/RealTimeChat";
+import UserCards from "../components/UserCard";
+import { Container, Spinner, Button } from "react-bootstrap";
 
 export const Profile = () => {
   const { currentUser } = useAuth();
@@ -16,93 +16,114 @@ export const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
   const [accountData, setAccountData] = useState(null);
-  const [transactions, setTransactions] = useState([]); // Estado para las transacciones
+  const [transactions, setTransactions] = useState([]);
+  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!currentUser) {
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
       const db = getFirestore(app);
 
-      // Verificar rol del usuario
+      // Fetch user role
       const rolesCollection = collection(db, "roles");
-      const q = query(rolesCollection, where("email", "==", currentUser.email));
-      const rolesSnapshot = await getDocs(q);
+      const roleQuery = query(rolesCollection, where("email", "==", currentUser.email));
+      const rolesSnapshot = await getDocs(roleQuery);
 
       if (!rolesSnapshot.empty) {
         const userRoleData = rolesSnapshot.docs[0].data();
         setUserRole(userRoleData.role);
       }
 
-      // Obtener datos de la cuenta
+      // Fetch account data
       const accountsCollection = collection(db, "accounts");
-      const q2 = query(accountsCollection, where("ownerId", "==", currentUser.uid));
-      const querySnapshot = await getDocs(q2);
+      const accountQuery = query(accountsCollection, where("ownerId", "==", currentUser.uid));
+      const accountSnapshot = await getDocs(accountQuery);
 
-      if (querySnapshot.empty) {
-        navigate('/crear-cuenta');
+      if (accountSnapshot.empty) {
+        navigate("/crear-cuenta");
       } else {
-        const accountInfo = querySnapshot.docs[0].data();
+        const accountInfo = accountSnapshot.docs[0].data();
         setAccountData(accountInfo);
 
-        // Obtener transacciones
-        const transactionsRef = collection(db, "transactions");
-        const q3 = query(transactionsRef, where("account_id", "==", `account_${currentUser.uid}`));
-        const transactionsSnapshot = await getDocs(q3);
-        
-        const transactionsData = [];
-        transactionsSnapshot.forEach((doc) => {
-          transactionsData.push(doc.data());
-        });
+        // Fetch transactions if a card is selected
+        if (selectedCard) {
+          const transactionsRef = collection(db, "transactions");
+          const transactionsQuery = query(transactionsRef, where("card_id", "==", `${selectedCard.cardId}`));
+          const transactionsSnapshot = await getDocs(transactionsQuery);
 
-        transactionsData.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
-        setTransactions(transactionsData);
+          const transactionsData = transactionsSnapshot.docs.map(doc => doc.data());
+          transactionsData.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
+          setTransactions(transactionsData);
+        }
       }
 
       setLoading(false);
     };
 
     fetchUserData();
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, selectedCard]);
+
+  const handleCardSelection = (card) => setSelectedCard(card);
+  const handleImageUpdate = (newImageUrl) => setAccountData((prevData) => ({ ...prevData, profileImage: newImageUrl }));
+  const updateCardBalance = (newBalance) => setSelectedCard((prevCard) => ({ ...prevCard, balance: newBalance }));
+
+  const handleCardDelete = () => {
+    setSelectedCard(null); // Deselecciona la tarjeta después de eliminarla
+    // Puedes añadir lógica adicional aquí si es necesario
+  };
+   // Nueva función para actualizar el nombre en tiempo real
+   const handleNameUpdate = (newName) => {
+    setAccountData((prevData) => ({
+      ...prevData,
+      name: newName,
+    }));
+  };
 
   if (loading) {
-    return <p>Cargando...</p>;
+    return (
+      <Container className="text-center my-5">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </Spinner>
+      </Container>
+    );
   }
-  
+
   return (
-    <div className="container text-center">
-      <h2>Perfil</h2>
-      <FaUserCircle size={50} />       
-      <p>Bienvenido, {currentUser.displayName}</p>
-      <p>{currentUser.email}</p>
+    <Container className="my-3">
+      <UserProfile
+        accountData={accountData}
+        currentUser={currentUser}
+        onImageUpdate={handleImageUpdate}
+        onNameUpdate={handleNameUpdate}
+      />
       {accountData && (
-        <div>
-          <p>Tipo de cuenta: {accountData.accountType}</p>
-          <p>Saldo: ${accountData.balance} MXN</p>
-        </div>
+        <AccountInfo
+          accountData={accountData}
+          selectedCard={selectedCard}
+          transactions={transactions}
+          onCardDelete={handleCardDelete} // Pasa la función de eliminación aquí
+        />
       )}
-      <button 
-        className="btn btn-primary"
-        onClick={() => downloadPDF(accountData, currentUser, transactions)}>
-        Descargar Estado de Cuenta
-      </button>
-      <Transactions updateBalance={(newBalance) => setAccountData(prevState => ({ ...prevState, balance: newBalance }))} />
-      <TransactionHistory/>
-      <div className="chat-section">
-        <h3>Chat en Tiempo Real</h3>
-        {userRole === 'soporte' ? <SoporteChat /> : <Chat />}
-      </div>
-      {/* Botón solo para administradores */}
-      {userRole === 'admin' && (
-        <button 
-          className="btn btn-secondary mt-3"
-          onClick={() => navigate('/admin/users')}>
+      <UserCards onSelectCard={handleCardSelection} />
+      <TransactionSection
+        selectedCard={selectedCard}
+        updateCardBalance={updateCardBalance}
+      />
+      <RealTimeChat userRole={userRole} />
+      {userRole === "admin" && (
+        <Button
+          variant="secondary"
+          className="mt-4"
+          onClick={() => navigate("/admin/users")}
+        >
           Panel de Administración
-        </button>
+        </Button>
       )}
-    </div>
+    </Container>
   );
 };
