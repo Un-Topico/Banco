@@ -38,7 +38,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate }) => {
     <Row className="text-center mb-4">
       <Col>
         <h2>Perfil</h2>
-        <ProfileImageUpload/>
+        <ProfileImageUpload currentImageUrl={accountData.profileImage} onImageUpdate={onImageUpdate}/>
         <p className="h4">Bienvenido, {accountData.name}</p>
         <p className="text-muted">{currentUser.email}</p>
 
