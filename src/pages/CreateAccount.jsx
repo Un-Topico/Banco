@@ -51,7 +51,7 @@ export const CreateAccount = () => {
       };
       checkCard(user.uid);
     }
-  }, [auth.currentUser, navigate]);
+  }, [auth.currentUser, navigate,db]);
 
   useEffect(() => {
     // Habilita el botón si la tarjeta ha sido guardada y el nombre está lleno
