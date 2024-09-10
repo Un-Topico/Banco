@@ -20,3 +20,21 @@
     margin-bottom: 1rem;
     border-color: black;
 }
+
+.section-nuestros-productos-container {
+    padding: 50px 0;
+}
+  
+.card {
+    border: none;
+    transition: transform 0.3s ease-in-out;
+}
+  
+.card:hover {
+    transform: scale(1.05);
+}
+
+.carousel-control-next, .carousel-control-prev {
+    width: 5%;
+    color: black;
+}

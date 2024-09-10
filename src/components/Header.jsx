@@ -4,6 +4,7 @@ import { signOut, getAuth } from "firebase/auth";
 import { app } from "../firebaseConfig";
 import { useAuth } from "../auth/authContext"; 
 
+
 export const Header = () => {
   const { currentUser } = useAuth(); // Obtemos el usuario actual del contexto
   const navigate = useNavigate();
@@ -20,9 +21,9 @@ export const Header = () => {
 
   return (
     <header>
-<nav className="navbar navbar-expand-lg navbar-light" style={{backgroundColor: "#50D890"}}>
-  <div className="container-fluid">
-    <a class="navbar-brand" href="/">
+  <nav className="navbar navbar-expand-lg navbar-light" style={{backgroundColor: "#4F98CA"}}>
+  <div className="container-fluid fs-4">
+    <a class="navbar-brand" href="/" >
       <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Flogo_unto.png?alt=media&token=017bedc5-b76b-46b2-bdb3-24be1107872e" 
       alt="Logo UnTópico" 
       width="40" 
@@ -42,23 +43,23 @@ export const Header = () => {
     </button>
     <div className="collapse navbar-collapse" id="navbarNav">
       <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-        <li className="nav-item">
-          <Link className="nav-link active" aria-current="page" to="/">
+        <li className="nav-item" href="/about">
+          <Link className="nav-link" to="/Personas" >
             Personas
           </Link>
         </li>
         <li className="nav-item">
-          <Link className="nav-link" to="/products">
+          <Link className="nav-link" to="/PyMes">
             PyMes
           </Link>
         </li>
-        <li className="nav-item">
+        <li className="nav-item" >
           <Link className="nav-link" to="/about">
             Nosotros
           </Link>
         </li>
         <li className="nav-item">
-          <Link className="nav-link" to="/contact">
+          <Link className="nav-link" to="/sucursales">
             Encuentra tu sucursal
           </Link>
         </li>
@@ -77,12 +78,12 @@ export const Header = () => {
           </button>
         ) : (
           <div>
-              <Link className="btn btn-outline-primary" to="/login">
+            <Link className="btn btn-outline-primary" to="/login">
             Login
-          </Link>
+            </Link>
             <Link className="btn btn-outline-primary" to="/crear-cuenta">
             Crear cuenta
-          </Link>
+            </Link>
           </div>
         
           
