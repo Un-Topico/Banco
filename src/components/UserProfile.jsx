@@ -1,24 +1,29 @@
 import React, { useState } from "react";
 import { reauthenticateUser, updatePasswordForUser } from "../auth/auth"; // Funciones para reautenticar y actualizar contraseña
 import { Row, Col, Button, Modal, Form, Alert } from "react-bootstrap";
-import {ProfileImageUpload} from './ProfileImageUpload'
-export const UserProfile = ({ accountData, currentUser, onImageUpdate }) => {
+import { ProfileImageUpload } from './ProfileImageUpload';
+import { FaEdit } from "react-icons/fa"; // Ícono de edición
+import { getFirestore, doc, updateDoc } from "firebase/firestore"; // Firebase para actualizar el nombre
+import { app } from "../firebaseConfig"; // Configuración de Firebase
+
+export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate }) => { 
+  // Añadí onNameUpdate que será pasado desde el componente padre
   const [showModal, setShowModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false); // Nuevo estado para editar el nombre
+  const [newName, setNewName] = useState(accountData.name); // Guardar el nombre editado
 
   const handlePasswordChange = async () => {
     setError(null);
     setSuccess(false);
-    
+
     try {
-      // Reautenticar al usuario antes de actualizar la contraseña
       const reauthResult = await reauthenticateUser(currentPassword);
-      
+
       if (reauthResult.success) {
-        // Cambiar la contraseña
         const result = await updatePasswordForUser(newPassword);
         if (result.success) {
           setSuccess(true);
@@ -34,15 +39,53 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate }) => {
     }
   };
 
+  const handleNameEdit = () => {
+    setIsEditingName(true); // Habilitar edición del nombre
+  };
+
+  const handleNameSave = async () => {
+    const db = getFirestore(app);
+    const userDocRef = doc(db, "accounts", "account_" + currentUser.uid);
+
+    try {
+      await updateDoc(userDocRef, { name: newName }); // Actualizar el nombre en Firestore
+      onNameUpdate(newName); // Llamar a la función para actualizar el nombre en el estado global
+      setIsEditingName(false); // Desactivar el modo de edición
+    } catch (error) {
+      console.error("Error al actualizar el nombre:", error);
+    }
+  };
+
   return (
     <Row className="text-center mb-4">
       <Col>
         <h2>Perfil</h2>
-        <ProfileImageUpload currentImageUrl={accountData.profileImage} onImageUpdate={onImageUpdate}/>
-        <p className="h4">Bienvenido, {accountData.name}</p>
+        <ProfileImageUpload currentImageUrl={accountData.profileImage} onImageUpdate={onImageUpdate} />
+
+        {/* Mostrar el nombre con opción de editar */}
+        <div className="d-flex justify-content-center align-items-center">
+          {isEditingName ? (
+            <Form.Control
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="me-2"
+              style={{ maxWidth: "200px" }}
+            />
+          ) : (
+            <p className="h4 me-2">Bienvenido, {accountData.name}</p>
+          )}
+          <FaEdit onClick={handleNameEdit} style={{ cursor: "pointer" }} />
+
+          {isEditingName && (
+            <Button variant="primary" size="sm" className="ms-2" onClick={handleNameSave}>
+              Guardar
+            </Button>
+          )}
+        </div>
+
         <p className="text-muted">{currentUser.email}</p>
 
-        {/* Botón para abrir el modal */}
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           Cambiar Contraseña
         </Button>

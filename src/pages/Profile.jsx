@@ -75,6 +75,13 @@ export const Profile = () => {
     setSelectedCard(null); // Deselecciona la tarjeta después de eliminarla
     // Puedes añadir lógica adicional aquí si es necesario
   };
+   // Nueva función para actualizar el nombre en tiempo real
+   const handleNameUpdate = (newName) => {
+    setAccountData((prevData) => ({
+      ...prevData,
+      name: newName,
+    }));
+  };
 
   if (loading) {
     return (
@@ -92,6 +99,7 @@ export const Profile = () => {
         accountData={accountData}
         currentUser={currentUser}
         onImageUpdate={handleImageUpdate}
+        onNameUpdate={handleNameUpdate}
       />
       {accountData && (
         <AccountInfo
