@@ -87,7 +87,7 @@ export const Home = () => {
               </div>
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
-                  <img src="imagen2.png" alt="Producto 2" className="img-fluid my-3" />
+                  <FontAwesomeIcon icon={faCoffee} size="3x" className="my-3" />
                   <div className="card-body">
                     <h5 className="card-title">Producto 2</h5>
                     <p className="card-text">Detalles del producto 2.</p>
