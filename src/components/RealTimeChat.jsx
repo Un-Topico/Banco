@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card } from "react-bootstrap";
 import { Chat } from "./Chat";
 import { SoporteChat } from "./SoporteChat";
-import { AiOutlineMessage } from "react-icons/ai"; // Importamos el ícono de chat
+import { AiOutlineMessage, AiOutlineClose } from "react-icons/ai"; // Importamos el ícono de chat y el de cerrar
 import "../styles/Chat.css"; // Asegúrate de agregar las clases al archivo CSS
 
 export const RealTimeChat = ({ userRole }) => {
@@ -22,9 +22,13 @@ export const RealTimeChat = ({ userRole }) => {
       {/* Chat flotante que se muestra si isChatOpen es true */}
       {isChatOpen && (
         <div className="chat-window">
-          <Card className="mt-4">
+          <Card>
             <Card.Body>
-              <Card.Title>Chat en Tiempo Real</Card.Title>
+              <div className="chat-header">
+                <Card.Title>Chat en Tiempo Real</Card.Title>
+                {/* Botón para cerrar el chat */}
+                <AiOutlineClose size={25} onClick={toggleChat} className="close-icon" />
+              </div>
               {userRole === "soporte" ? <SoporteChat /> : <Chat />}
             </Card.Body>
           </Card>
