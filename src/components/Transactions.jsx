@@ -132,7 +132,7 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
         };
   
         await saveTransaction(recipientTransactionData);
-  
+        updateBalance(newBalance); 
       } else {
         // Manejo de otros tipos de transacciones (Depósito o Retiro)
         if (transactionType === "Deposito") {
