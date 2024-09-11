@@ -8,6 +8,9 @@ export const ChatWindow = ({ chat }) => {
   const [messages, setMessages] = useState([]);
   const [newReply, setNewReply] = useState('');
 
+  // Crear una referencia al archivo de sonido
+  const notificationSound = new Audio('https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12');
+
   // useEffect para obtener los mensajes del chat seleccionado
   useEffect(() => {
     const db = getFirestore(app);
@@ -47,6 +50,9 @@ export const ChatWindow = ({ chat }) => {
       lastMessage: newReply,
       lastMessageTimestamp: serverTimestamp(),
     }, { merge: true });
+
+    // Reproducir el sonido de notificación
+    notificationSound.play();
 
     setNewReply(''); // Limpiar el campo de texto
   };
