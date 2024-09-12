@@ -5,6 +5,8 @@ import { app } from "../firebaseConfig";
 import '../styles/Chat.css';
 
 export const Chat = () => {
+   // Crear una referencia al archivo de sonido
+   const notificationSoundRef = useRef(new Audio('https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12'));
   const { currentUser } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -15,13 +17,15 @@ export const Chat = () => {
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight; // Desplazar al final
+       // Reproducir el sonido de notificación  
+       notificationSoundRef.current.play();
     }
   };
 
   useEffect(() => {
     const messagesRef = collection(db, `chats/${currentUser.uid}/messages`);
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
-
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -31,10 +35,12 @@ export const Chat = () => {
     });
 
     return () => unsubscribe();
+    
   }, [db, currentUser.uid]);
 
   useEffect(() => {
     scrollToBottom(); // Desplazar hacia el final cada vez que se actualicen los mensajes
+    
   }, [messages]);
 
   const handleSendMessage = async (e) => {
@@ -56,7 +62,7 @@ export const Chat = () => {
       lastMessage: newMessage,
       lastMessageTimestamp: serverTimestamp(),
     }, { merge: true });
-
+   
     setNewMessage('');
   };
 
