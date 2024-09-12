@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect, useCallback} from "react";
 import { getFirestore, collection, doc, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../auth/authContext";
 import { app } from "../firebaseConfig";
@@ -19,14 +19,8 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
   
   const db = getFirestore(app);
 
-  useEffect(() => {
-    if (transactionType === "Transferencia") {
-      fetchContacts();
-    }
-  }, [transactionType]);
-
   // Cargar contactos guardados desde Firestore
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     try {
       const contactsQuery = query(collection(db, "contactos"), where("userId", "==", currentUser.uid));
       const contactsSnapshot = await getDocs(contactsQuery);
@@ -39,7 +33,13 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
       console.error("Error al obtener contactos:", error);
       setError("Hubo un error al cargar los contactos.");
     }
-  };
+  }, [currentUser.uid, db]);
+
+  useEffect(() => {
+    if (transactionType === "Transferencia") {
+      fetchContacts();
+    }
+  }, [transactionType, fetchContacts]);
 
   // Asignar automáticamente el correo del contacto si solo existe uno.
   useEffect(() => {
