@@ -24,6 +24,8 @@ export const ChatWindow = ({ chat }) => {
         ...doc.data(),
       }));
       setMessages(msgs); // Actualiza los mensajes en tiempo real
+      // Reproducir el sonido de notificación
+    notificationSound.play();
     });
 
     return () => unsubscribe();
@@ -51,8 +53,7 @@ export const ChatWindow = ({ chat }) => {
       lastMessageTimestamp: serverTimestamp(),
     }, { merge: true });
 
-    // Reproducir el sonido de notificación
-    notificationSound.play();
+    
 
     setNewReply(''); // Limpiar el campo de texto
   };
