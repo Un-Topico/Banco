@@ -23,10 +23,10 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
     if (transactionType === "Transferencia") {
       fetchContacts();
     }
-  }, [transactionType]);
+  }, [transactionType, fetchContacts]);
 
   // Cargar contactos guardados desde Firestore
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     try {
       const contactsQuery = query(collection(db, "contactos"), where("userId", "==", currentUser.uid));
       const contactsSnapshot = await getDocs(contactsQuery);
@@ -39,7 +39,7 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
       console.error("Error al obtener contactos:", error);
       setError("Hubo un error al cargar los contactos.");
     }
-  };
+  }, [currentUser.uid]);
 
   // Asignar automáticamente el correo del contacto si solo existe uno.
   useEffect(() => {
