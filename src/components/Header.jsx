@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { signOut, getAuth } from "firebase/auth";
 import { app } from "../firebaseConfig";
-import { useAuth } from "../auth/authContex"; 
+import { useAuth } from "../auth/authContext"; 
 
 export const Header = () => {
   const { currentUser } = useAuth(); // Obtemos el usuario actual del contexto
@@ -61,9 +61,16 @@ export const Header = () => {
             Logout
           </button>
         ) : (
-          <Link className="btn btn-outline-primary" to="/login">
+          <div>
+              <Link className="btn btn-outline-primary" to="/login">
             Login
           </Link>
+            <Link className="btn btn-outline-primary" to="/crear-cuenta">
+            Crear cuenta
+          </Link>
+          </div>
+        
+          
         )}
       </div>
     </div>
