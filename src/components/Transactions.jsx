@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import { getFirestore, collection, doc, getDoc, setDoc, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../auth/authContext";
 import { app } from "../firebaseConfig";
@@ -11,9 +11,42 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
   const [recipientEmail, setRecipientEmail] = useState(''); // Correo del destinatario
   const [error, setError] = useState(null); // Estado para mostrar errores
   const [success, setSuccess] = useState(null); // Estado para mostrar éxito
+  const [contacts, setContacts] = useState([]); // Lista de contactos guardados
+  const [useSavedContact, setUseSavedContact] = useState(false); // Indica si se selecciona un contacto guardado
+  const [newContactEmail, setNewContactEmail] = useState('');
+  const [newContactAlias, setNewContactAlias] = useState('');
   const { currentUser } = useAuth();
   
   const db = getFirestore(app);
+
+  useEffect(() => {
+    if (transactionType === "Transferencia") {
+      fetchContacts();
+    }
+  }, [transactionType]);
+
+  // Cargar contactos guardados desde Firestore
+  const fetchContacts = async () => {
+    try {
+      const contactsQuery = query(collection(db, "contactos"), where("userId", "==", currentUser.uid));
+      const contactsSnapshot = await getDocs(contactsQuery);
+      const contactsList = contactsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setContacts(contactsList);
+    } catch (error) {
+      console.error("Error al obtener contactos:", error);
+      setError("Hubo un error al cargar los contactos.");
+    }
+  };
+
+  // Asignar automáticamente el correo del contacto si solo existe uno.
+  useEffect(() => {
+    if (contacts.length === 1) {
+      setRecipientEmail(contacts[0].email); // Asignar automáticamente el correo del único contacto
+    }
+  }, [contacts]);
 
   const getCardDoc = async () => {
     try {
@@ -24,7 +57,6 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
 
       const cardDocRef = doc(db, "cards", selectedCardId);
       const cardDoc = await getDoc(cardDocRef);
-
       if (!cardDoc.exists()) {
         setError("La tarjeta seleccionada no existe.");
         return null;
@@ -41,7 +73,6 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
     try {
       const recipientData = recipientDoc.data();
       const recipientNewBalance = recipientData.balance + parseFloat(amount);
-      
       await setDoc(recipientDoc.ref, { balance: recipientNewBalance }, { merge: true });
       console.log("Balance del destinatario actualizado.");
     } catch (error) {
@@ -206,6 +237,38 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
     }
   };
 
+  const handleAddContact = async (e) => {
+    e.preventDefault();
+    if (!newContactEmail || !newContactAlias) {
+      setError("Por favor, completa todos los campos.");
+      return;
+    }
+
+    try {
+      const existingContactQuery = query(collection(db, "contactos"), where("email", "==", newContactEmail), where("userId", "==", currentUser.uid));
+      const existingContactSnapshot = await getDocs(existingContactQuery);
+      if (!existingContactSnapshot.empty) {
+        setError("El contacto ya está guardado.");
+        return;
+      }
+
+      const contactData = {
+        email: newContactEmail,
+        alias: newContactAlias,
+        userId: currentUser.uid
+      };
+
+      await setDoc(doc(db, "contactos", newContactEmail), contactData);
+      setSuccess("Contacto guardado con éxito.");
+      setNewContactEmail('');
+      setNewContactAlias('');
+      fetchContacts();
+    } catch (error) {
+      console.error("Error al guardar el contacto:", error);
+      setError("Hubo un error al guardar el contacto.");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -231,46 +294,70 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
 
   return (
     <Container className="text-center mt-5">
-      <h1>Transacciones</h1>
+      <h2>Realizar Transacción</h2>
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}
       <Form onSubmit={handleSubmit}>
         <Form.Group as={Row} className="mb-3">
-          <Form.Label column sm={4}>Selecciona el tipo de transferencia</Form.Label>
+          <Form.Label column sm={4}>Tipo de transacción</Form.Label>
           <Col sm={8}>
-            <Form.Select
-              id="transactionType"
-              value={transactionType}
-              onChange={(e) => setTransactionType(e.target.value)}
-            >
+            <Form.Control as="select" value={transactionType} onChange={(e) => setTransactionType(e.target.value)} required>
               <option value="Deposito">Depósito</option>
               <option value="Retiro">Retiro</option>
               <option value="Transferencia">Transferencia</option>
-            </Form.Select>
+            </Form.Control>
           </Col>
         </Form.Group>
         {transactionType === "Transferencia" && (
-          <Form.Group as={Row} className="mb-3">
-            <Form.Label column sm={4}>Correo electrónico del destinatario</Form.Label>
-            <Col sm={8}>
-              <Form.Control
-                type="email"
-                id="recipientEmail"
-                value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
-                required
-              />
-            </Col>
-          </Form.Group>
+          <>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={4}>Correo electrónico del destinatario</Form.Label>
+              <Col sm={8}>
+                <Form.Control
+                  type="email"
+                  value={recipientEmail}
+                  onChange={(e) => setRecipientEmail(e.target.value)}
+                  required
+                />
+              </Col>
+            </Form.Group>
+            <Form.Check
+              type="checkbox"
+              label="Usar contacto guardado"
+              checked={useSavedContact}
+              onChange={(e) => setUseSavedContact(e.target.checked)}
+            />
+            {useSavedContact && (
+              <Form.Group as={Row} className="mb-3">
+                <Form.Label column sm={4}>Seleccionar contacto guardado</Form.Label>
+                <Col sm={8}>
+                  <Form.Control
+                    as="select"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    required
+                    disabled={contacts.length === 1} // Si hay solo un contacto, deshabilitar el selector
+                  >
+                    {contacts.map(contact => (
+                      <option key={contact.email} value={contact.email}>
+                        {contact.alias} ({contact.email})
+                      </option>
+                    ))}
+                  </Form.Control>
+                </Col>
+              </Form.Group>
+            )}
+          </>
         )}
         <Form.Group as={Row} className="mb-3">
           <Form.Label column sm={4}>Monto</Form.Label>
           <Col sm={8}>
             <Form.Control
               type="number"
-              id="amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              step="0.01"
+              min="0"
               required
             />
           </Col>
@@ -280,7 +367,6 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
           <Col sm={8}>
             <Form.Control
               type="text"
-              id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -288,6 +374,37 @@ export const Transactions = ({ selectedCardId, updateBalance }) => {
         </Form.Group>
         <Button variant="primary" type="submit">Realizar Transacción</Button>
       </Form>
+
+      {transactionType === "Transferencia" && (
+        <div className="mt-5">
+          <h3>Agregar nuevo contacto</h3>
+          <Form onSubmit={handleAddContact}>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={4}>Correo electrónico del contacto</Form.Label>
+              <Col sm={8}>
+                <Form.Control
+                  type="email"
+                  value={newContactEmail}
+                  onChange={(e) => setNewContactEmail(e.target.value)}
+                  required
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+              <Form.Label column sm={4}>Alias del contacto</Form.Label>
+              <Col sm={8}>
+                <Form.Control
+                  type="text"
+                  value={newContactAlias}
+                  onChange={(e) => setNewContactAlias(e.target.value)}
+                  required
+                />
+              </Col>
+            </Form.Group>
+            <Button variant="primary" type="submit">Guardar Contacto</Button>
+          </Form>
+        </div>
+      )}
     </Container>
   );
 };
