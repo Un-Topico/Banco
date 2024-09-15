@@ -1,8 +1,7 @@
-// TransactionSection.jsx
 import React from "react";
 import { Card, Row, Col } from "react-bootstrap";
 import { TransactionsForm } from "./TransactionForm";
-import { TransactionHistory } from "./TransactionHistory";
+import {TransactionHistory} from './TransactionHistory';
 import { useAuth } from "../auth/authContext"; // Asegúrate de importar el hook correcto
 
 export const TransactionSection = ({ selectedCard, updateCardBalance }) => {
