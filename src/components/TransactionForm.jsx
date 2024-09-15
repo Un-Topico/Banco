@@ -1,0 +1,96 @@
+import React, { useState } from "react";
+import { Form, Button, Alert, Container, Row, Col } from "react-bootstrap";
+import Contacts from "./Contacts";
+import { handleTransaction } from "../services/transactionService";
+import { getCardDoc } from "../services/firestoreTransactionService";
+
+export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance }) => {
+  const [transactionType, setTransactionType] = useState("Deposito");
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const cardDoc = await getCardDoc(selectedCardId);
+      await handleTransaction(cardDoc, transactionType, amount, description, recipientEmail, currentUser, updateBalance);
+      setSuccess("Transacción realizada con éxito.");
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleContactSelect = (email) => {
+    setRecipientEmail(email);
+  };
+
+  return (
+    <Container>
+      <Row className="justify-content-center">
+        <Col>
+          <h2>Realizar Transacción</h2>
+          {error && <Alert variant="danger">{error}</Alert>}
+          {success && <Alert variant="success">{success}</Alert>}
+
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Tipo de Transacción</Form.Label>
+              <Form.Select value={transactionType} onChange={(e) => setTransactionType(e.target.value)}>
+                <option value="Deposito">Depósito</option>
+                <option value="Retiro">Retiro</option>
+                <option value="Transferencia">Transferencia</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Monto</Form.Label>
+              <Form.Control
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Ingresa el monto"
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Descripción</Form.Label>
+              <Form.Control
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Descripción opcional"
+              />
+            </Form.Group>
+
+            {transactionType === "Transferencia" && (
+              <>
+                <Form.Group className="mb-3">
+                  <Form.Label>Correo del destinatario</Form.Label>
+                  <Form.Control
+                    type="email"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    placeholder="Ingresa el correo del destinatario"
+                    required={transactionType === "Transferencia"}
+                  />
+                </Form.Group>
+                <Contacts currentUser={currentUser} setError={setError} setSuccess={setSuccess} onContactSelect={handleContactSelect} />
+              </>
+            )}
+
+            <Button variant="primary" type="submit">
+              Realizar Transacción
+            </Button>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
