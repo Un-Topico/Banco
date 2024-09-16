@@ -1,16 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Button, Alert, Container, Row, Col } from "react-bootstrap";
 import Contacts from "./Contacts";
 import { handleTransaction } from "../services/transactionService";
-import { getCardDoc } from "../services/firestoreTransactionService";
+import { getCardDoc, listenToCardDoc } from "../services/firestoreTransactionService";
 
 export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance }) => {
   const [transactionType, setTransactionType] = useState("Deposito");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientClabe, setRecipientClabe] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  useEffect(() => {
+    if (selectedCardId) {
+      const unsubscribe = listenToCardDoc(selectedCardId, updateBalance);
+      return () => unsubscribe();
+    }
+  }, [selectedCardId, updateBalance]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +27,27 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
 
     try {
       const cardDoc = await getCardDoc(selectedCardId);
-      await handleTransaction(cardDoc, transactionType, amount, description, recipientEmail, currentUser, updateBalance);
+
+      // Validar campo de entrada
+      if (transactionType === "Transferencia" && !recipientEmail && !recipientClabe) {
+        throw new Error("Debes ingresar un correo electrónico o un número CLABE del destinatario.");
+      }
+
+      await handleTransaction(
+        cardDoc,
+        transactionType,
+        amount,
+        description,
+        recipientEmail,
+        recipientClabe,
+        currentUser
+      );
+
+      // Limpiar campos del formulario después de una transacción exitosa
+      setAmount("");
+      setDescription("");
+      setRecipientEmail("");
+      setRecipientClabe("");
       setSuccess("Transacción realizada con éxito.");
     } catch (error) {
       setError(error.message);
@@ -28,7 +56,12 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
 
   const handleContactSelect = (email) => {
     setRecipientEmail(email);
+    setRecipientClabe(""); // Limpiar número CLABE si se selecciona un contacto
   };
+
+  // Determinar si los campos deben estar deshabilitados
+  const isEmailDisabled = recipientClabe !== "";
+  const isClabeDisabled = recipientEmail !== "";
 
   return (
     <Container>
@@ -78,7 +111,17 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
                     value={recipientEmail}
                     onChange={(e) => setRecipientEmail(e.target.value)}
                     placeholder="Ingresa el correo del destinatario"
-                    required={transactionType === "Transferencia"}
+                    disabled={isEmailDisabled}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Número CLABE del destinatario</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={recipientClabe}
+                    onChange={(e) => setRecipientClabe(e.target.value)}
+                    placeholder="Ingresa el número CLABE del destinatario"
+                    disabled={isClabeDisabled}
                   />
                 </Form.Group>
                 <Contacts currentUser={currentUser} setError={setError} setSuccess={setSuccess} onContactSelect={handleContactSelect} />
