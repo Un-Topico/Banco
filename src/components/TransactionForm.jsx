@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Form, Button, Alert, Container, Row, Col } from "react-bootstrap";
 import Contacts from "./Contacts";
 import { handleTransaction } from "../services/transactionService";
@@ -13,12 +13,23 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  const lastBalanceRef = useRef(null); // Usar useRef para almacenar el último balance
+
+  // Memoriza la función updateBalance para evitar renderizados innecesarios
+  const memoizedUpdateBalance = useCallback((newBalance) => {
+    // Comparamos el balance actual con el último balance conocido
+    if (newBalance !== lastBalanceRef.current) {
+      updateBalance(newBalance);
+      lastBalanceRef.current = newBalance; // Actualizamos el balance
+    }
+  }, [updateBalance]);
+
   useEffect(() => {
     if (selectedCardId) {
-      const unsubscribe = listenToCardDoc(selectedCardId, updateBalance);
+      const unsubscribe = listenToCardDoc(selectedCardId, memoizedUpdateBalance);
       return () => unsubscribe();
     }
-  }, [selectedCardId, updateBalance]);
+  }, [selectedCardId, memoizedUpdateBalance]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +51,8 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
         description,
         recipientEmail,
         recipientClabe,
-        currentUser
+        currentUser,
+        memoizedUpdateBalance // Pasa la función memorizada
       );
 
       // Limpiar campos del formulario después de una transacción exitosa
@@ -124,7 +136,12 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
                     disabled={isClabeDisabled}
                   />
                 </Form.Group>
-                <Contacts currentUser={currentUser} setError={setError} setSuccess={setSuccess} onContactSelect={handleContactSelect} />
+                <Contacts
+                  currentUser={currentUser}
+                  setError={setError}
+                  setSuccess={setSuccess}
+                  onContactSelect={handleContactSelect}
+                />
               </>
             )}
 

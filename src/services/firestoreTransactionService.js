@@ -14,45 +14,6 @@ export const getCardDoc = async (selectedCardId) => {
   return cardDoc;
 };
 
-export const getCardDocByClabe = async (clabeNumber) => {
-  // Buscar la tarjeta asociada al número CLABE en la colección 'cards'
-  const cardsRef = collection(db, "cards");
-  const q = query(cardsRef, where("clabeNumber", "==", clabeNumber));
-  const querySnapshot = await getDocs(q);
-
-  if (querySnapshot.empty) {
-    throw new Error("No se encontró una tarjeta asociada a este número CLABE.");
-  }
-
-  // Devolver el primer documento encontrado
-  return querySnapshot.docs[0];
-};
-
-export const getCardDocByEmail = async (email) => {
-  // Obtener el 'ownerId' asociado al correo electrónico del destinatario desde la colección 'accounts'
-  const accountsRef = collection(db, "accounts");
-  const q = query(accountsRef, where("email", "==", email));
-  const querySnapshot = await getDocs(q);
-
-  if (querySnapshot.empty) {
-    throw new Error("No se encontró una cuenta asociada a este correo electrónico.");
-  }
-
-  const recipientAccount = querySnapshot.docs[0].data();
-  const recipientOwnerId = recipientAccount.ownerId;
-
-  // Buscar la tarjeta asociada al 'ownerId' en la colección 'cards'
-  const cardsRef = collection(db, "cards");
-  const cardQuery = query(cardsRef, where("ownerId", "==", recipientOwnerId));
-  const cardSnapshot = await getDocs(cardQuery);
-
-  if (cardSnapshot.empty) {
-    throw new Error("El destinatario no tiene una tarjeta asociada.");
-  }
-
-  // Devolver el primer documento encontrado
-  return cardSnapshot.docs[0];
-};
 export const listenToCardDoc = (cardId, onBalanceUpdate) => {
   const cardDocRef = doc(db, "cards", cardId);
   return onSnapshot(cardDocRef, (doc) => {
