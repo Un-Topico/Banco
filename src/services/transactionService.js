@@ -1,59 +1,75 @@
-import { saveTransaction, saveTransfer, updateRecipientBalance } from './firestoreTransactionService';
+import { saveTransaction, saveTransfer, updateRecipientBalance,getPhoneNumberByOwnerId } from './firestoreTransactionService';
 import { getFirestore, query, collection, where, getDocs, setDoc } from 'firebase/firestore';
 
+import axios from 'axios'; // Asegúrate de tener axios instalado 
 const db = getFirestore();
-
-export const handleTransaction = async (cardDoc, transactionType, amount, description, recipientEmail, recipientClabe, currentUser, updateBalance) => {
+const sendMessage = async (phoneNumber, amount) => {
+    try {
+      await axios.post("https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-ab5e80b6-8190-4404-9b75-ead553014c5a/twilio-package/send-message", {
+        to: phoneNumber,
+        body: `Has recibido una transferencia de ${amount} MXN.`,
+      });
+    } catch (error) {
+      console.error("Error al enviar el mensaje:", error);
+    }
+  };
+  
+  export const handleTransaction = async (cardDoc, transactionType, amount, description, recipientEmail, recipientClabe, currentUser, updateBalance) => {
     let newBalance = cardDoc.data().balance;
-
+  
     if (transactionType === "Transferencia") {
-        if (recipientEmail === currentUser.email || recipientClabe === currentUser.email) {
-            throw new Error("No puedes enviarte dinero a ti mismo.");
-        }
-
-        let recipientCardDoc;
-        if (recipientClabe) {
-            // Buscar tarjeta por clabeNumber
-            recipientCardDoc = await getCardDocByClabe(recipientClabe);
-        } else if (recipientEmail) {
-            // Buscar tarjeta por correo electrónico
-            recipientCardDoc = await getCardDocByEmail(recipientEmail);
-        } else {
-            throw new Error("Debes ingresar un correo electrónico o un número CLABE del destinatario.");
-        }
-
-        try {
-            if (newBalance < amount) throw new Error("No tienes suficiente saldo para realizar esta transferencia.");
-
-            newBalance -= parseFloat(amount);
-
-            await updateRecipientBalance(recipientCardDoc, amount);
-            await saveTransferData(cardDoc, recipientCardDoc, amount, description);
-            await saveTransactionData(cardDoc, recipientCardDoc, amount, description, transactionType);
-
-            await setDoc(cardDoc.ref, { balance: newBalance }, { merge: true });
-            updateBalance(newBalance);
-        } catch (error) {
-            console.error('Error in handleTransaction:', error.message);
-            throw error;
-        }
-    } else {
-        newBalance = transactionType === "Deposito" ? newBalance + parseFloat(amount) : newBalance - parseFloat(amount);
-
-        await saveTransaction({
-            transaction_id: `transaction_${Date.now()}`,
-            card_id: cardDoc.id,
-            transaction_type: transactionType,
-            amount: parseFloat(amount),
-            transaction_date: new Date(),
-            description: description || "Sin descripción",
-            status: transactionType === "Deposito" ? "received" : "sent",
-        });
-
+      if (recipientEmail === currentUser.email || recipientClabe === currentUser.email) {
+        throw new Error("No puedes enviarte dinero a ti mismo.");
+      }
+  
+      let recipientCardDoc;
+      if (recipientClabe) {
+        // Buscar tarjeta por clabeNumber
+        recipientCardDoc = await getCardDocByClabe(recipientClabe);
+      } else if (recipientEmail) {
+        // Buscar tarjeta por correo electrónico
+        recipientCardDoc = await getCardDocByEmail(recipientEmail);
+      } else {
+        throw new Error("Debes ingresar un correo electrónico o un número CLABE del destinatario.");
+      }
+  
+      try {
+        if (newBalance < amount) throw new Error("No tienes suficiente saldo para realizar esta transferencia.");
+  
+        newBalance -= parseFloat(amount);
+  
+        await updateRecipientBalance(recipientCardDoc, amount);
+        await saveTransferData(cardDoc, recipientCardDoc, amount, description);
+        await saveTransactionData(cardDoc, recipientCardDoc, amount, description, transactionType);
+  
         await setDoc(cardDoc.ref, { balance: newBalance }, { merge: true });
         updateBalance(newBalance);
+  
+        // Obtener el número de teléfono del destinatario y enviar el mensaje
+        const recipientOwnerId = recipientCardDoc.data().ownerId;
+        const recipientPhoneNumber = await getPhoneNumberByOwnerId(recipientOwnerId);
+        await sendMessage(recipientPhoneNumber, amount);
+      } catch (error) {
+        console.error('Error in handleTransaction:', error.message);
+        throw error;
+      }
+    } else {
+      newBalance = transactionType === "Deposito" ? newBalance + parseFloat(amount) : newBalance - parseFloat(amount);
+  
+      await saveTransaction({
+        transaction_id: `transaction_${Date.now()}`,
+        card_id: cardDoc.id,
+        transaction_type: transactionType,
+        amount: parseFloat(amount),
+        transaction_date: new Date(),
+        description: description || "Sin descripción",
+        status: transactionType === "Deposito" ? "received" : "sent",
+      });
+  
+      await setDoc(cardDoc.ref, { balance: newBalance }, { merge: true });
+      updateBalance(newBalance);
     }
-};
+  };
 
 const saveTransferData = async (cardDoc, recipientCardDoc, amount, description) => {
     await saveTransfer({
