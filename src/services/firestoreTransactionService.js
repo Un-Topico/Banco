@@ -2,7 +2,6 @@ import { getFirestore, collection, doc, getDoc, setDoc, query, where, getDocs,on
 import { app } from "../firebaseConfig";
 
 const db = getFirestore(app);
-// En firestoeTransactionService.js
 export const getPhoneNumberByOwnerId = async (ownerId) => {
   try {
     const accountsRef = collection(db, "accounts");

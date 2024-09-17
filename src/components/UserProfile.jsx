@@ -14,7 +14,9 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false); // Nuevo estado para editar el nombre
+  const [isEditingPhone, setIsEditingPhone] = useState(false)
   const [newName, setNewName] = useState(accountData.name); // Guardar el nombre editado
+  const [newPhone, setNewPhone] = useState(accountData.phoneNumber)
 
   const handlePasswordChange = async () => {
     setError(null);
@@ -55,6 +57,22 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
       console.error("Error al actualizar el nombre:", error);
     }
   };
+  const handlePhoneEdit = () => {
+    setIsEditingPhone(true); // Habilitar edición del nombre
+  };
+
+  const handlePhoneSave = async () => {
+    const db = getFirestore(app);
+    const userDocRef = doc(db, "accounts", "account_" + currentUser.uid);
+
+    try {
+      await updateDoc(userDocRef, { phoneNumber: "+52"+newPhone.trim() }); // Actualizar el nombre en Firestore
+      onNameUpdate(newPhone); // Llamar a la función para actualizar el nombre en el estado global
+      setIsEditingPhone(false); // Desactivar el modo de edición
+    } catch (error) {
+      console.error("Error al actualizar el numero:", error);
+    }
+  };
 
   return (
     <Row className="text-center mb-4">
@@ -82,8 +100,28 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
               Guardar
             </Button>
           )}
+          
         </div>
+          <div className="d-flex justify-content-center align-items-center">
+          {isEditingPhone ? (
+            <Form.Control
+              type="number"
+              value={newPhone}
+              onChange={(e) => setNewPhone(e.target.value)}
+              className="me-2"
+              style={{ maxWidth: "200px" }}
+            />
+          ) : (
+            <p className="h4 me-2">Telefono {accountData.phoneNumber}</p>
+          )}
+          <FaEdit onClick={handlePhoneEdit} style={{ cursor: "pointer" }} />
 
+          {isEditingPhone && (
+            <Button variant="primary" size="sm" className="ms-2" onClick={handlePhoneSave}>
+              Guardar
+            </Button>
+          )}
+          </div>
         <p className="text-muted">{currentUser.email}</p>
 
         <Button variant="secondary" onClick={() => setShowModal(true)}>
