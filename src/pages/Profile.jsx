@@ -18,6 +18,7 @@ export const Profile = () => {
   const [accountData, setAccountData] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [totalBalance, setTotalBalance] = useState(0);  // Nuevo estado para el balance total
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -49,7 +50,18 @@ export const Profile = () => {
         const accountInfo = accountSnapshot.docs[0].data();
         setAccountData(accountInfo);
 
-        // Fetch transactions if a card is selected
+        // Fetch para calcular el total del balance de todas las tarjetas
+        const cardsCollection = collection(db, "cards");
+        const cardsQuery = query(cardsCollection, where("ownerId", "==", currentUser.uid));
+        const cardsSnapshot = await getDocs(cardsQuery);
+        
+        let total = 0;
+        cardsSnapshot.forEach((doc) => {
+          total += doc.data().balance;  // Sumamos el balance de cada tarjeta
+        });
+
+        setTotalBalance(total);  // Establecemos el balance total
+
         if (selectedCard) {
           const transactionsRef = collection(db, "transactions");
           const transactionsQuery = query(transactionsRef, where("card_id", "==", `${selectedCard.cardId}`));
@@ -106,7 +118,8 @@ export const Profile = () => {
           accountData={accountData}
           selectedCard={selectedCard}
           transactions={transactions}
-          onCardDelete={handleCardDelete} // Pasa la función de eliminación aquí
+          totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
+          onCardDelete={handleCardDelete} 
         />
       )}
       <UserCards onSelectCard={handleCardSelection} />
