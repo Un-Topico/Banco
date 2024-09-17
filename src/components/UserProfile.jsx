@@ -6,7 +6,7 @@ import { FaEdit } from "react-icons/fa"; // Ícono de edición
 import { getFirestore, doc, updateDoc } from "firebase/firestore"; // Firebase para actualizar el nombre
 import { app } from "../firebaseConfig"; // Configuración de Firebase
 
-export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate }) => { 
+export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate}) => { 
   // Añadí onNameUpdate que será pasado desde el componente padre
   const [showModal, setShowModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -67,7 +67,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
 
     try {
       await updateDoc(userDocRef, { phoneNumber: "+52"+newPhone.trim() }); // Actualizar el nombre en Firestore
-      onNameUpdate(newPhone); // Llamar a la función para actualizar el nombre en el estado global
+      onPhoneUpdate(newPhone); // Llamar a la función para actualizar el nombre en el estado global
       setIsEditingPhone(false); // Desactivar el modo de edición
     } catch (error) {
       console.error("Error al actualizar el numero:", error);

@@ -93,7 +93,14 @@ export const Profile = () => {
       ...prevData,
       name: newName,
     }));
+    
   };
+  const handlePhoneUpdate = (newPhone) => {
+    setAccountData((prevData) => ({
+      ...prevData,
+      phoneNumber: newPhone,
+    }));
+};
 
   if (loading) {
     return (
@@ -112,6 +119,7 @@ export const Profile = () => {
         currentUser={currentUser}
         onImageUpdate={handleImageUpdate}
         onNameUpdate={handleNameUpdate}
+        onPhoneUpdate={handlePhoneUpdate}
       />
       {accountData && (
         <AccountInfo
