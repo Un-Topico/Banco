@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { getFirestore, collection, query, where, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 import { Table, Container, Row, Col, Form, Alert } from "react-bootstrap";
 
 export const TransactionHistory = ({ selectedCardId }) => {
   const [transactions, setTransactions] = useState([]);
-  const [filter, setFilter] = useState("all"); // Estado para el filtro
+  const [filter, setFilter] = useState("all"); // Estado para el filtro de tipo
+  const [startDate, setStartDate] = useState(""); // Estado para la fecha de inicio
+  const [endDate, setEndDate] = useState(""); // Estado para la fecha de fin
   const [error, setError] = useState(null); // Estado para mostrar errores
   const db = getFirestore(app);
 
@@ -16,7 +18,7 @@ export const TransactionHistory = ({ selectedCardId }) => {
       return;
     }
 
-    // Construir la consulta basada en el filtro seleccionado
+    // Construir la consulta basada en los filtros seleccionados
     let q = query(
       collection(db, "transactions"),
       where("card_id", "==", selectedCardId)
@@ -24,11 +26,21 @@ export const TransactionHistory = ({ selectedCardId }) => {
 
     if (filter !== "all") {
       q = query(
-        collection(db, "transactions"),
-        where("card_id", "==", selectedCardId),
+        q,
         where("status", "==", filter)
       );
     }
+
+    if (startDate && endDate) {
+      q = query(
+        q,
+        where("transaction_date", ">=", new Date(startDate)),
+        where("transaction_date", "<=", new Date(endDate))
+      );
+    }
+
+    // Agregar ordenación por fecha
+    q = query(q, orderBy("transaction_date", "desc"));
 
     const unsubscribe = onSnapshot(
       q,
@@ -37,9 +49,6 @@ export const TransactionHistory = ({ selectedCardId }) => {
         querySnapshot.forEach((doc) => {
           transactionsData.push({ ...doc.data(), id: doc.id });
         });
-
-        // Ordenar por fecha de transacción (más reciente primero)
-        transactionsData.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
 
         setTransactions(transactionsData);
         setError(null); // Limpiar el error si la consulta tiene éxito
@@ -52,7 +61,7 @@ export const TransactionHistory = ({ selectedCardId }) => {
 
     // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [db, selectedCardId, filter]); // Se añade 'selectedCardId' como dependencia
+  }, [db, selectedCardId, filter, startDate, endDate]); // Añadido startDate y endDate como dependencias
 
   return (
     <Container className="text-center mt-5">
@@ -71,6 +80,33 @@ export const TransactionHistory = ({ selectedCardId }) => {
               <option value="sent">Realizadas</option>
               <option value="received">Recibidas</option>
             </Form.Select>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      {/* Menú de selección de fecha */}
+      <Row className="mb-4">
+        <Col md={6} className="mx-auto">
+          <Form.Group controlId="dateRange">
+            <Form.Label>Filtrar por fecha</Form.Label>
+            <Row>
+              <Col>
+                <Form.Control
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  placeholder="Fecha de inicio"
+                />
+              </Col>
+              <Col>
+                <Form.Control
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  placeholder="Fecha de fin"
+                />
+              </Col>
+            </Row>
           </Form.Group>
         </Col>
       </Row>
