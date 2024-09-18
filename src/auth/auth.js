@@ -16,7 +16,7 @@ const signUpWithEmail = async (email, password, captchaToken) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ token: captchaToken }), // El token de reCAPTCHA que obtienes del cliente
+      body: JSON.stringify({ captchaToken }), // Asegúrate de pasar el captchaToken correctamente
     });
 
     const data = await response.json();
@@ -34,8 +34,8 @@ const signUpWithEmail = async (email, password, captchaToken) => {
     await checkAndAssignRole(userEmail);
     return { success: true };
   } catch (error) {
+    console.error(error);
     let errorMessage = "Error desconocido";
-
     if (error.message === 'Verificación de reCAPTCHA fallida') {
       errorMessage = "Verificación de reCAPTCHA fallida. Por favor, inténtelo de nuevo.";
     } else if (error.code === "auth/email-already-in-use") {
@@ -49,6 +49,7 @@ const signUpWithEmail = async (email, password, captchaToken) => {
     return { success: false, message: errorMessage };
   }
 };
+
 
 const signInWithEmail = async (email, password) => {
   try {
