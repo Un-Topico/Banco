@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { signUpWithEmail, signInWithGoogle } from "../auth/auth"; // Importa la función de registro de cuentas
+import React, { useState, useEffect, useRef } from "react";
+import { signUpWithEmail, signInWithGoogle } from "../auth/auth";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../auth/authContext";
 import { app } from '../firebaseConfig';
 import { FaGoogle, FaEnvelope, FaLock } from 'react-icons/fa';
 import { Container, Row, Col, Form, Button, Alert, InputGroup } from 'react-bootstrap';
+import ReCAPTCHA from "react-google-recaptcha";
+
 const db = getFirestore(app);
 
 export const Register = () => {
@@ -14,6 +16,8 @@ export const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const recaptchaRef = useRef();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
@@ -41,18 +45,28 @@ export const Register = () => {
       setError("Las contraseñas no coinciden");
       return;
     }
-
-    const result = await signUpWithEmail(email, password);
-
+  
+    if (!captchaToken) {
+      setError("Por favor, complete el reCAPTCHA");
+      return;
+    }
+  
+    const result = await signUpWithEmail(email, password, captchaToken);
+  
     if (result.success) {
       navigate("/configurar-cuenta");
     } else {
       setErrorMessage(result.message);
     }
   };
+  
 
   const handleLoginWithGoogle = async () => {
     await signInWithGoogle();
+  };
+
+  const handleCaptchaChange = (token) => {
+    setCaptchaToken(token);
   };
 
   return (
@@ -101,6 +115,14 @@ export const Register = () => {
                 />
               </InputGroup>
             </Form.Group>
+            
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey="6Lei2DoqAAAAANZjygCn2y8Z0r10NT_NqQAN06y5"
+              onChange={handleCaptchaChange}
+              className="mb-3"
+            />
+
             <Button variant="primary" type="submit" className="w-100 mb-3">
               Registrar
             </Button>
