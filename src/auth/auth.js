@@ -51,24 +51,41 @@ const signUpWithEmail = async (email, password, captchaToken) => {
 };
 
 
-const signInWithEmail = async (email, password) => {
+const signInWithEmail = async (email, password, captchaToken) => {
   try {
+    // Verifica el token de reCAPTCHA con el backend
+    const response = await fetch('https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-ab5e80b6-8190-4404-9b75-ead553014c5a/verify-recaptcha-package/send-recaptcha', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ captchaToken }),
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error('Verificación de reCAPTCHA fallida');
+    }
+
     await setAuthPersistence();
     await signInWithEmailAndPassword(auth, email, password);
     return { success: true };
   } catch (error) {
     let errorMessage;
-    if (error.code === "auth/user-not-found") {
+    if (error.message === 'Verificación de reCAPTCHA fallida') {
+      errorMessage = 'Por favor completa la verificación de reCAPTCHA.';
+    } else if (error.code === "auth/user-not-found") {
       errorMessage = "El usuario no existe.";
     } else if (error.code === "auth/too-many-requests") {
-      errorMessage = "Demasiados intentos fallidos. Restablece tu contraseña o intenta más tarde."
+      errorMessage = "Demasiados intentos fallidos. Restablece tu contraseña o intenta más tarde.";
     } else if (error.code === "auth/invalid-credential") {
-      errorMessage = "Correo o contraseña invalidos"
+      errorMessage = "Correo o contraseña invalidos.";
     }
 
     return { success: false, message: errorMessage };
   }
 };
+
 
 const resetPassword = async (email) => {
   try {
