@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { reauthenticateUser, updatePasswordForUser } from "../auth/auth"; // Funciones para reautenticar y actualizar contraseña
 import { Row, Col, Button, Modal, Form, Alert } from "react-bootstrap";
 import { ProfileImageUpload } from './ProfileImageUpload';
