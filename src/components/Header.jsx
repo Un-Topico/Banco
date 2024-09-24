@@ -50,7 +50,7 @@ export const Header = () => {
               {currentUser ? (
                 <div>
                   <button className="btn btn-outline-success me-2" onClick={handleSignOut}>Logout</button>
-                  <CiBellOn onClick={handleShow} />
+                  <CiBellOn onClick={handleShow}  style={{cursor: 'pointer'}}/>
                   <ModalNotification 
                     show={showModal} 
                     handleClose={handleClose} 
