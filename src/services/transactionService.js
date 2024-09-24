@@ -190,3 +190,32 @@ export const getTransferById = async (transferId) => {
   
   return transferDoc.data();
 };
+export const getCardById = async (cardId) => {
+  const cardRef = doc(db, "cards", cardId);
+  const cardDoc = await getDoc(cardRef);
+
+  if (!cardDoc.exists()) {
+    throw new Error("Tarjeta no encontrada.");
+  }
+
+  const cardData = cardDoc.data();
+  
+  // Aquí transformamos el número de tarjeta
+  const maskedCardNumber = maskCardNumber(cardData.cardNumber);
+  
+  // Devolvemos solo el cardNumber enmascarado
+  return {
+    cardNumber: maskedCardNumber
+  };
+};
+
+// Función para enmascarar el número de tarjeta
+const maskCardNumber = (cardNumber) => {
+  if (!cardNumber || cardNumber.length < 8) {
+    return "Número inválido";
+  }
+  const firstDigit = cardNumber.slice(0, 1); // Primer dígito
+  const lastFourDigits = cardNumber.slice(-4); // Últimos 4 dígitos
+  const masked = `${firstDigit}${'x'.repeat(cardNumber.length - 5)}${lastFourDigits}`;
+  return masked;
+};

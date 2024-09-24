@@ -2,17 +2,27 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, Row, Col, Badge } from "react-bootstrap";
 import { FaMoneyCheckAlt, FaCalendarAlt, FaInfoCircle } from "react-icons/fa";
-import { getTransferById } from "../services/transactionService"; // Asegúrate de tener esta función en tu servicio Firestore
+import { getTransferById, getCardById } from "../services/transactionService"; // Asegúrate de crear la función getCardById
 
 export const TransactionDetail = () => {
-  const { id } = useParams(); // Obtén el transfer_id de la ruta
+  const { id } = useParams();
   const [transfer, setTransfer] = useState(null);
+  const [fromCardNumber, setFromCardNumber] = useState("");
+  const [toCardNumber, setToCardNumber] = useState("");
 
   useEffect(() => {
     const fetchTransfer = async () => {
       try {
-        const transferData = await getTransferById(id); // Función que busca la transferencia en Firestore
+        const transferData = await getTransferById(id);
         setTransfer(transferData);
+
+        // Buscar el número de tarjeta para 'from_card_id'
+        const fromCardData = await getCardById(transferData.from_card_id);
+        setFromCardNumber(fromCardData.cardNumber);
+
+        // Buscar el número de tarjeta para 'to_card_id'
+        const toCardData = await getCardById(transferData.to_card_id);
+        setToCardNumber(toCardData.cardNumber);
       } catch (error) {
         console.error("Error al obtener la transferencia:", error);
       }
@@ -56,11 +66,11 @@ export const TransactionDetail = () => {
         <Row className="mb-3">
           <Col md={6}>
             <h5><FaInfoCircle /> Tarjeta de Origen</h5>
-            <Badge bg="info">{transfer.from_card_id}</Badge>
+            <Badge bg="info">{fromCardNumber}</Badge>
           </Col>
           <Col md={6}>
             <h5><FaInfoCircle /> Tarjeta de Destino</h5>
-            <Badge bg="success">{transfer.to_card_id}</Badge>
+            <Badge bg="success">{toCardNumber}</Badge>
           </Col>
         </Row>
       </Card.Body>
