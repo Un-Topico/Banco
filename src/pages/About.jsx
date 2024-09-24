@@ -42,7 +42,7 @@ export const About = () => {
           <div className="col-md-8 text-center">
             <h2>Nuestra Historia</h2>
             <p>
-              Fundados en el año 2000, hemos crecido para convertirnos en uno de los principales bancos que ofrecen soluciones financieras
+              Fundados en el año 2024, hemos crecido para convertirnos en uno de los principales bancos que ofrecen soluciones financieras
               a nivel global. Nuestro enfoque en la innovación y el servicio al cliente ha sido clave para nuestro éxito.
             </p>
           </div>
