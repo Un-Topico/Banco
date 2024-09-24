@@ -1,5 +1,5 @@
 import { saveTransaction, saveTransfer, updateRecipientBalance,getPhoneNumberByOwnerId } from './firestoreTransactionService';
-import { getFirestore, query, collection, where, getDocs, setDoc } from 'firebase/firestore';
+import { getFirestore, query, collection, where, getDocs, setDoc, addDoc, doc, getDoc } from 'firebase/firestore';
 
 import axios from 'axios'; // Asegúrate de tener axios instalado 
 const db = getFirestore();
@@ -49,6 +49,16 @@ const sendMessage = async (phoneNumber, amount) => {
         const recipientOwnerId = recipientCardDoc.data().ownerId;
         const recipientPhoneNumber = await getPhoneNumberByOwnerId(recipientOwnerId);
         await sendMessage(recipientPhoneNumber, amount);
+
+        // CODIGO PARA LA NOTIFICACION:
+        await saveNotification({
+          ownerId: recipientOwnerId,
+          message: `Has recibido una transferencia de ${amount} MXN.`,
+          cardId: recipientCardDoc.id,
+          read: false, // Estado inicial como no leído
+          timestamp: new Date(),
+        });
+
       } catch (error) {
         console.error('Error in handleTransaction:', error.message);
         throw error;
@@ -143,4 +153,37 @@ const getCardDocByEmail = async (email) => {
 
     // Devolvemos el primer documento encontrado
     return cardSnapshot.docs[0];
+};
+export const getNotificationsByOwnerId = async (ownerId) => {
+  const notificationsRef = collection(db, "notifications");
+  const q = query(notificationsRef, where("ownerId", "==", ownerId));
+  const querySnapshot = await getDocs(q);
+  
+  const notifications = querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  
+  return notifications;
+};
+export const saveNotification = async (notification) => {
+  const notificationRef = collection(db, "notifications");
+  await addDoc(notificationRef, notification);
+};
+
+
+export const markNotificationAsRead = async (notificationId) => {
+  const notificationRef = doc(db, "notifications", notificationId);
+  await setDoc(notificationRef, { read: true }, { merge: true });
+};
+
+export const getNotificationById = async (notificationId) => {
+  const notificationRef = doc(db, "notifications", notificationId);
+  const notificationDoc = await getDoc(notificationRef);
+  
+  if (!notificationDoc.exists()) {
+    throw new Error("La notificación no existe.");
+  }
+
+  return notificationDoc.data();
 };
