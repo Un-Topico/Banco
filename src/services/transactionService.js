@@ -52,6 +52,7 @@ const sendMessage = async (phoneNumber, amount) => {
 
         // CODIGO PARA LA NOTIFICACION:
         await saveNotification({
+          notificationId: `notification_${Date.now()}`,
           ownerId: recipientOwnerId,
           message: `Has recibido una transferencia de ${amount} MXN.`,
           cardId: recipientCardDoc.id,

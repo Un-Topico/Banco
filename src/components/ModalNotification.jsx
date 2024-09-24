@@ -1,7 +1,8 @@
-// ModalNotification.jsx
 import React, { useEffect, useState } from 'react';
 import { Modal } from 'react-bootstrap';
+import { Badge } from 'react-bootstrap'; // Asegúrate de importar Badge
 import { getNotificationsByOwnerId, markNotificationAsRead } from '../services/transactionService'; // Importa tus servicios
+import { Link } from 'react-router-dom';
 
 const ModalNotification = ({ show, handleClose, ownerId }) => {
   const [notifications, setNotifications] = useState([]);
@@ -33,8 +34,12 @@ const ModalNotification = ({ show, handleClose, ownerId }) => {
       <Modal.Body>
         <ul>
           {notifications.map((notification) => (
-            <li key={notification.id} onClick={() => handleNotificationClick(notification.id)}>
-              {notification.read ? <s>{notification.message}</s> : notification.message}
+            <li key={notification.id} onClick={() => handleNotificationClick(notification.notificationId)}>
+              <Link to={"notificacion/"+ notification.notificationId}>{notification.message} 
+              <Badge bg={notification.read ? 'success' : 'warning'} className="ms-2">
+                {notification.read ? 'Leída' : 'No leída'}
+              </Badge>
+              </Link>
             </li>
           ))}
         </ul>
