@@ -4,10 +4,12 @@ import { downloadPDF } from "../utils/downloadPDF";
 import { reauthenticateUser, reauthenticateWithGoogle } from "../auth/auth";
 import { auth } from "../auth/auth"; // Importa auth desde tu archivo de autenticación
 import { deleteCard } from "../auth/deleteCard";
+import UpdateCardModal from './UpdateCardModal'; // Importar el modal de actualización de tarjeta
 
 export const AccountInfo = ({ accountData, selectedCard, transactions, totalBalance, onCardDelete }) => {
   const [showModal, setShowModal] = useState(false);
   const [password, setPassword] = useState("");
+  const [showUpdateModal, setShowUpdateModal] = useState(false); // Estado para el modal de actualización
 
   const handleDelete = async () => {
     let result;
@@ -59,6 +61,13 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, totalBala
               >
                 Eliminar Tarjeta
               </Button>
+              <Button
+                variant="warning"
+                className="ms-2"
+                onClick={() => setShowUpdateModal(true)} // Abrir el modal de actualización
+              >
+                Actualizar Tarjeta
+              </Button>
             </>
           )}
         </Card.Body>
@@ -95,6 +104,16 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, totalBala
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Modal para actualizar tarjeta */}
+      {selectedCard && (
+        <UpdateCardModal
+          show={showUpdateModal}
+          handleClose={() => setShowUpdateModal(false)}
+          cardData={selectedCard}
+          onCardUpdated={() => setShowUpdateModal(false)} // Refresca después de la actualización
+        />
+      )}
     </>
   );
 };

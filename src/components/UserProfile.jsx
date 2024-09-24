@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { reauthenticateUser, updatePasswordForUser } from "../auth/auth"; // Funciones para reautenticar y actualizar contraseña
 import { Row, Col, Button, Modal, Form, Alert } from "react-bootstrap";
 import { ProfileImageUpload } from './ProfileImageUpload';
@@ -7,20 +7,35 @@ import { getFirestore, doc, updateDoc } from "firebase/firestore"; // Firebase p
 import { app } from "../firebaseConfig"; // Configuración de Firebase
 
 export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate}) => { 
-  // Añadí onNameUpdate que será pasado desde el componente padre
   const [showModal, setShowModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // Nuevo estado para confirmar la contraseña
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [isEditingName, setIsEditingName] = useState(false); // Nuevo estado para editar el nombre
-  const [isEditingPhone, setIsEditingPhone] = useState(false)
-  const [newName, setNewName] = useState(accountData.name); // Guardar el nombre editado
-  const [newPhone, setNewPhone] = useState(accountData.phoneNumber)
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [newName, setNewName] = useState(accountData.name);
+  const [newPhone, setNewPhone] = useState(accountData.phoneNumber);
+
+  // Verificar si el botón debe estar habilitado
+  const isPasswordChangeButtonDisabled = !currentPassword || !newPassword || !confirmPassword;
 
   const handlePasswordChange = async () => {
     setError(null);
     setSuccess(false);
+
+    // Verificar que las contraseñas coincidan
+    if (newPassword !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    // Confirmación antes de cambiar la contraseña
+    const confirmChange = window.confirm("¿Estás seguro de que deseas cambiar tu contraseña?");
+    if (!confirmChange) {
+      return; // Salir si el usuario no confirma
+    }
 
     try {
       const reauthResult = await reauthenticateUser(currentPassword);
@@ -30,6 +45,10 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
         if (result.success) {
           setSuccess(true);
           setShowModal(false); // Cerrar el modal en caso de éxito
+          // Resetear campos de contraseña
+          setNewPassword("");
+          setConfirmPassword("");
+          setCurrentPassword(""); // Limpiar el input de contraseña actual
         } else {
           setError(result.message);
         }
@@ -42,7 +61,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
   };
 
   const handleNameEdit = () => {
-    setIsEditingName(true); // Habilitar edición del nombre
+    setIsEditingName(true);
   };
 
   const handleNameSave = async () => {
@@ -50,15 +69,16 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
     const userDocRef = doc(db, "accounts", "account_" + currentUser.uid);
 
     try {
-      await updateDoc(userDocRef, { name: newName }); // Actualizar el nombre en Firestore
-      onNameUpdate(newName); // Llamar a la función para actualizar el nombre en el estado global
-      setIsEditingName(false); // Desactivar el modo de edición
+      await updateDoc(userDocRef, { name: newName });
+      onNameUpdate(newName);
+      setIsEditingName(false);
     } catch (error) {
       console.error("Error al actualizar el nombre:", error);
     }
   };
+
   const handlePhoneEdit = () => {
-    setIsEditingPhone(true); // Habilitar edición del nombre
+    setIsEditingPhone(true);
   };
 
   const handlePhoneSave = async () => {
@@ -66,11 +86,11 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
     const userDocRef = doc(db, "accounts", "account_" + currentUser.uid);
 
     try {
-      await updateDoc(userDocRef, { phoneNumber: "+52"+newPhone.trim() }); // Actualizar el nombre en Firestore
-      onPhoneUpdate(newPhone); // Llamar a la función para actualizar el nombre en el estado global
-      setIsEditingPhone(false); // Desactivar el modo de edición
+      await updateDoc(userDocRef, { phoneNumber: "+52" + newPhone.trim() });
+      onPhoneUpdate(newPhone);
+      setIsEditingPhone(false);
     } catch (error) {
-      console.error("Error al actualizar el numero:", error);
+      console.error("Error al actualizar el número:", error);
     }
   };
 
@@ -100,9 +120,9 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
               Guardar
             </Button>
           )}
-          
         </div>
-          <div className="d-flex justify-content-center align-items-center">
+
+        <div className="d-flex justify-content-center align-items-center">
           {isEditingPhone ? (
             <Form.Control
               type="number"
@@ -112,7 +132,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
               style={{ maxWidth: "200px" }}
             />
           ) : (
-            <p className="h4 me-2">Telefono {accountData.phoneNumber}</p>
+            <p className="h4 me-2">Teléfono: {accountData.phoneNumber}</p>
           )}
           <FaEdit onClick={handlePhoneEdit} style={{ cursor: "pointer" }} />
 
@@ -121,7 +141,8 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
               Guardar
             </Button>
           )}
-          </div>
+        </div>
+
         <p className="text-muted">{currentUser.email}</p>
 
         <Button variant="secondary" onClick={() => setShowModal(true)}>
@@ -155,6 +176,16 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
                 />
               </Form.Group>
 
+              <Form.Group controlId="confirmPassword" className="mt-3">
+                <Form.Label>Confirmar nueva contraseña</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Confirma tu nueva contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </Form.Group>
+
               {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
               {success && <Alert variant="success" className="mt-3">Contraseña actualizada exitosamente</Alert>}
             </Form>
@@ -163,7 +194,11 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
             <Button variant="secondary" onClick={() => setShowModal(false)}>
               Cancelar
             </Button>
-            <Button variant="primary" onClick={handlePasswordChange}>
+            <Button 
+              variant="primary" 
+              onClick={handlePasswordChange} 
+              disabled={isPasswordChangeButtonDisabled} // Deshabilitar el botón si faltan campos
+            >
               Cambiar Contraseña
             </Button>
           </Modal.Footer>
