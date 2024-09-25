@@ -65,23 +65,26 @@ export const Header = () => {
         </li>
         {currentUser && (
           <li className="nav-item">
-            <Link className="nav-link" to="/perfil">
+            <Link className="btn btn-success position-relative me-md-2 btn-lg" to="/perfil">
               Perfil
+            <span className="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
+              <span className="visually-hidden">New alerts</span>
+            </span>
             </Link>
           </li>
         )}
       </ul>
       <div className="d-flex">
         {currentUser ? (
-          <button className="btn btn-outline-success me-2" onClick={handleSignOut}>
+          <button className="btn btn-danger me-2" onClick={handleSignOut}>
             Logout
           </button>
         ) : (
           <div>
-            <Link className="btn btn-outline-primary" to="/login">
+            <Link className="btn btn-success me-md-2" to="/login">
             Login
             </Link>
-            <Link className="btn btn-outline-primary" to="/crear-cuenta">
+            <Link className="btn btn-primary" to="/crear-cuenta">
             Crear cuenta
             </Link>
           </div>
