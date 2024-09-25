@@ -46,7 +46,7 @@ const UserChat = () => {
       });
       return () => unsubscribe();
     }
-  }, [isOpen, chatDocRef, currentUser]); // Eliminar messages como dependencia
+  }, [isOpen, chatDocRef, currentUser, messages.length]); // Eliminar messages como dependencia
 
   useEffect(() => {
     const scrollToBottom = () => {
