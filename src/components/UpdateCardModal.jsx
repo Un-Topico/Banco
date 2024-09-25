@@ -4,6 +4,7 @@ import { getFirestore, collection, doc, updateDoc, query, where, getDocs } from 
 import { getAuth } from 'firebase/auth';
 import { reauthenticateUser, reauthenticateWithGoogle } from '../auth/auth'; // Importamos la reautenticación
 import { app } from '../firebaseConfig';
+import { FaUser, FaCreditCard, FaCalendarAlt, FaLock, FaKey } from 'react-icons/fa'; // Importar iconos
 
 const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
   const db = getFirestore(app);
@@ -105,7 +106,9 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
       <Modal.Body>
         <Form onSubmit={handleUpdateCard}>
           <Form.Group as={Row} controlId="cardHolderName" className="mb-3">
-            <Form.Label column sm={4}>Nombre en la Tarjeta</Form.Label>
+            <Form.Label column sm={4}>
+              <FaUser className="me-2" /> Nombre en la Tarjeta
+            </Form.Label>
             <Col sm={8}>
               <Form.Control
                 type="text"
@@ -117,7 +120,9 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
           </Form.Group>
 
           <Form.Group as={Row} controlId="cardNumber" className="mb-3">
-            <Form.Label column sm={4}>Número de Tarjeta</Form.Label>
+            <Form.Label column sm={4}>
+              <FaCreditCard className="me-2" /> Número de Tarjeta
+            </Form.Label>
             <Col sm={8}>
               <Form.Control
                 type="text"
@@ -133,7 +138,9 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
           <Row className="mb-3">
             <Col>
               <Form.Group controlId="expiryDate">
-                <Form.Label>Fecha de Expiración</Form.Label>
+                <Form.Label>
+                  <FaCalendarAlt className="me-2" /> Fecha de Expiración
+                </Form.Label>
                 <Form.Control
                   type="text"
                   value={expiryDate}
@@ -145,7 +152,9 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
 
             <Col>
               <Form.Group controlId="cvv">
-                <Form.Label>CVV</Form.Label>
+                <Form.Label>
+                  <FaLock className="me-2" /> CVV
+                </Form.Label>
                 <Form.Control
                   type="text"
                   value={cvv}
@@ -160,7 +169,9 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
           {/* Campo de contraseña si el usuario inició sesión con correo y contraseña */}
           {auth.currentUser.providerData[0].providerId === "password" && (
             <Form.Group controlId="formPassword" className="mb-3">
-              <Form.Label>Contraseña</Form.Label>
+              <Form.Label>
+                <FaKey className="me-2" /> Contraseña
+              </Form.Label>
               <Form.Control
                 type="password"
                 placeholder="Ingresa tu contraseña"

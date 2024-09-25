@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button, Collapse } from "react-bootstrap";
+import { Form, Button, Collapse, InputGroup } from "react-bootstrap";
 import { fetchContacts, saveContact } from "../services/firestoreTransactionService";
+import { FaEnvelope, FaUser, FaPlusCircle, FaList } from "react-icons/fa"; // Importa los íconos de react-icons
 
 const Contacts = ({ currentUser, setError, setSuccess, onContactSelect }) => {
   const [newContactEmail, setNewContactEmail] = useState("");
@@ -34,7 +35,6 @@ const Contacts = ({ currentUser, setError, setSuccess, onContactSelect }) => {
       setSuccess("Contacto guardado con éxito.");
       setNewContactEmail("");
       setNewContactAlias("");
-      // Recargar la lista de contactos
       const userContacts = await fetchContacts(currentUser.uid);
       setContacts(userContacts);
     } catch (error) {
@@ -47,7 +47,7 @@ const Contacts = ({ currentUser, setError, setSuccess, onContactSelect }) => {
       <Form.Group className="mb-3">
         <Form.Check 
           type="checkbox" 
-          label="Mostrar lista de contactos" 
+          label={<><FaList /> Mostrar lista de contactos</>}
           onChange={(e) => setShowContactList(e.target.checked)} 
         />
         <Collapse in={showContactList}>
@@ -70,33 +70,39 @@ const Contacts = ({ currentUser, setError, setSuccess, onContactSelect }) => {
       <Form.Group className="mb-3">
         <Form.Check 
           type="checkbox" 
-          label="Agregar nuevo contacto" 
+          label={<><FaPlusCircle /> Agregar nuevo contacto</>}
           onChange={(e) => setShowAddContactForm(e.target.checked)} 
         />
         <Collapse in={showAddContactForm}>
           <div>
-            <Form onClick={handleAddContact}>
+            <Form onSubmit={handleAddContact}>
               <Form.Group className="mb-3">
                 <Form.Label>Correo Electrónico</Form.Label>
-                <Form.Control
-                  type="email"
-                  value={newContactEmail}
-                  onChange={(e) => setNewContactEmail(e.target.value)}
-                  placeholder="Ingresa el correo del contacto"
-                />
+                <InputGroup>
+                  <InputGroup.Text><FaEnvelope /></InputGroup.Text>
+                  <Form.Control
+                    type="email"
+                    value={newContactEmail}
+                    onChange={(e) => setNewContactEmail(e.target.value)}
+                    placeholder="Ingresa el correo del contacto"
+                  />
+                </InputGroup>
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>Alias</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={newContactAlias}
-                  onChange={(e) => setNewContactAlias(e.target.value)}
-                  placeholder="Ingresa un alias para el contacto"
-                />
+                <InputGroup>
+                  <InputGroup.Text><FaUser /></InputGroup.Text>
+                  <Form.Control
+                    type="text"
+                    value={newContactAlias}
+                    onChange={(e) => setNewContactAlias(e.target.value)}
+                    placeholder="Ingresa un alias para el contacto"
+                  />
+                </InputGroup>
               </Form.Group>
 
-              <Button variant="secondary" type="button">
+              <Button variant="secondary" type="submit">
                 Guardar Contacto
               </Button>
             </Form>

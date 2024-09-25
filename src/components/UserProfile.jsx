@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { reauthenticateUser, updatePasswordForUser } from "../auth/auth"; // Funciones para reautenticar y actualizar contraseña
 import { Row, Col, Button, Modal, Form, Alert } from "react-bootstrap";
 import { ProfileImageUpload } from './ProfileImageUpload';
-import { FaEdit } from "react-icons/fa"; // Ícono de edición
+import { FaEdit, FaSave, FaKey } from "react-icons/fa"; // Íconos de edición, guardado y cambio de contraseña
 import { getFirestore, doc, updateDoc } from "firebase/firestore"; // Firebase para actualizar el nombre
 import { app } from "../firebaseConfig"; // Configuración de Firebase
 
-export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate}) => { 
+export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate }) => { 
   const [showModal, setShowModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -18,7 +18,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
   const [newName, setNewName] = useState(accountData.name);
   const [newPhone, setNewPhone] = useState(accountData.phoneNumber);
 
-  // Verificar si el botón debe estar habilitado
+  // Verificar si el botón de cambiar contraseña debe estar habilitado
   const isPasswordChangeButtonDisabled = !currentPassword || !newPassword || !confirmPassword;
 
   const handlePasswordChange = async () => {
@@ -101,7 +101,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
         <ProfileImageUpload currentImageUrl={accountData.profileImage} onImageUpdate={onImageUpdate} />
 
         {/* Mostrar el nombre con opción de editar */}
-        <div className="d-flex justify-content-center align-items-center">
+        <div className="d-flex justify-content-center align-items-center mb-3">
           {isEditingName ? (
             <Form.Control
               type="text"
@@ -117,12 +117,12 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
 
           {isEditingName && (
             <Button variant="primary" size="sm" className="ms-2" onClick={handleNameSave}>
-              Guardar
+              <FaSave className="me-1" /> Guardar
             </Button>
           )}
         </div>
 
-        <div className="d-flex justify-content-center align-items-center">
+        <div className="d-flex justify-content-center align-items-center mb-3">
           {isEditingPhone ? (
             <Form.Control
               type="number"
@@ -138,7 +138,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
 
           {isEditingPhone && (
             <Button variant="primary" size="sm" className="ms-2" onClick={handlePhoneSave}>
-              Guardar
+              <FaSave className="me-1" /> Guardar
             </Button>
           )}
         </div>
@@ -146,7 +146,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
         <p className="text-muted">{currentUser.email}</p>
 
         <Button variant="secondary" onClick={() => setShowModal(true)}>
-          Cambiar Contraseña
+          <FaKey className="me-1" /> Cambiar Contraseña
         </Button>
 
         {/* Modal para cambiar la contraseña */}
