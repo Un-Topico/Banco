@@ -22,6 +22,9 @@ const UserChat = () => {
   const db = getFirestore(app);
   const { currentUser } = useAuth();
 
+  // Referencia de audio para el sonido de notificación
+  const notificationSoundRef = useRef(new Audio('https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12'));
+
   // Memoriza chatDocRef para evitar recreación en cada renderizado
   const chatDocRef = useMemo(() => {
     return doc(collection(db, "chats"), currentUser?.uid);
@@ -31,20 +34,28 @@ const UserChat = () => {
     if (isOpen && currentUser) {
       const unsubscribe = onSnapshot(chatDocRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
-          setMessages(docSnapshot.data().messages || []);
+          const newMessages = docSnapshot.data().messages || [];
+          // Reproducir sonido cuando se recibe un mensaje
+          if (newMessages.length > messages.length) {
+            notificationSoundRef.current.play();
+          }
+          setMessages(newMessages);
         } else {
           setMessages([]);
         }
       });
       return () => unsubscribe();
     }
-  }, [isOpen, chatDocRef, currentUser]); // No se debería generar un ciclo infinito ahora
+  }, [isOpen, chatDocRef, currentUser]); // Eliminar messages como dependencia
 
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+    const scrollToBottom = () => {
+      if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+    scrollToBottom();
+  }, [messages]); // Mantener el scroll hacia abajo al recibir nuevos mensajes
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -66,6 +77,9 @@ const UserChat = () => {
           { merge: true }
         );
 
+        // Reproducir sonido cuando se envía un mensaje
+        notificationSoundRef.current.play();
+        
         setNewMessage("");
       } catch (error) {
         console.error("Error enviando mensaje: ", error);
@@ -97,7 +111,7 @@ const UserChat = () => {
               <FaTimes />
             </button>
           </div>
-          <div className="chat-messages">
+          <div className="chat-messages" style={{ maxHeight: '300px', overflowY: 'auto' }}>
             {messages.map((msg, idx) => (
               <div
                 key={idx}
@@ -119,7 +133,7 @@ const UserChat = () => {
                 </div>
               </div>
             ))}
-            <div ref={chatEndRef} />
+            <div ref={chatEndRef} /> {/* Este elemento se usa para hacer scroll */}
           </div>
           <form onSubmit={sendMessage} className="message-form">
             <input
