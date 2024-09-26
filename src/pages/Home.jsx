@@ -1,5 +1,6 @@
 import React from 'react';
-import { FaCreditCard, FaCoffee } from 'react-icons/fa';  
+import { FaCreditCard, FaRegCreditCard, FaMoneyBill} from 'react-icons/fa';
+import {GiReceiveMoney} from 'react-icons/gi';  
 
 import '../styles/home.css';
 
@@ -75,7 +76,7 @@ export const Home = () => {
             <div className="row justify-content-center">
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
-                  <FaCreditCard size="3em" className="my-3" />  {/* React Icons */}
+                  <FaCreditCard size="3em" className="my-3" /> 
                   <div className="card-body">
                     <h5 className="card-title">Tarjeta de Crédito</h5>
                     <p className="card-text">Descubre nuestros beneficios.</p>
@@ -85,7 +86,7 @@ export const Home = () => {
               </div>
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
-                  <FaCoffee size="3em" className="my-3" />  {/* React Icons */}
+                  <FaRegCreditCard size="3em" className="my-3" /> 
                   <div className="card-body">
                     <h5 className="card-title">Producto 2</h5>
                     <p className="card-text">Detalles del producto 2.</p>
@@ -95,7 +96,7 @@ export const Home = () => {
               </div>
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
-                  <FaCoffee size="3em" className="my-3" />  {/* React Icons */}
+                  <GiReceiveMoney size="3em" className="my-3" /> 
                   <div className="card-body">
                     <h5 className="card-title">Producto 3</h5>
                     <p className="card-text">Detalles del producto 3.</p>
@@ -105,7 +106,7 @@ export const Home = () => {
               </div>
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
-                  <FaCoffee size="3em" className="my-3" />  {/* React Icons */}
+                  <FaMoneyBill size="3rem" className="my-3" /> 
                   <div className="card-body">
                     <h5 className="card-title">Producto 4</h5>
                     <p className="card-text">Detalles del producto 4.</p>

@@ -17,17 +17,17 @@ export const Personas = () => {
         <h2 className="text-center mb-4">Nuestros Productos</h2>
         <div className="row text-center">
           <div className="col-md-4 mb-4">
-            <FaPiggyBank size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaPiggyBank */}
+            <FaPiggyBank size="3rem" className="mb-3" />
             <h5>Cuentas de Ahorro</h5>
             <p>Abre tu cuenta de ahorro y disfruta de excelentes tasas de interés.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <FaCreditCard size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaCreditCard */}
+            <FaCreditCard size="3rem" className="mb-3" /> 
             <h5>Tarjetas de Crédito</h5>
             <p>Disfruta de nuestros programas de recompensas y bajos intereses.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <FaHome size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaHome */}
+            <FaHome size="3rem" className="mb-3" /> 
             <h5>Créditos Hipotecarios</h5>
             <p>Obtén tu hogar soñado con nuestras opciones de crédito hipotecario.</p>
           </div>
