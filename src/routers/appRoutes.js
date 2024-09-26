@@ -7,6 +7,9 @@ import { About }  from '../pages/About';
 import { PyMes } from '../pages/PyMes';
 import { EncuentraSucursal } from '../pages/sucursales';
 import { Personas } from '../pages/Personas';
+import { TarjetaCredito } from '../pages/creditCard';
+import { TarjetaDebito } from '../pages/debitCard';
+import { CuentaAhorro } from '../pages/cuentaAhorro';
 export const rutas = [
     { path: "/", element: <Home  />,  protected:false },
     { path: "/login", element: <Login />,  protected:false  },
@@ -16,4 +19,7 @@ export const rutas = [
     { path: "/PyMes", element: <PyMes/>, protected:false},
     { path: "/Sucursales", element: <EncuentraSucursal/>, protected:false},
     { path: "/Personas", element: <Personas/>, protected:false},
+    { path: "/TarjetaCredito", element: <TarjetaCredito/>, protected:false},
+    { path: "/TarjetaDebito", element: <TarjetaDebito/>, protected:false},
+    { path: "/cuentaAhorro", element: <CuentaAhorro/>, protected:false},
 ];

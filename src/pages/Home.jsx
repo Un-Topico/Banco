@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaCreditCard, FaRegCreditCard, FaMoneyBill} from 'react-icons/fa';
 import {GiReceiveMoney} from 'react-icons/gi';  
+import { Link} from "react-router-dom";
 
 import '../styles/home.css';
 
@@ -74,52 +75,53 @@ export const Home = () => {
           <div className="container">
             <h3 className="text-center mb-4">Nuestros productos</h3>
             <div className="row justify-content-center">
+              {/* Tarjeta de crédito */}
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
                   <FaCreditCard size="3em" className="my-3" /> 
                   <div className="card-body">
                     <h5 className="card-title">Tarjeta de Crédito</h5>
                     <p className="card-text">Descubre nuestros beneficios.</p>
-                    <a href="#tarjeta-credito" className="btn btn-info">Ver más</a>
+                    <Link className="btn btn-info" to="/TarjetaCredito">Ver más</Link>
                   </div>
                 </div>
               </div>
+              {/* Tarjeta de débito */}
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
                   <FaRegCreditCard size="3em" className="my-3" /> 
                   <div className="card-body">
-                    <h5 className="card-title">Producto 2</h5>
-                    <p className="card-text">Detalles del producto 2.</p>
-                    <a href="#producto2" className="btn btn-info">Ver más</a>
+                    <h5 className="card-title">Tarjeta de debito</h5>
+                    <p className="card-text">Descubre nuestros beneficios.</p>
+                    <Link className="btn btn-info" to="/TarjetaDebito">Ver más</Link>
                   </div>
                 </div>
               </div>
+              {/* Cuenta de ahorro */}
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
                   <GiReceiveMoney size="3em" className="my-3" /> 
                   <div className="card-body">
-                    <h5 className="card-title">Producto 3</h5>
-                    <p className="card-text">Detalles del producto 3.</p>
-                    <a href="#producto2" className="btn btn-info">Ver más</a>
+                    <h5 className="card-title">Cuenta de ahorro</h5>
+                    <p className="card-text">Descubre nuestros beneficios.</p>
+                    <Link className="btn btn-info" to="/cuentaAhorro">Ver más</Link>
                   </div>
                 </div>
               </div>
-              <div className="col-md-3 col-sm-6 mb-4">
-                <div className="card text-center">
+              {/* Cambio de diviza */}
+              <div className="col-md-3 col-sm-6 mb-4" >
+                <div className="card text-center" style={{width: '18rem'}} >
                   <FaMoneyBill size="3rem" className="my-3" /> 
                   <div className="card-body">
-                    <h5 className="card-title">Producto 4</h5>
-                    <p className="card-text">Detalles del producto 4.</p>
+                    <h5 className="card-title">Cambio de diviza</h5>
+                    <p className="card-text">Recibe la mejor taza.</p>
                     <a href="#producto2" className="btn btn-info">Ver más</a>
                   </div>
                 </div>
               </div>
-              
-              {/* Puedes añadir más tarjetas como estas */}
             </div>
           </div>
         </section>
-  
       </div>
     );
   };
