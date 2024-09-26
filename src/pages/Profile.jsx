@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../auth/authContext";
 import { useNavigate } from "react-router-dom";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 import { UserProfile } from "../components/UserProfile";
 import { AccountInfo } from "../components/AccountInfo";
@@ -18,7 +18,7 @@ export const Profile = () => {
   const [accountData, setAccountData] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
-  const [totalBalance, setTotalBalance] = useState(0);  // Nuevo estado para el balance total
+  const [totalBalance, setTotalBalance] = useState(0);  // Estado para el balance total
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -49,31 +49,35 @@ export const Profile = () => {
       } else {
         const accountInfo = accountSnapshot.docs[0].data();
         setAccountData(accountInfo);
+      }
 
-        // Fetch para calcular el total del balance de todas las tarjetas
-        const cardsCollection = collection(db, "cards");
-        const cardsQuery = query(cardsCollection, where("ownerId", "==", currentUser.uid));
-        const cardsSnapshot = await getDocs(cardsQuery);
-        
+      // Listener para las tarjetas del usuario
+      const cardsCollection = collection(db, "cards");
+      const cardsQuery = query(cardsCollection, where("ownerId", "==", currentUser.uid));
+
+      const unsubscribe = onSnapshot(cardsQuery, (snapshot) => {
         let total = 0;
-        cardsSnapshot.forEach((doc) => {
+        snapshot.forEach((doc) => {
           total += doc.data().balance;  // Sumamos el balance de cada tarjeta
         });
 
-        setTotalBalance(total);  // Establecemos el balance total
+        setTotalBalance(total);  // Establecemos el balance total en tiempo real
+      });
 
-        if (selectedCard) {
-          const transactionsRef = collection(db, "transactions");
-          const transactionsQuery = query(transactionsRef, where("card_id", "==", `${selectedCard.cardId}`));
-          const transactionsSnapshot = await getDocs(transactionsQuery);
+      if (selectedCard) {
+        const transactionsRef = collection(db, "transactions");
+        const transactionsQuery = query(transactionsRef, where("card_id", "==", `${selectedCard.cardId}`));
+        const transactionsSnapshot = await getDocs(transactionsQuery);
 
-          const transactionsData = transactionsSnapshot.docs.map(doc => doc.data());
-          transactionsData.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
-          setTransactions(transactionsData);
-        }
+        const transactionsData = transactionsSnapshot.docs.map(doc => doc.data());
+        transactionsData.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
+        setTransactions(transactionsData);
       }
 
       setLoading(false);
+
+      // Cleanup: elimina el listener cuando el componente se desmonte
+      return () => unsubscribe();
     };
 
     fetchUserData();
@@ -85,22 +89,21 @@ export const Profile = () => {
 
   const handleCardDelete = () => {
     setSelectedCard(null); // Deselecciona la tarjeta después de eliminarla
-    // Puedes añadir lógica adicional aquí si es necesario
   };
-   // Nueva función para actualizar el nombre en tiempo real
-   const handleNameUpdate = (newName) => {
+
+  const handleNameUpdate = (newName) => {
     setAccountData((prevData) => ({
       ...prevData,
       name: newName,
     }));
-    
   };
+
   const handlePhoneUpdate = (newPhone) => {
     setAccountData((prevData) => ({
       ...prevData,
       phoneNumber: newPhone,
     }));
-};
+  };
 
   if (loading) {
     return (
@@ -127,7 +130,7 @@ export const Profile = () => {
           selectedCard={selectedCard}
           transactions={transactions}
           totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
-          onCardDelete={handleCardDelete} 
+          onCardDelete={handleCardDelete}
         />
       )}
       <UserCards onSelectCard={handleCardSelection} />
@@ -135,7 +138,7 @@ export const Profile = () => {
         selectedCard={selectedCard}
         updateCardBalance={updateCardBalance}
       />
-      <UserChat/>
+      <UserChat />
       {userRole === "admin" && (
         <Button
           variant="secondary"
