@@ -1,33 +1,36 @@
-import React, { useState,useEffect } from "react";
-import { signUpWithEmail, signInWithGoogle } from "../auth/auth"; // Importa la función de registro de cuentas
+import React, { useState, useEffect, useRef } from "react";
+import { signUpWithEmail, signInWithGoogle } from "../auth/auth";
 import { useNavigate } from "react-router-dom";
-
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../auth/authContext";
-import {app} from '../firebaseConfig'
+import { app } from '../firebaseConfig';
+import { FaGoogle, FaEnvelope, FaLock } from 'react-icons/fa';
+import { Container, Row, Col, Form, Button, Alert, InputGroup } from 'react-bootstrap';
+import ReCAPTCHA from "react-google-recaptcha";
+
 const db = getFirestore(app);
+
 export const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");  // Para error de validación de contraseña 
-  const [errorMessage, setErrorMessage] = useState("");  // Para errores de Firebase
+  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const recaptchaRef = useRef();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
   useEffect(() => {
     const checkUserAccount = async () => {
       if (currentUser) {
-        // Verificar si el usuario ya tiene una cuenta
         const accountsCollection = collection(db, "accounts");
         const q = query(accountsCollection, where("ownerId", "==", currentUser.email));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-          // Si no tiene cuenta, redirigir a la página de crear cuenta
           navigate("/configurar-cuenta");
         } else {
-          // Si ya tiene cuenta, redirigir al perfil
           navigate("/perfil");
         }
       }
@@ -38,76 +41,102 @@ export const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    // Validar que las contraseñas coincidan
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden");
       return;
     }
-
-    // Intentar registrar al usuario
-    const result = await signUpWithEmail(email, password);
-    
+  
+    if (!captchaToken) {
+      setError("Por favor, complete el reCAPTCHA");
+      return;
+    }
+  
+    const result = await signUpWithEmail(email, password, captchaToken);
+  
     if (result.success) {
-      // Si el registro es exitoso, redirige a configurar cuenta o al perfil
       navigate("/configurar-cuenta");
     } else {
-      // Muestra el mensaje de error si ocurre un error de Firebase
       setErrorMessage(result.message);
     }
   };
+  
+
   const handleLoginWithGoogle = async () => {
     await signInWithGoogle();
   };
 
+  const handleCaptchaChange = (token) => {
+    setCaptchaToken(token);
+  };
+
   return (
-    <div className="container text-center w-50">
-      <h2>Registrar cuenta</h2>
+    <Container className="d-flex justify-content-center mt-5" style={{ minHeight: '100vh' }}>
+      <Row className="w-100">
+        <Col md={6} lg={4} className="mx-auto">
+          <h2 className="mb-4 text-center">Registrar cuenta</h2>
 
-      {/* Muestra errores de validación */}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+          {error && <Alert variant="danger">{error}</Alert>}
+          {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
 
-      {/* Muestra errores desde Firebase */}
-      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+          <Form onSubmit={handleRegister}>
+            <Form.Group className="mb-3">
+              <InputGroup>
+                <InputGroup.Text><FaEnvelope /></InputGroup.Text>
+                <Form.Control
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <InputGroup>
+                <InputGroup.Text><FaLock /></InputGroup.Text>
+                <Form.Control
+                  type="password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group className="mb-4">
+              <InputGroup>
+                <InputGroup.Text><FaLock /></InputGroup.Text>
+                <Form.Control
+                  type="password"
+                  placeholder="Confirmar contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </InputGroup>
+            </Form.Group>
+            
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey="6Lei2DoqAAAAANZjygCn2y8Z0r10NT_NqQAN06y5"
+              onChange={handleCaptchaChange}
+              className="mb-3"
+            />
 
-      <form onSubmit={handleRegister}>
-        <div className="form-group">
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="password"
-            placeholder="Confirmar contraseña"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">
-          Registrar
-        </button>
-        
-      <button onClick={handleLoginWithGoogle} className="btn btn-secondary">
-        Crear cuenta con Google
-      </button>
-      </form>
-    </div>
+            <Button variant="primary" type="submit" className="w-100 mb-3">
+              Registrar
+            </Button>
+
+            <Button 
+              variant="secondary" 
+              className="w-100 d-flex align-items-center justify-content-center" 
+              onClick={handleLoginWithGoogle}
+            >
+              <FaGoogle className="me-2" /> Crear cuenta con Google
+            </Button>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
   );
 };

@@ -4,11 +4,13 @@ import { downloadPDF } from "../utils/downloadPDF";
 import { reauthenticateUser, reauthenticateWithGoogle } from "../auth/auth";
 import { auth } from "../auth/auth"; // Importa auth desde tu archivo de autenticación
 import { deleteCard } from "../auth/deleteCard";
+import UpdateCardModal from './UpdateCardModal'; // Importar el modal de actualización de tarjeta
 
-export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDelete }) => {
+export const AccountInfo = ({ accountData, selectedCard, transactions, totalBalance, onCardDelete }) => {
   const [showModal, setShowModal] = useState(false);
   const [password, setPassword] = useState("");
-  
+  const [showUpdateModal, setShowUpdateModal] = useState(false); // Estado para el modal de actualización
+
   const handleDelete = async () => {
     let result;
 
@@ -18,14 +20,14 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
     } else {
       result = await reauthenticateWithGoogle(); // Reautenticación con Google
     }
-    console.log("Estado de autenticacion ",result)
+
     if (result.success) {
       await deleteCard(selectedCard.cardId); // Llama a la función para eliminar la tarjeta
-      setShowModal(false)
+      setShowModal(false);
       onCardDelete(); // Llama a la función para actualizar el estado en el componente padre
     } else {
-        setShowModal(false)
-        alert("Contraseña incorrecta o autenticacion fallida")
+      setShowModal(false);
+      alert("Contraseña incorrecta o autenticación fallida");
     }
   };
 
@@ -36,6 +38,7 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
           <Card.Title>Información de la Cuenta</Card.Title>
           <Card.Text>
             <p><strong>Tipo de cuenta:</strong> {accountData.accountType}</p>
+            <p><strong>Total del saldo en todas las tarjetas:</strong> ${totalBalance} MXN</p> {/* Mostramos el saldo total */}
             {selectedCard && (
               <>
                 <p><strong>CLABE:</strong> {selectedCard.clabeNumber}</p>
@@ -57,6 +60,13 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
                 onClick={() => setShowModal(true)}
               >
                 Eliminar Tarjeta
+              </Button>
+              <Button
+                variant="warning"
+                className="ms-2"
+                onClick={() => setShowUpdateModal(true)} // Abrir el modal de actualización
+              >
+                Actualizar Tarjeta
               </Button>
             </>
           )}
@@ -94,6 +104,16 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Modal para actualizar tarjeta */}
+      {selectedCard && (
+        <UpdateCardModal
+          show={showUpdateModal}
+          handleClose={() => setShowUpdateModal(false)}
+          cardData={selectedCard}
+          onCardUpdated={() => setShowUpdateModal(false)} // Refresca después de la actualización
+        />
+      )}
     </>
   );
 };

@@ -1,9 +1,12 @@
 import React from "react";
 import { Card, Row, Col } from "react-bootstrap";
-import { Transactions } from "./Transactions";
-import { TransactionHistory } from "./TransactionHistory";
+import { TransactionsForm } from "./TransactionForm";
+import {TransactionHistory} from './TransactionHistory';
+import { useAuth } from "../auth/authContext"; // Asegúrate de importar el hook correcto
 
 export const TransactionSection = ({ selectedCard, updateCardBalance }) => {
+  const { currentUser } = useAuth(); // Obtener currentUser del contexto
+
   return (
     <Row>
       <Col md={6} className="mb-4">
@@ -11,9 +14,10 @@ export const TransactionSection = ({ selectedCard, updateCardBalance }) => {
           <Card.Body>
             <Card.Title>Transacciones</Card.Title>
             {selectedCard ? (
-              <Transactions
+              <TransactionsForm
                 selectedCardId={selectedCard.cardId}
                 updateBalance={updateCardBalance}
+                currentUser={currentUser} 
               />
             ) : (
               <p>Selecciona una tarjeta para ver las transacciones</p>
