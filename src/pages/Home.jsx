@@ -1,6 +1,5 @@
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCoffee, faCreditCard } from '@fortawesome/free-solid-svg-icons';
+import { FaCreditCard, FaCoffee } from 'react-icons/fa';  
 
 import '../styles/home.css';
 
@@ -11,7 +10,7 @@ export const Home = () => {
         {/* Sección de galería de imágenes */}
         <div className="row justify-content-center align-items-center mt-5">
           <div className="col-md-8">
-            <div id="imageCarousel" className="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+            <div id="imageCarousel" className="carousel carousel-dark slide" data-bs-ride="carousel" data-bs-interval="3000">
               <div className="carousel-indicators">
                 <button type="button" data-bs-target="#imageCarousel" data-bs-slide-to="0" className="active" aria-current="true" aria-label="Slide 1"></button>
                 <button type="button" data-bs-target="#imageCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
@@ -40,12 +39,12 @@ export const Home = () => {
                 </div>
                 <div className="carousel-item active" data-bs-interval="10000">
                   <img 
-                    src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fimagen%203.png?alt=media&token=85465cda-42a9-4c19-a41c-9b22ec210a24" 
+                    src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fliberacion.jpg?alt=media&token=62cb6736-0427-4808-a945-04019972cb71" 
                     className="d-block w-100 img-fluid" 
                     alt="Imagen 3" />
                     <div class="carousel-caption d-none d-md-block">
-                        <h5>Liberate de la tensión</h5>
-                        <p>Con nuestros asesores nunca tendras que volver a preocuparte por el manejo de tus cuentas.</p>
+                        <h5 className='text-black'>Liberate de la tensión</h5>
+                        <p className='text-black'>Con nuestros asesores nunca tendras que volver a preocuparte por el manejo de tus cuentas.</p>
                     </div>
                 </div>
               </div>
@@ -66,7 +65,6 @@ export const Home = () => {
           <div className="col-md-8 text-center">
             <h1 className="display-4 text-dark mb-4">El banco que está de tu lado</h1>
             <p className="lead text-dark">Bienvenido a nuestra plataforma. Explora nuestros servicios y productos.</p>
-            <a href="#explore" className="btn btn-primary btn-lg mt-4">Explorar</a>
           </div>
         </div>
 
@@ -77,29 +75,49 @@ export const Home = () => {
             <div className="row justify-content-center">
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
-                  <FontAwesomeIcon icon={faCreditCard} size="3x" className="my-3" />
+                  <FaCreditCard size="3em" className="my-3" />  {/* React Icons */}
                   <div className="card-body">
                     <h5 className="card-title">Tarjeta de Crédito</h5>
                     <p className="card-text">Descubre nuestros beneficios.</p>
-                    <a href="#tarjeta-credito" className="btn btn-primary">Ver más</a>
+                    <a href="#tarjeta-credito" className="btn btn-info">Ver más</a>
                   </div>
                 </div>
               </div>
               <div className="col-md-3 col-sm-6 mb-4">
                 <div className="card text-center">
-                  <FontAwesomeIcon icon={faCoffee} size="3x" className="my-3" />
+                  <FaCoffee size="3em" className="my-3" />  {/* React Icons */}
                   <div className="card-body">
                     <h5 className="card-title">Producto 2</h5>
                     <p className="card-text">Detalles del producto 2.</p>
-                    <a href="#producto2" className="btn btn-primary">Ver más</a>
+                    <a href="#producto2" className="btn btn-info">Ver más</a>
                   </div>
                 </div>
               </div>
+              <div className="col-md-3 col-sm-6 mb-4">
+                <div className="card text-center">
+                  <FaCoffee size="3em" className="my-3" />  {/* React Icons */}
+                  <div className="card-body">
+                    <h5 className="card-title">Producto 3</h5>
+                    <p className="card-text">Detalles del producto 3.</p>
+                    <a href="#producto2" className="btn btn-info">Ver más</a>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-3 col-sm-6 mb-4">
+                <div className="card text-center">
+                  <FaCoffee size="3em" className="my-3" />  {/* React Icons */}
+                  <div className="card-body">
+                    <h5 className="card-title">Producto 4</h5>
+                    <p className="card-text">Detalles del producto 4.</p>
+                    <a href="#producto2" className="btn btn-info">Ver más</a>
+                  </div>
+                </div>
+              </div>
+              
               {/* Puedes añadir más tarjetas como estas */}
             </div>
           </div>
         </section>
-
   
       </div>
     );

@@ -6,7 +6,7 @@ import { app } from "../firebaseConfig";
 import { UserProfile } from "../components/UserProfile";
 import { AccountInfo } from "../components/AccountInfo";
 import { TransactionSection } from "../components/TransactionSection";
-import { RealTimeChat } from "../components/RealTimeChat";
+import UserChat from "../components/UserChat";
 import UserCards from "../components/UserCard";
 import { Container, Spinner, Button } from "react-bootstrap";
 
@@ -135,7 +135,7 @@ export const Profile = () => {
         selectedCard={selectedCard}
         updateCardBalance={updateCardBalance}
       />
-      <RealTimeChat userRole={userRole} />
+      <UserChat/>
       {userRole === "admin" && (
         <Button
           variant="secondary"

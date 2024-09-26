@@ -1,6 +1,7 @@
-// src/components/ResetPassword.jsx
 import React, { useState } from "react";
 import { resetPassword } from "../auth/auth"; // Importa la función de restablecer contraseña
+import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap"; // Importando componentes de React Bootstrap
+import { FaEnvelope, FaKey } from "react-icons/fa"; // Importar íconos de react-icons
 
 export const ResetPassword = () => {
   const [email, setEmail] = useState("");
@@ -17,24 +18,39 @@ export const ResetPassword = () => {
   };
 
   return (
-    <div className="container text-center w-50">
-      <h2>Restablecer contraseña</h2>
-      {message && <p style={{ color: message.includes("Correo de restablecimiento") ? "green" : "red" }}>{message}</p>}
-      <form onSubmit={handleResetPassword}>
-        <div className="form-group">
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="form-control"
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">
-          Enviar correo de restablecimiento
-        </button>
-      </form>
-    </div>
+    <Container className="d-flex flex-column justify-content-center align-items-center mt-5">
+      <Row className="w-100">
+        <Col md={{ span: 6, offset: 3 }}>
+          <div className="text-center ">
+            <FaKey size={50} className="mb-3 text-primary" />
+            <h2>Restablecer contraseña</h2>
+          </div>
+          {message && (
+            <Alert
+              variant={message.includes("Correo de restablecimiento") ? "success" : "danger"}
+            >
+              {message}
+            </Alert>
+          )}
+          <Form onSubmit={handleResetPassword} className="p-4 border rounded shadow-sm">
+            <Form.Group controlId="formEmail" className="mb-3">
+              <Form.Label>
+                <FaEnvelope className="me-2" /> Correo Electrónico
+              </Form.Label>
+              <Form.Control
+                type="email"
+                placeholder="Introduce tu correo electrónico"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Button variant="primary" type="submit" className="w-100">
+              Enviar correo de restablecimiento
+            </Button>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
   );
 };
