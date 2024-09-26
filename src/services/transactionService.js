@@ -1,5 +1,5 @@
 import { saveTransaction, saveTransfer, updateRecipientBalance,getPhoneNumberByOwnerId } from './firestoreTransactionService';
-import { getFirestore, query, collection, where, getDocs, setDoc, addDoc, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, query, collection, where, getDocs, setDoc, addDoc, doc, getDoc, getCountFromServer } from 'firebase/firestore';
 
 import axios from 'axios'; // Asegúrate de tener axios instalado 
 const db = getFirestore();
@@ -178,6 +178,25 @@ export const getNotificationById = async (notificationId) => {
   }
 
   return notificationDoc.data();
+};
+
+export const countUnreadNotifications = async (currentUser, db) => {
+  if (currentUser) {
+    const q = query(
+      collection(db, "notifications"),
+      where("ownerId", "==", currentUser.uid),
+      where("read", "==", false)
+    );
+
+    try {
+      const snapshot = await getCountFromServer(q); // Obtener solo el conteo de los documentos
+      return snapshot.data().count; // Retornar el número de documentos
+    } catch (error) {
+      console.error("Error al contar notificaciones no leídas:", error);
+      return 0; // En caso de error, retornar 0
+    }
+  }
+  return 0; // Si no hay usuario, no hay notificaciones
 };
 
 export const getTransferById = async (transferId) => {

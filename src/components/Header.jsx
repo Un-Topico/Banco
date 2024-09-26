@@ -1,16 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut, getAuth } from "firebase/auth";
 import { app } from "../firebaseConfig";
 import { useAuth } from "../auth/authContext"; 
 import { CiBellOn } from 'react-icons/ci'; 
-import ModalNotification from "./ModalNotification"; // Importa el componente Modal
+import ModalNotification from "./ModalNotification"; 
+import { getFirestore, query, collection, where, onSnapshot } from "firebase/firestore"; 
 
 export const Header = () => {
   const { currentUser } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0); // Estado para el conteo
   const navigate = useNavigate();
   const auth = getAuth(app);
+  const db = getFirestore();
 
   const handleShow = () => setShowModal(true);
   const handleClose = () => setShowModal(false);
@@ -23,6 +26,25 @@ export const Header = () => {
       console.error("Error al cerrar sesión:", error);
     }
   };
+
+  useEffect(() => {
+    if (currentUser) {
+      const q = query(
+        collection(db, "notifications"),
+        where("ownerId", "==", currentUser.uid),
+        where("read", "==", false)
+      );
+  
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        // El tamaño del snapshot te da el conteo de las no leídas
+        setUnreadCount(snapshot.size);
+      });
+  
+      // Cleanup para evitar fugas de memoria
+      return () => unsubscribe();
+    }
+  }, [currentUser, db]);
+  
 
   return (
     <header>
@@ -50,7 +72,28 @@ export const Header = () => {
               {currentUser ? (
                 <div>
                   <button className="btn btn-outline-success me-2" onClick={handleSignOut}>Logout</button>
-                  <CiBellOn onClick={handleShow}  style={{cursor: 'pointer'}}/>
+                  
+                  {/* Icono de notificaciones con contador */}
+                  <div style={{ position: 'relative', display: 'inline-block' }}>
+                    <CiBellOn onClick={handleShow} style={{cursor: 'pointer', fontSize: '1.5rem'}} />
+                    {unreadCount > 0 && (
+                      <span 
+                        style={{
+                          position: 'absolute',
+                          top: '-5px',
+                          right: '-10px',
+                          background: 'red',
+                          color: 'white',
+                          borderRadius: '50%',
+                          padding: '2px 6px',
+                          fontSize: '0.8rem'
+                        }}
+                      >
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+
                   <ModalNotification 
                     show={showModal} 
                     handleClose={handleClose} 
