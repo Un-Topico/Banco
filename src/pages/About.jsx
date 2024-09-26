@@ -1,8 +1,5 @@
 import React from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBullseye, faEye, faHandshake } from '@fortawesome/free-solid-svg-icons';
-
-//import '../styles/about.css';
+import { FaBullseye, FaEye, FaHandshake } from "react-icons/fa";  // Importamos los íconos desde react-icons
 
 export const About = () => {
   return (
@@ -19,17 +16,17 @@ export const About = () => {
       <div className="container my-5">
         <div className="row text-center">
           <div className="col-md-4">
-            <FontAwesomeIcon icon={faBullseye} size="3x" className="my-3" />
+            <FaBullseye size="3x" className="my-3" /> {/* Reemplazamos FontAwesomeIcon por FaBullseye */}
             <h3>Misión</h3>
             <p>Proporcionar soluciones financieras accesibles y efectivas para todos.</p>
           </div>
           <div className="col-md-4">
-            <FontAwesomeIcon icon={faEye} size="3x" className="my-3" />
+            <FaEye size="3x" className="my-3" /> {/* Reemplazamos FontAwesomeIcon por FaEye */}
             <h3>Visión</h3>
             <p>Ser líderes en innovación bancaria a nivel global.</p>
           </div>
           <div className="col-md-4">
-            <FontAwesomeIcon icon={faHandshake} size="3x" className="my-3" />
+            <FaHandshake size="3x" className="my-3" /> {/* Reemplazamos FontAwesomeIcon por FaHandshake */}
             <h3>Valores</h3>
             <p>Compromiso, integridad y confianza son nuestros pilares.</p>
           </div>

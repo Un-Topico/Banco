@@ -1,7 +1,5 @@
 import React from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBriefcase, faChartLine, faHandshake } from '@fortawesome/free-solid-svg-icons';
-//import '../styles/pymes.css';
+import { FaBriefcase, FaChartLine, FaHandshake } from 'react-icons/fa';  // Importamos los íconos desde react-icons
 
 export const PyMes = () => {
   return (
@@ -19,17 +17,17 @@ export const PyMes = () => {
         <h2 className="text-center mb-4">Nuestros Servicios</h2>
         <div className="row text-center">
           <div className="col-md-4 mb-4">
-            <FontAwesomeIcon icon={faBriefcase} size="3x" className="mb-3" />
+            <FaBriefcase size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaBriefcase */}
             <h5>Créditos PyMEs</h5>
             <p>Financiamiento rápido y seguro para tu negocio.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <FontAwesomeIcon icon={faChartLine} size="3x" className="mb-3" />
+            <FaChartLine size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaChartLine */}
             <h5>Soluciones Financieras</h5>
             <p>Productos adaptados para impulsar el crecimiento de tu empresa.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <FontAwesomeIcon icon={faHandshake} size="3x" className="mb-3" />
+            <FaHandshake size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaHandshake */}
             <h5>Asesoría Personalizada</h5>
             <p>Te ayudamos a tomar las mejores decisiones para tu empresa.</p>
           </div>

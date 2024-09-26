@@ -1,7 +1,5 @@
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPiggyBank, faCreditCard, faHome } from '@fortawesome/free-solid-svg-icons';
-//import '../styles/personas.css';
+import { FaPiggyBank, FaCreditCard, FaHome } from 'react-icons/fa';  // Importamos los íconos desde react-icons
 
 export const Personas = () => {
   return (
@@ -19,17 +17,17 @@ export const Personas = () => {
         <h2 className="text-center mb-4">Nuestros Productos</h2>
         <div className="row text-center">
           <div className="col-md-4 mb-4">
-            <FontAwesomeIcon icon={faPiggyBank} size="3x" className="mb-3" />
+            <FaPiggyBank size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaPiggyBank */}
             <h5>Cuentas de Ahorro</h5>
             <p>Abre tu cuenta de ahorro y disfruta de excelentes tasas de interés.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <FontAwesomeIcon icon={faCreditCard} size="3x" className="mb-3" />
+            <FaCreditCard size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaCreditCard */}
             <h5>Tarjetas de Crédito</h5>
             <p>Disfruta de nuestros programas de recompensas y bajos intereses.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <FontAwesomeIcon icon={faHome} size="3x" className="mb-3" />
+            <FaHome size="3x" className="mb-3" /> {/* Reemplazamos FontAwesomeIcon por FaHome */}
             <h5>Créditos Hipotecarios</h5>
             <p>Obtén tu hogar soñado con nuestras opciones de crédito hipotecario.</p>
           </div>

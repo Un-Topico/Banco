@@ -1,7 +1,5 @@
 import React from "react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt, faClock, faSearch } from '@fortawesome/free-solid-svg-icons';
-//import '../styles/encuentraSucursal.css';
+import { FaMapMarkerAlt, FaClock, FaSearch } from 'react-icons/fa';
 
 export const EncuentraSucursal = () => {
   return (
@@ -25,7 +23,7 @@ export const EncuentraSucursal = () => {
               aria-label="Buscar" 
             />
             <button className="btn btn-primary" type="button">
-              <FontAwesomeIcon icon={faSearch} /> Buscar
+              <FaSearch /> Buscar  {/* Reemplazamos FontAwesomeIcon por el ícono de react-icons */}
             </button>
           </div>
         </div>
@@ -50,9 +48,9 @@ export const EncuentraSucursal = () => {
             <div className="col-md-4 mb-4">
               <div className="card">
                 <div className="card-body">
-                  <h5 className="card-title"><FontAwesomeIcon icon={faMapMarkerAlt} /> Sucursal Centro</h5>
+                  <h5 className="card-title"><FaMapMarkerAlt /> Sucursal Centro</h5> {/* Reemplazamos FontAwesomeIcon por FaMapMarkerAlt */}
                   <p className="card-text">Calle Principal #123, Centro, Ciudad</p>
-                  <p><FontAwesomeIcon icon={faClock} /> Horario: Lunes a Viernes, 9:00 AM - 5:00 PM</p>
+                  <p><FaClock /> Horario: Lunes a Viernes, 9:00 AM - 5:00 PM</p>  {/* Reemplazamos FontAwesomeIcon por FaClock */}
                   <a href="#sucursal-detalles" className="btn btn-outline-primary">Ver detalles</a>
                 </div>
               </div>
@@ -62,9 +60,9 @@ export const EncuentraSucursal = () => {
             <div className="col-md-4 mb-4">
               <div className="card">
                 <div className="card-body">
-                  <h5 className="card-title"><FontAwesomeIcon icon={faMapMarkerAlt} /> Sucursal Norte</h5>
+                  <h5 className="card-title"><FaMapMarkerAlt /> Sucursal Norte</h5>
                   <p className="card-text">Avenida Norte #456, Zona Norte, Ciudad</p>
-                  <p><FontAwesomeIcon icon={faClock} /> Horario: Lunes a Sábado, 10:00 AM - 6:00 PM</p>
+                  <p><FaClock /> Horario: Lunes a Sábado, 10:00 AM - 6:00 PM</p>
                   <a href="#sucursal-detalles" className="btn btn-outline-primary">Ver detalles</a>
                 </div>
               </div>
@@ -74,9 +72,9 @@ export const EncuentraSucursal = () => {
             <div className="col-md-4 mb-4">
               <div className="card">
                 <div className="card-body">
-                  <h5 className="card-title"><FontAwesomeIcon icon={faMapMarkerAlt} /> Sucursal Sur</h5>
+                  <h5 className="card-title"><FaMapMarkerAlt /> Sucursal Sur</h5>
                   <p className="card-text">Calle Sur #789, Zona Sur, Ciudad</p>
-                  <p><FontAwesomeIcon icon={faClock} /> Horario: Lunes a Viernes, 8:00 AM - 4:00 PM</p>
+                  <p><FaClock /> Horario: Lunes a Viernes, 8:00 AM - 4:00 PM</p>
                   <a href="#sucursal-detalles" className="btn btn-outline-primary">Ver detalles</a>
                 </div>
               </div>
