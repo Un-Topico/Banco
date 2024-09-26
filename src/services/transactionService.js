@@ -1,68 +1,98 @@
-import { saveTransaction, saveTransfer, updateRecipientBalance } from './firestoreTransactionService';
-import { getFirestore, query, collection, where, getDocs, setDoc } from 'firebase/firestore';
+import { saveTransaction, saveTransfer, updateRecipientBalance,getPhoneNumberByOwnerId } from './firestoreTransactionService';
+import { getFirestore, query, collection, where, getDocs, setDoc, addDoc, doc, getDoc } from 'firebase/firestore';
 
+import axios from 'axios'; // Asegúrate de tener axios instalado 
 const db = getFirestore();
-
-export const handleTransaction = async (cardDoc, transactionType, amount, description, recipientEmail, recipientClabe, currentUser, updateBalance) => {
+const sendMessage = async (phoneNumber, amount) => {
+    try {
+      await axios.post("https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-ab5e80b6-8190-4404-9b75-ead553014c5a/twilio-package/send-message", {
+        to: phoneNumber,
+        body: `Has recibido una transferencia de ${amount} MXN.`,
+      });
+    } catch (error) {
+      console.error("Error al enviar el mensaje:", error);
+    }
+  };
+  
+  export const handleTransaction = async (cardDoc, transactionType, amount, description, recipientEmail, recipientClabe, currentUser, updateBalance) => {
     let newBalance = cardDoc.data().balance;
-
+  
     if (transactionType === "Transferencia") {
-        if (recipientEmail === currentUser.email || recipientClabe === currentUser.email) {
-            throw new Error("No puedes enviarte dinero a ti mismo.");
-        }
-
-        let recipientCardDoc;
-        if (recipientClabe) {
-            // Buscar tarjeta por clabeNumber
-            recipientCardDoc = await getCardDocByClabe(recipientClabe);
-        } else if (recipientEmail) {
-            // Buscar tarjeta por correo electrónico
-            recipientCardDoc = await getCardDocByEmail(recipientEmail);
-        } else {
-            throw new Error("Debes ingresar un correo electrónico o un número CLABE del destinatario.");
-        }
-
-        try {
-            if (newBalance < amount) throw new Error("No tienes suficiente saldo para realizar esta transferencia.");
-
-            newBalance -= parseFloat(amount);
-
-            await updateRecipientBalance(recipientCardDoc, amount);
-            await saveTransferData(cardDoc, recipientCardDoc, amount, description);
-            await saveTransactionData(cardDoc, recipientCardDoc, amount, description, transactionType);
-
-            await setDoc(cardDoc.ref, { balance: newBalance }, { merge: true });
-            updateBalance(newBalance);
-        } catch (error) {
-            console.error('Error in handleTransaction:', error.message);
-            throw error;
-        }
-    } else {
-        newBalance = transactionType === "Deposito" ? newBalance + parseFloat(amount) : newBalance - parseFloat(amount);
-
-        await saveTransaction({
-            transaction_id: `transaction_${Date.now()}`,
-            card_id: cardDoc.id,
-            transaction_type: transactionType,
-            amount: parseFloat(amount),
-            transaction_date: new Date(),
-            description: description || "Sin descripción",
-            status: transactionType === "Deposito" ? "received" : "sent",
-        });
-
+      if (recipientEmail === currentUser.email || recipientClabe === currentUser.email) {
+        throw new Error("No puedes enviarte dinero a ti mismo.");
+      }
+  
+      let recipientCardDoc;
+      if (recipientClabe) {
+        // Buscar tarjeta por clabeNumber
+        recipientCardDoc = await getCardDocByClabe(recipientClabe);
+      } else if (recipientEmail) {
+        // Buscar tarjeta por correo electrónico
+        recipientCardDoc = await getCardDocByEmail(recipientEmail);
+      } else {
+        throw new Error("Debes ingresar un correo electrónico o un número CLABE del destinatario.");
+      }
+  
+      try {
+        if (newBalance < amount) throw new Error("No tienes suficiente saldo para realizar esta transferencia.");
+         // Obtener el número de teléfono del destinatario y enviar el mensaje
+         const recipientOwnerId = recipientCardDoc.data().ownerId;
+        newBalance -= parseFloat(amount);
+  
+        await updateRecipientBalance(recipientCardDoc, amount);
+        await saveTransferData(cardDoc, recipientCardDoc, amount, description, recipientOwnerId);
+        await saveTransactionData(cardDoc, recipientCardDoc, amount, description, transactionType);
+  
         await setDoc(cardDoc.ref, { balance: newBalance }, { merge: true });
         updateBalance(newBalance);
-    }
-};
+  
+       
+        const recipientPhoneNumber = await getPhoneNumberByOwnerId(recipientOwnerId);
+        await sendMessage(recipientPhoneNumber, amount);
 
-const saveTransferData = async (cardDoc, recipientCardDoc, amount, description) => {
+        
+
+      } catch (error) {
+        console.error('Error in handleTransaction:', error.message);
+        throw error;
+      }
+    } else {
+      newBalance = transactionType === "Deposito" ? newBalance + parseFloat(amount) : newBalance - parseFloat(amount);
+  
+      await saveTransaction({
+        transaction_id: `transaction_${Date.now()}`,
+        card_id: cardDoc.id,
+        transaction_type: transactionType,
+        amount: parseFloat(amount),
+        transaction_date: new Date(),
+        description: description || "Sin descripción",
+        status: transactionType === "Deposito" ? "received" : "sent",
+      });
+  
+      await setDoc(cardDoc.ref, { balance: newBalance }, { merge: true });
+      updateBalance(newBalance);
+    }
+  };
+
+const saveTransferData = async (cardDoc, recipientCardDoc, amount, description, recipientOwnerId) => {
+  const transferID = `transfer_${Date.now()}`;
     await saveTransfer({
-        transfer_id: `transfer_${Date.now()}`,
+        transfer_id: transferID,
         from_card_id: cardDoc.id,
         to_card_id: recipientCardDoc.id,
         amount: parseFloat(amount),
         transfer_date: new Date(),
         description: description || "Sin descripción",
+    });
+    // CODIGO PARA LA NOTIFICACION:
+    await saveNotification({
+      notificationId: `notification_${Date.now()}`,
+      transfer_id: transferID,
+      ownerId: recipientOwnerId,
+      message: `Has recibido una transferencia de $${amount} MXN.`,
+      cardId: recipientCardDoc.id,
+      read: false, // Estado inicial como no leído
+      timestamp: new Date(),
     });
 };
 
@@ -127,4 +157,67 @@ const getCardDocByEmail = async (email) => {
 
     // Devolvemos el primer documento encontrado
     return cardSnapshot.docs[0];
+};
+export const saveNotification = async (notification) => {
+  const notificationRef = collection(db, "notifications");
+  await addDoc(notificationRef, notification);
+};
+
+
+export const markNotificationAsRead = async (notificationId) => {
+  const notificationRef = doc(db, "notifications", notificationId);
+  await setDoc(notificationRef, { read: true }, { merge: true });
+};
+
+export const getNotificationById = async (notificationId) => {
+  const notificationRef = doc(db, "notifications", notificationId);
+  const notificationDoc = await getDoc(notificationRef);
+  
+  if (!notificationDoc.exists()) {
+    throw new Error("La notificación no existe.");
+  }
+
+  return notificationDoc.data();
+};
+
+
+
+export const getTransferById = async (transferId) => {
+  const transferRef = doc(db, "transfers", transferId);
+  const transferDoc = await getDoc(transferRef);
+  
+  if (!transferDoc.exists()) {
+    throw new Error("Transferencia no encontrada");
+  }
+  
+  return transferDoc.data();
+};
+export const getCardById = async (cardId) => {
+  const cardRef = doc(db, "cards", cardId);
+  const cardDoc = await getDoc(cardRef);
+
+  if (!cardDoc.exists()) {
+    throw new Error("Tarjeta no encontrada.");
+  }
+
+  const cardData = cardDoc.data();
+  
+  // Aquí transformamos el número de tarjeta
+  const maskedCardNumber = maskCardNumber(cardData.cardNumber);
+  
+  // Devolvemos solo el cardNumber enmascarado
+  return {
+    cardNumber: maskedCardNumber
+  };
+};
+
+// Función para enmascarar el número de tarjeta
+const maskCardNumber = (cardNumber) => {
+  if (!cardNumber || cardNumber.length < 8) {
+    return "Número inválido";
+  }
+  const firstDigit = cardNumber.slice(0, 1); // Primer dígito
+  const lastFourDigits = cardNumber.slice(-4); // Últimos 4 dígitos
+  const masked = `${firstDigit}${'x'.repeat(cardNumber.length - 5)}${lastFourDigits}`;
+  return masked;
 };

@@ -2,6 +2,23 @@ import { getFirestore, collection, doc, getDoc, setDoc, query, where, getDocs,on
 import { app } from "../firebaseConfig";
 
 const db = getFirestore(app);
+export const getPhoneNumberByOwnerId = async (ownerId) => {
+  try {
+    const accountsRef = collection(db, "accounts");
+    const q = query(accountsRef, where("ownerId", "==", ownerId));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      throw new Error("No se encontró una cuenta asociada a este ownerId.");
+    }
+
+    const accountDoc = querySnapshot.docs[0].data();
+    return accountDoc.phoneNumber;
+  } catch (error) {
+    console.error("Error al obtener el número de teléfono:", error.message);
+    throw error;
+  }
+};
 
 export const getCardDoc = async (selectedCardId) => {
   if (!selectedCardId) throw new Error("No se ha seleccionado ninguna tarjeta.");

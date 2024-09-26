@@ -1,73 +1,94 @@
-import React, { useEffect, useState } from 'react';
-import { getFirestore, collection, query, onSnapshot, orderBy } from 'firebase/firestore';
-import { app } from "../firebaseConfig";
-import { ChatWindow } from './ChatWindow';
-import { AiOutlineMessage, AiOutlineClose } from "react-icons/ai"; // Importamos el ícono de chat y el de cerrar
-import "../styles/Chat.css"; // Asegúrate de agregar las clases al archivo CSS
+// import React, { useState, useEffect } from 'react';
+// import { Accordion, Card, Button } from 'react-bootstrap';
+// import { getFirestore, collection, query, onSnapshot, doc, setDoc, arrayUnion } from 'firebase/firestore';
+// import { useAuth } from "../auth/authContext"; // Asegúrate de tener el contexto de autenticación
 
-export const SoporteChat = ({ toggleChat, isChatOpen }) => {
-  const [chats, setChats] = useState([]);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [isConversationListOpen, setIsConversationListOpen] = useState(false); // Controla la visibilidad de la lista de conversaciones
+// const SoporteChat = () => {
+//   const [chats, setChats] = useState([]);
+//   const [selectedChatId, setSelectedChatId] = useState(null);
+//   const [newReply, setNewReply] = useState('');
+//   const db = getFirestore();
+//   const { currentUser } = useAuth(); // Suponiendo que ya tienes autenticación implementada
 
-  useEffect(() => {
-    const db = getFirestore(app);
-    const chatsRef = collection(db, 'chats');
-    const q = query(chatsRef, orderBy('lastMessageTimestamp', 'desc')); // Ordena los chats por el último mensaje
+//   // Lógica para obtener los chats pendientes de responder
+//   useEffect(() => {
+//     const q = query(collection(db, 'chats'));
+//     const unsubscribe = onSnapshot(q, (snapshot) => {
+//       const chatsData = snapshot.docs.map((doc) => ({
+//         id: doc.id,
+//         ...doc.data(),
+//       }));
+//       setChats(chatsData);
+//     });
+//     return () => unsubscribe();
+//   }, []);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const chatsArray = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setChats(chatsArray);
-    });
+//   // Enviar respuesta al usuario desde el soporte
+//   const sendReply = async (e, chatId) => {
+//     e.preventDefault();
+//     if (newReply.trim()) {
+//       const chatRef = doc(db, 'chats', chatId);
+//       const newMessage = {
+//         text: newReply,
+//         createdAt: new Date(),
+//         userId: 'soporte', // Identificador del soporte
+//         userName: 'Soporte',
+//       };
 
-    return () => unsubscribe();
-  }, []);
+//       try {
+//         // Actualizar el chat específico con la respuesta del soporte
+//         await setDoc(chatRef, {
+//           messages: arrayUnion(newMessage)
+//         }, { merge: true });
+//         setNewReply('');
+//       } catch (error) {
+//         console.error("Error enviando respuesta: ", error);
+//       }
+//     }
+//   };
 
-  const selectChat = (chat) => {
-    setSelectedChat(chat);
-    toggleChat(); // Abre el chat
-  };
+//   return (
+//     <div className="soporte-chat">
+//       <h3>Chats Pendientes</h3>
+//       <Accordion>
+//         {chats.map((chat) => (
+//           <Card key={chat.id}>
+//             <Card.Header>
+//               <Accordion.Toggle
+//                 as={Button}
+//                 variant="link"
+//                 eventKey={chat.id}
+//                 onClick={() => setSelectedChatId(chat.id)}
+//               >
+//                 Chat con {chat.userName}
+//               </Accordion.Toggle>
+//             </Card.Header>
+//             <Accordion.Collapse eventKey={chat.id}>
+//               <Card.Body>
+//                 {/* Mostrar todos los mensajes del chat */}
+//                 {chat.messages && chat.messages.map((msg, idx) => (
+//                   <p key={idx}>
+//                     <strong>{msg.userName}:</strong> {msg.text}
+//                   </p>
+//                 ))}
 
-  const toggleConversationList = () => {
-    setIsConversationListOpen(!isConversationListOpen); // Alterna la visibilidad de la lista de conversaciones
-  };
+//                 {/* Formulario para responder */}
+//                 <form onSubmit={(e) => sendReply(e, chat.id)}>
+//                   <input
+//                     type="text"
+//                     value={newReply}
+//                     onChange={(e) => setNewReply(e.target.value)}
+//                     placeholder="Escribe una respuesta..."
+//                   />
+//                   <Button type="submit">Enviar</Button>
+//                 </form>
+//               </Card.Body>
+//             </Accordion.Collapse>
+//           </Card>
+//         ))}
+//       </Accordion>
+//     </div>
+//   );
+// };
 
-  return (
-    <>
-      {/* Botón flotante para abrir la lista de conversaciones */}
-      <div className="conversation-list-icon" onClick={toggleConversationList}>
-        {isConversationListOpen ? (
-          <AiOutlineClose size={40} />
-        ) : (
-          <AiOutlineMessage size={40} />
-        )}
-      </div>
-
-      {/* Contenedor flotante de la lista de conversaciones */}
-      {isConversationListOpen && (
-        <div className="conversation-list-window">
-            <strong>Chats por responder:</strong>
-
-          <div className="conversation-list">
-            {chats.map(chat => (
-              <div
-                key={chat.id}
-                onClick={() => selectChat(chat)}
-                className="chat-list-item"
-              >
-                <p>{chat.email}</p>
-                <p>{chat.lastMessage}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ChatWindow se abre si isChatOpen es true y hay un chat seleccionado */}
-      {isChatOpen && selectedChat && <ChatWindow chat={selectedChat} />}
-    </>
-  );
-};
+// export default SoporteChat;

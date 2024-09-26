@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Form, Button, Alert, Container, Row, Col } from "react-bootstrap";
+import { Form, Button, Alert, Container, Row, Col, InputGroup } from "react-bootstrap";
 import Contacts from "./Contacts";
 import { handleTransaction } from "../services/transactionService";
 import { getCardDoc, listenToCardDoc } from "../services/firestoreTransactionService";
+import { FaMoneyBillAlt, FaUser, FaCommentAlt, FaExchangeAlt, FaPiggyBank } from "react-icons/fa"; // Importa los íconos de react-icons
 
 export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance }) => {
   const [transactionType, setTransactionType] = useState("Deposito");
@@ -13,14 +14,12 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  const lastBalanceRef = useRef(null); // Usar useRef para almacenar el último balance
+  const lastBalanceRef = useRef(null);
 
-  // Memoriza la función updateBalance para evitar renderizados innecesarios
   const memoizedUpdateBalance = useCallback((newBalance) => {
-    // Comparamos el balance actual con el último balance conocido
     if (newBalance !== lastBalanceRef.current) {
       updateBalance(newBalance);
-      lastBalanceRef.current = newBalance; // Actualizamos el balance
+      lastBalanceRef.current = newBalance;
     }
   }, [updateBalance]);
 
@@ -38,8 +37,6 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
 
     try {
       const cardDoc = await getCardDoc(selectedCardId);
-
-      // Validar campo de entrada
       if (transactionType === "Transferencia" && !recipientEmail && !recipientClabe) {
         throw new Error("Debes ingresar un correo electrónico o un número CLABE del destinatario.");
       }
@@ -52,10 +49,9 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
         recipientEmail,
         recipientClabe,
         currentUser,
-        memoizedUpdateBalance // Pasa la función memorizada
+        memoizedUpdateBalance
       );
 
-      // Limpiar campos del formulario después de una transacción exitosa
       setAmount("");
       setDescription("");
       setRecipientEmail("");
@@ -68,10 +64,9 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
 
   const handleContactSelect = (email) => {
     setRecipientEmail(email);
-    setRecipientClabe(""); // Limpiar número CLABE si se selecciona un contacto
+    setRecipientClabe("");
   };
 
-  // Determinar si los campos deben estar deshabilitados
   const isEmailDisabled = recipientClabe !== "";
   const isClabeDisabled = recipientEmail !== "";
 
@@ -79,7 +74,7 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
     <Container>
       <Row className="justify-content-center">
         <Col>
-          <h2>Realizar Transacción</h2>
+          <h2>Realizar Transacción <FaExchangeAlt /></h2>
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 
@@ -95,46 +90,59 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
 
             <Form.Group className="mb-3">
               <Form.Label>Monto</Form.Label>
-              <Form.Control
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Ingresa el monto"
-                required
-              />
+              <InputGroup>
+                <InputGroup.Text><FaMoneyBillAlt /></InputGroup.Text>
+                <Form.Control
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Ingresa el monto"
+                  required
+                />
+              </InputGroup>
             </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label>Descripción</Form.Label>
-              <Form.Control
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descripción opcional"
-              />
+              <InputGroup>
+                <InputGroup.Text><FaCommentAlt /></InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Descripción opcional"
+                />
+              </InputGroup>
             </Form.Group>
 
             {transactionType === "Transferencia" && (
               <>
                 <Form.Group className="mb-3">
                   <Form.Label>Correo del destinatario</Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={recipientEmail}
-                    onChange={(e) => setRecipientEmail(e.target.value)}
-                    placeholder="Ingresa el correo del destinatario"
-                    disabled={isEmailDisabled}
-                  />
+                  <InputGroup>
+                    <InputGroup.Text><FaUser /></InputGroup.Text>
+                    <Form.Control
+                      type="email"
+                      value={recipientEmail}
+                      onChange={(e) => setRecipientEmail(e.target.value)}
+                      placeholder="Ingresa el correo del destinatario"
+                      disabled={isEmailDisabled}
+                    />
+                  </InputGroup>
                 </Form.Group>
+
                 <Form.Group className="mb-3">
                   <Form.Label>Número CLABE del destinatario</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={recipientClabe}
-                    onChange={(e) => setRecipientClabe(e.target.value)}
-                    placeholder="Ingresa el número CLABE del destinatario"
-                    disabled={isClabeDisabled}
-                  />
+                  <InputGroup>
+                    <InputGroup.Text><FaPiggyBank /></InputGroup.Text>
+                    <Form.Control
+                      type="text"
+                      value={recipientClabe}
+                      onChange={(e) => setRecipientClabe(e.target.value)}
+                      placeholder="Ingresa el número CLABE del destinatario"
+                      disabled={isClabeDisabled}
+                    />
+                  </InputGroup>
                 </Form.Group>
                 <Contacts
                   currentUser={currentUser}

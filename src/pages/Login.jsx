@@ -1,35 +1,51 @@
-import React, { useEffect, useState } from "react";
-import { signInWithGoogle, signInWithEmail } from "../auth/auth"; // Importa la función de inicio de sesión por correo
-import { useNavigate, Link } from "react-router-dom"; // Importa Link para navegación
+import React, { useEffect, useState, useRef } from "react";
+import { signInWithGoogle, signInWithEmail } from "../auth/auth";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../auth/authContext";
-import { Container, Row, Col, Form, Button, Alert,InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Alert, InputGroup } from 'react-bootstrap';
 import { FaEnvelope, FaLock, FaGoogle } from 'react-icons/fa';
+import ReCAPTCHA from "react-google-recaptcha";  // Importa el componente de reCAPTCHA
 
 export const Login = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [captchaToken, setCaptchaToken] = useState(null); // Nuevo estado para almacenar el token de reCAPTCHA
+  const recaptchaRef = useRef(); // Referencia para el componente de reCAPTCHA
+
   useEffect(() => {
     if (currentUser) {
       navigate('/perfil');
     }
   }, [currentUser, navigate]);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
   const handleLoginWithEmail = async (e) => {
     e.preventDefault();
-    const result = await signInWithEmail(email, password);
-    if (result.success) {
-      navigate("/perfil"); // Redirigir al perfil si el inicio es exitoso
-    } else {
-      setErrorMessage(result.message); // Mostrar el mensaje de error
+
+    if (!captchaToken) {
+      setErrorMessage("Por favor completa la verificación de reCAPTCHA.");
+      return;
     }
+
+    const result = await signInWithEmail(email, password, captchaToken); // Pasa el captchaToken al backend
+    if (result.success) {
+      navigate("/perfil");
+    } else {
+      setErrorMessage(result.message);
+    }
+
+    // Resetea el captcha después de la solicitud
+    recaptchaRef.current.reset();
   };
 
   const handleLoginWithGoogle = async () => {
     await signInWithGoogle();
+  };
+
+  const handleRecaptchaChange = (token) => {
+    setCaptchaToken(token); // Guarda el token generado por reCAPTCHA
   };
 
   return (
@@ -65,7 +81,15 @@ export const Login = () => {
                 />
               </InputGroup>
             </Form.Group>
-            <Button variant="primary" type="submit" className="w-100 mb-3">
+
+            {/* reCAPTCHA Widget */}
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey="6Lei2DoqAAAAANZjygCn2y8Z0r10NT_NqQAN06y5" // Reemplaza con tu clave de sitio
+              onChange={handleRecaptchaChange}
+            />
+
+            <Button variant="primary" type="submit" className="w-100 mb-3 mt-3 ">
               Iniciar sesión con correo
             </Button>
           </Form>
