@@ -46,6 +46,27 @@ export const SoporteChatScreen = () => {
     }
   };
 
+  const toggleHumanSupport = async (chatId, isActive) => {
+    const chatRef = doc(db, 'chats', chatId);
+    try {
+      await setDoc(chatRef, { isHumanSupport: isActive }, { merge: true });
+
+      if (!isActive) {
+        const botMessage = {
+          text: "El agente ha finalizado el soporte. El bot retomará la conversación.",
+          createdAt: new Date(),
+          userId: 'bot',
+          userName: 'Bot',
+        };
+        await setDoc(chatRef, {
+          messages: arrayUnion(botMessage)
+        }, { merge: true });
+      }
+    } catch (error) {
+      console.error("Error al cambiar el estado del soporte humano: ", error);
+    }
+  };
+
   return (
     <div className="soporte-chat">
       <h3>Chats Pendientes</h3>
@@ -61,22 +82,31 @@ export const SoporteChatScreen = () => {
                 <div key={idx} className="message">
                   <strong>{msg.userName}:</strong> {msg.text}
                   {msg.createdAt ? new Date(msg.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-
                 </div>
               ))}
 
+              {/* Botón para activar/desactivar el soporte humano */}
+              <Button
+                variant={chat.isHumanSupport ? "danger" : "primary"}
+                onClick={() => toggleHumanSupport(chat.id, !chat.isHumanSupport)}
+              >
+                {chat.isHumanSupport ? "Finalizar Soporte Humano" : "Activar Soporte Humano"}
+              </Button>
+
               {/* Formulario para responder */}
-              <form onSubmit={(e) => sendReply(e, chat.id)} className="reply-form">
-                <input
-                  type="text"
-                  value={newReply}
-                  onChange={(e) => setNewReply(e.target.value)}
-                  placeholder="Escribe una respuesta..."
-                />
-                <Button type="submit" disabled={isSending}>
-                  {isSending ? 'Enviando...' : 'Enviar'}
-                </Button>
-              </form>
+              {chat.isHumanSupport && (
+                <form onSubmit={(e) => sendReply(e, chat.id)} className="reply-form">
+                  <input
+                    type="text"
+                    value={newReply}
+                    onChange={(e) => setNewReply(e.target.value)}
+                    placeholder="Escribe una respuesta..."
+                  />
+                  <Button type="submit" disabled={isSending}>
+                    {isSending ? 'Enviando...' : 'Enviar'}
+                  </Button>
+                </form>
+              )}
             </Accordion.Body>
           </Accordion.Item>
         ))}

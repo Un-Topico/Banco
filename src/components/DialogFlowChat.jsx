@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { FaCommentAlt, FaTimes } from "react-icons/fa";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../auth/authContext";
-import { getFirestore, collection, query, where, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, arrayUnion, onSnapshot, query, where } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 import "../styles/Chat.css";
 
@@ -12,15 +12,17 @@ const DialogFlowChat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const chatEndRef = useRef(null);
-  const notificationSoundRef = useRef(
-    new Audio(
-      "https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12"
-    )
-  );
+  const notificationSoundRef = useRef(new Audio("https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12"));
   const { currentUser } = useAuth();
   const [cards, setCards] = useState([]);
+  const [isHumanSupport, setIsHumanSupport] = useState(false); // Estado para determinar si está en modo soporte humano
 
   const db = getFirestore(app);
+
+  // Memoriza la referencia al documento del chat
+  const chatDocRef = useMemo(() => {
+    return doc(collection(db, "chats"), currentUser?.uid);
+  }, [db, currentUser?.uid]);
 
   // Función para obtener las tarjetas del usuario desde Firebase
   const getUserCards = () => {
@@ -39,6 +41,27 @@ const DialogFlowChat = () => {
       getUserCards(); // Obtener las tarjetas del usuario al montar el componente
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (isOpen && currentUser) {
+      const unsubscribe = onSnapshot(chatDocRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const chatData = docSnapshot.data();
+          const newMessages = chatData.messages || [];
+          setIsHumanSupport(chatData.isHumanSupport || false); // Actualiza el estado de soporte humano
+          // Reproducir sonido cuando se recibe un mensaje
+          if (newMessages.length > messages.length) {
+            notificationSoundRef.current.play();
+          }
+          setMessages(newMessages);
+        } else {
+          setMessages([]);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [isOpen, chatDocRef, currentUser, messages.length]);
+
   useEffect(() => {
     const scrollToBottom = () => {
       if (chatEndRef.current) {
@@ -53,7 +76,6 @@ const DialogFlowChat = () => {
       message: message,
       sessionId: currentUser.uid,
     };
-    console.log(requestBody);
 
     try {
       const response = await fetch(
@@ -84,6 +106,20 @@ const DialogFlowChat = () => {
     }
   };
 
+  const saveMessageToDB = async (messageObject) => {
+    try {
+      await setDoc(
+        chatDocRef,
+        {
+          messages: arrayUnion(messageObject),
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      console.error("Error guardando mensaje en la base de datos: ", error);
+    }
+  };
+
   // Enviar mensajes desde el chat
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -97,25 +133,44 @@ const DialogFlowChat = () => {
 
       setMessages((prevMessages) => [...prevMessages, userMessage]);
       setIsSending(true);
+      await saveMessageToDB(userMessage);
 
-      // Si el usuario pide el saldo, responder con la información de las tarjetas
-      if (newMessage.toLowerCase().includes("saldo") || newMessage.toLowerCase().includes("cuenta")) {
-        const cardBalances = cards
-          .map((card) => `Tarjeta: ${card.cardNumber}, Saldo: ${card.balance} `)
-          .join("\n");
+      // Detectar si el usuario quiere hablar con soporte humano
+      if (newMessage.toLowerCase().includes("hablar con soporte") || newMessage.toLowerCase().includes("quiero un agente") || newMessage.toLowerCase().includes("soporte")) {
+        setIsHumanSupport(true);
+
         const botMessage = {
-          text: cardBalances || "No tienes tarjetas registradas.",
+          text: "Te estamos conectando con un agente humano. Por favor, espera.",
           createdAt: new Date(),
           userId: "bot",
           userName: "Soporte",
         };
-
         setMessages((prevMessages) => [...prevMessages, botMessage]);
+        await saveMessageToDB(botMessage);
+        setNewMessage("");
+        setIsSending(false);
+
+        // Actualizar en la base de datos que el usuario está en soporte humano
+        await setDoc(chatDocRef, { isHumanSupport: true }, { merge: true });
+        return;
+      }
+
+      // Si el modo soporte humano está activo, no envíes mensajes a DialogFlow
+      if (isHumanSupport) {
+        const botMessage = {
+          text: "Un agente humano responderá tu mensaje.",
+          createdAt: new Date(),
+          userId: "bot",
+          userName: "Soporte",
+        };
+        setMessages((prevMessages) => [...prevMessages, botMessage]);
+        await saveMessageToDB(botMessage);
         setNewMessage("");
         setIsSending(false);
         return;
       }
 
+      // Si no está en modo soporte humano, enviar el mensaje a DialogFlow
       try {
         const botReply = await sendMessageToDialogFlow(newMessage);
         const botMessage = {
@@ -126,6 +181,7 @@ const DialogFlowChat = () => {
         };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
         notificationSoundRef.current.play();
+        await saveMessageToDB(botMessage);
       } catch (error) {
         console.error(error);
         const errorMessage = {
@@ -135,6 +191,7 @@ const DialogFlowChat = () => {
           userName: "Soporte",
         };
         setMessages((prevMessages) => [...prevMessages, errorMessage]);
+        await saveMessageToDB(errorMessage);
       } finally {
         setNewMessage("");
         setIsSending(false);
