@@ -6,7 +6,6 @@ import { app } from "../firebaseConfig";
 import { UserProfile } from "../components/UserProfile";
 import { AccountInfo } from "../components/AccountInfo";
 import { TransactionSection } from "../components/TransactionSection";
-import UserChat from "../components/UserChat";
 import UserCards from "../components/UserCard";
 import DialogFlowChat from "../components/DialogFlowChat";
 import { Container, Spinner, Button } from "react-bootstrap";
@@ -139,7 +138,6 @@ export const Profile = () => {
         selectedCard={selectedCard}
         updateCardBalance={updateCardBalance}
       />
-      {/* <UserChat /> */}
       <DialogFlowChat/>
       {userRole === "admin" && (
         <Button

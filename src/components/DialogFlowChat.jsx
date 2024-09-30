@@ -9,8 +9,6 @@ import {
   setDoc,
   arrayUnion,
   onSnapshot,
-  query,
-  where,
 } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 import "../styles/Chat.css";
