@@ -2,45 +2,41 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { FaCommentAlt, FaTimes } from "react-icons/fa";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../auth/authContext";
-import { getFirestore, collection, doc, setDoc, arrayUnion, onSnapshot, query, where } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  arrayUnion,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 import { app } from "../firebaseConfig";
 import "../styles/Chat.css";
 
 const DialogFlowChat = () => {
+  const db = getFirestore(app);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const chatEndRef = useRef(null);
-  const notificationSoundRef = useRef(new Audio("https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12"));
+  const notificationSoundRef = useRef(
+    new Audio(
+      "https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12"
+    )
+  );
   const { currentUser } = useAuth();
-  const [cards, setCards] = useState([]);
   const [isHumanSupport, setIsHumanSupport] = useState(false); // Estado para determinar si está en modo soporte humano
+  const [hasSentHumanResponse, setHasSentHumanResponse] = useState(false); // Estado para verificar si el mensaje de soporte ha sido enviado
 
-  const db = getFirestore(app);
+  
 
   // Memoriza la referencia al documento del chat
   const chatDocRef = useMemo(() => {
     return doc(collection(db, "chats"), currentUser?.uid);
   }, [db, currentUser?.uid]);
-
-  // Función para obtener las tarjetas del usuario desde Firebase
-  const getUserCards = () => {
-    const q = query(collection(db, "cards"), where("ownerId", "==", currentUser.uid));
-    onSnapshot(q, (querySnapshot) => {
-      const cardsData = [];
-      querySnapshot.forEach((doc) => {
-        cardsData.push({ ...doc.data(), id: doc.id });
-      });
-      setCards(cardsData);
-    });
-  };
-
-  useEffect(() => {
-    if (currentUser?.uid) {
-      getUserCards(); // Obtener las tarjetas del usuario al montar el componente
-    }
-  }, [currentUser]);
 
   useEffect(() => {
     if (isOpen && currentUser) {
@@ -136,17 +132,23 @@ const DialogFlowChat = () => {
       await saveMessageToDB(userMessage);
 
       // Detectar si el usuario quiere hablar con soporte humano
-      if (newMessage.toLowerCase().includes("hablar con soporte") || newMessage.toLowerCase().includes("quiero un agente") || newMessage.toLowerCase().includes("soporte")) {
+      if (
+        newMessage.toLowerCase().includes("hablar con soporte") ||
+        newMessage.toLowerCase().includes("quiero un agente") ||
+        newMessage.toLowerCase().includes("soporte")
+      ) {
         setIsHumanSupport(true);
+        setHasSentHumanResponse(false); // Reinicia el estado al modo soporte humano
 
         const botMessage = {
           text: "Te estamos conectando con un agente humano. Por favor, espera.",
           createdAt: new Date(),
           userId: "bot",
-          userName: "Soporte",
+          userName: "UnBot",
         };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
+
         await saveMessageToDB(botMessage);
+        setMessages((prevMessages) => [...prevMessages, botMessage]);
         setNewMessage("");
         setIsSending(false);
 
@@ -157,14 +159,19 @@ const DialogFlowChat = () => {
 
       // Si el modo soporte humano está activo, no envíes mensajes a DialogFlow
       if (isHumanSupport) {
-        const botMessage = {
-          text: "Un agente humano responderá tu mensaje.",
-          createdAt: new Date(),
-          userId: "bot",
-          userName: "Soporte",
-        };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-        await saveMessageToDB(botMessage);
+        // Solo envía el mensaje si no se ha enviado antes
+        if (!hasSentHumanResponse) {
+          const botMessage = {
+            text: "Un agente humano responderá tu mensaje.",
+            createdAt: new Date(),
+            userId: "bot",
+            userName: "Soporte",
+          };
+
+          await saveMessageToDB(botMessage);
+          setMessages((prevMessages) => [...prevMessages, botMessage]);
+          setHasSentHumanResponse(true); // Actualiza el estado a true
+        }
         setNewMessage("");
         setIsSending(false);
         return;
@@ -177,21 +184,23 @@ const DialogFlowChat = () => {
           text: botReply,
           createdAt: new Date(),
           userId: "bot",
-          userName: "Soporte",
+          userName: "UnBot",
         };
+
+        await saveMessageToDB(botMessage);
         setMessages((prevMessages) => [...prevMessages, botMessage]);
         notificationSoundRef.current.play();
-        await saveMessageToDB(botMessage);
       } catch (error) {
         console.error(error);
         const errorMessage = {
           text: "Error al recibir respuesta del bot.",
           createdAt: new Date(),
           userId: "bot",
-          userName: "Soporte",
+          userName: "UnBot",
         };
-        setMessages((prevMessages) => [...prevMessages, errorMessage]);
+
         await saveMessageToDB(errorMessage);
+        setMessages((prevMessages) => [...prevMessages, errorMessage]);
       } finally {
         setNewMessage("");
         setIsSending(false);
@@ -221,11 +230,16 @@ const DialogFlowChat = () => {
               <FaTimes />
             </button>
           </div>
-          <div className="chat-messages" style={{ maxHeight: "300px", overflowY: "auto" }}>
+          <div
+            className="chat-messages"
+            style={{ maxHeight: "300px", overflowY: "auto" }}
+          >
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`message ${msg.userId === currentUser.uid ? "sent" : "received"}`}
+                className={`message ${
+                  msg.userId === currentUser.uid ? "sent" : "received"
+                }`}
               >
                 <div className="message-header">
                   <strong>{msg.userName}</strong>
@@ -233,7 +247,14 @@ const DialogFlowChat = () => {
                 <div className="message-body">{msg.text}</div>
                 <div className="message-timestamp">
                   {msg.createdAt
-                    ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                    ? new Date(
+                        msg.createdAt.seconds
+                          ? msg.createdAt.toDate() // Si es un Timestamp de Firebase
+                          : msg.createdAt // Si ya es un Date de JavaScript
+                      ).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                     : ""}
                 </div>
               </div>

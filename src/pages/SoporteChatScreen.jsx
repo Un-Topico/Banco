@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Accordion, Button } from 'react-bootstrap';
 import { getFirestore, collection, query, onSnapshot, doc, setDoc, arrayUnion } from 'firebase/firestore';
 import '../styles/Chat.css';
@@ -6,8 +6,9 @@ import '../styles/Chat.css';
 export const SoporteChatScreen = () => {
   const [chats, setChats] = useState([]);
   const [newReply, setNewReply] = useState('');
-  const [isSending, setIsSending] = useState(false); // Estado para el envío
+  const [isSending, setIsSending] = useState(false);
   const db = getFirestore();
+  const messagesEndRef = useRef(null); // Referencia para el final del contenedor de mensajes
 
   useEffect(() => {
     const q = query(collection(db, 'chats'));
@@ -33,7 +34,7 @@ export const SoporteChatScreen = () => {
       };
 
       try {
-        setIsSending(true); // Cambiar estado al enviar
+        setIsSending(true);
         await setDoc(chatRef, {
           messages: arrayUnion(newMessage)
         }, { merge: true });
@@ -41,7 +42,7 @@ export const SoporteChatScreen = () => {
       } catch (error) {
         console.error("Error enviando respuesta: ", error);
       } finally {
-        setIsSending(false); // Restablecer el estado al finalizar
+        setIsSending(false);
       }
     }
   };
@@ -67,6 +68,13 @@ export const SoporteChatScreen = () => {
     }
   };
 
+  // Hook para desplazar hacia abajo al final de los mensajes
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chats]);
+
   return (
     <div className="soporte-chat">
       <h3>Chats Pendientes</h3>
@@ -77,13 +85,16 @@ export const SoporteChatScreen = () => {
               Chat con {chat.userName || "Usuario Desconocido"}
             </Accordion.Header>
             <Accordion.Body>
-              {/* Mostrar todos los mensajes del chat */}
-              {chat.messages && chat.messages.map((msg, idx) => (
-                <div key={idx} className="message">
-                  <strong>{msg.userName}:</strong> {msg.text}
-                  {msg.createdAt ? new Date(msg.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                </div>
-              ))}
+              <div className="chat-messages" style={{  maxHeight: '300px', overflowY: 'auto' }}>
+                {/* Mostrar todos los mensajes del chat */}
+                {chat.messages && chat.messages.map((msg, idx) => (
+                  <div key={idx} className="message">
+                    <strong>{msg.userName}:</strong> {msg.text}
+                    {msg.createdAt ? new Date(msg.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                  </div>
+                ))}
+                <div ref={messagesEndRef} /> {/* Referencia para el final del contenedor */}
+              </div>
 
               {/* Botón para activar/desactivar el soporte humano */}
               <Button
