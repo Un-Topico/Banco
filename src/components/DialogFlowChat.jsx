@@ -26,10 +26,8 @@ const DialogFlowChat = () => {
     )
   );
   const { currentUser } = useAuth();
-  const [isHumanSupport, setIsHumanSupport] = useState(false); // Estado para determinar si está en modo soporte humano
-  const [hasSentHumanResponse, setHasSentHumanResponse] = useState(false); // Estado para verificar si el mensaje de soporte ha sido enviado
-
-  
+  const [isHumanSupport, setIsHumanSupport] = useState(false);
+  const [hasSentHumanResponse, setHasSentHumanResponse] = useState(false);
 
   // Memoriza la referencia al documento del chat
   const chatDocRef = useMemo(() => {
@@ -42,8 +40,7 @@ const DialogFlowChat = () => {
         if (docSnapshot.exists()) {
           const chatData = docSnapshot.data();
           const newMessages = chatData.messages || [];
-          setIsHumanSupport(chatData.isHumanSupport || false); // Actualiza el estado de soporte humano
-          // Reproducir sonido cuando se recibe un mensaje
+          setIsHumanSupport(chatData.isHumanSupport || false);
           if (newMessages.length > messages.length) {
             notificationSoundRef.current.play();
           }
@@ -62,7 +59,11 @@ const DialogFlowChat = () => {
         chatEndRef.current.scrollIntoView({ behavior: "smooth" });
       }
     };
-    scrollToBottom();
+
+    // Solo llama a scrollToBottom si hay nuevos mensajes
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const sendMessageToDialogFlow = async (message) => {
@@ -114,7 +115,6 @@ const DialogFlowChat = () => {
     }
   };
 
-  // Enviar mensajes desde el chat
   const sendMessage = async (e) => {
     e.preventDefault();
     if (newMessage.trim()) {
@@ -136,7 +136,7 @@ const DialogFlowChat = () => {
         newMessage.toLowerCase().includes("soporte")
       ) {
         setIsHumanSupport(true);
-        setHasSentHumanResponse(false); // Reinicia el estado al modo soporte humano
+        setHasSentHumanResponse(false);
 
         const botMessage = {
           text: "Te estamos conectando con un agente humano. Por favor, espera.",
@@ -157,7 +157,6 @@ const DialogFlowChat = () => {
 
       // Si el modo soporte humano está activo, no envíes mensajes a DialogFlow
       if (isHumanSupport) {
-        // Solo envía el mensaje si no se ha enviado antes
         if (!hasSentHumanResponse) {
           const botMessage = {
             text: "Un agente humano responderá tu mensaje.",
@@ -166,9 +165,11 @@ const DialogFlowChat = () => {
             userName: "Soporte",
           };
 
+          // Guardar el mensaje en la base de datos
           await saveMessageToDB(botMessage);
+          // Solo actualiza el estado al final
           setMessages((prevMessages) => [...prevMessages, botMessage]);
-          setHasSentHumanResponse(true); // Actualiza el estado a true
+          setHasSentHumanResponse(true);
         }
         setNewMessage("");
         setIsSending(false);
