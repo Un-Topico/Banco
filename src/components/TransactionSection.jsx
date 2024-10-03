@@ -12,7 +12,6 @@ export const TransactionSection = ({ selectedCard, updateCardBalance }) => {
       <Col md={6} className="mb-4">
         <Card>
           <Card.Body>
-            <Card.Title>Transacciones</Card.Title>
             {selectedCard ? (
               <TransactionsForm
                 selectedCardId={selectedCard.cardId}
@@ -29,7 +28,6 @@ export const TransactionSection = ({ selectedCard, updateCardBalance }) => {
       <Col md={6} className="mb-4">
         <Card>
           <Card.Body>
-            <Card.Title>Historial de Transacciones</Card.Title>
             {selectedCard ? (
               <TransactionHistory selectedCardId={selectedCard.cardId} />
             ) : (

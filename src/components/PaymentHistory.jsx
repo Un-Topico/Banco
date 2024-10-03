@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { app } from "../firebaseConfig";
-import { Card, ListGroup, Spinner, Container, Form } from "react-bootstrap";
+import { Card, ListGroup, Spinner, Container, Form, Row, Col } from "react-bootstrap";
 import { FaShoppingCart } from "react-icons/fa";
+import { Bar, Line } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement } from 'chart.js';
+
+// Registrar los componentes de ChartJS
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement);
 
 export const PaymentHistory = ({ currentUser }) => {
   const [cards, setCards] = useState([]);
@@ -59,6 +64,38 @@ export const PaymentHistory = ({ currentUser }) => {
     fetchPurchaseHistory(cardId);
   };
 
+  // Datos para el gráfico de barras por categoría
+  const categoryData = transactions.reduce((acc, transaction) => {
+    const { category, amount } = transaction;
+    acc[category] = (acc[category] || 0) + amount;
+    return acc;
+  }, {});
+
+  const barChartData = {
+    labels: Object.keys(categoryData),
+    datasets: [
+      {
+        label: 'Gastos por Categoría',
+        data: Object.values(categoryData),
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+      },
+    ],
+  };
+
+  // Datos para el gráfico de línea (transacciones a lo largo del tiempo)
+  const lineChartData = {
+    labels: transactions.map(transaction => new Date(transaction.transaction_date.seconds * 1000).toLocaleDateString()),
+    datasets: [
+      {
+        label: 'Monto de Compras',
+        data: transactions.map(transaction => transaction.amount),
+        fill: false,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        tension: 0.1,
+      },
+    ],
+  };
+
   if (loading) {
     return (
       <Container className="text-center my-5">
@@ -72,7 +109,7 @@ export const PaymentHistory = ({ currentUser }) => {
   return (
     <Container className="my-4">
       <h2 className="text-center mb-4">Historial de Compras</h2>
-      
+
       {/* Selección de tarjetas */}
       {cards.length === 0 ? (
         <p className="text-center">No tienes tarjetas registradas.</p>
@@ -83,11 +120,25 @@ export const PaymentHistory = ({ currentUser }) => {
             <option value="">-- Selecciona una tarjeta --</option>
             {cards.map((card) => (
               <option key={card.cardId} value={card.cardId}>
-                {card.cardId} - Saldo: ${card.balance}
+                {card.cardNumber} - Saldo: ${card.balance}
               </option>
             ))}
           </Form.Control>
         </Form.Group>
+      )}
+
+      {/* Gráficos */}
+      {selectedCardId && transactions.length > 0 && (
+        <Row className="mb-4">
+          <Col md={6}>
+            <h4>Gastos por Categoría</h4>
+            <Bar data={barChartData} />
+          </Col>
+          <Col md={6}>
+            <h4>Gastos a lo Largo del Tiempo</h4>
+            <Line data={lineChartData} />
+          </Col>
+        </Row>
       )}
 
       {/* Historial de compras */}
