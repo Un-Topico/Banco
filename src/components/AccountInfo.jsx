@@ -53,19 +53,20 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
                 <FaDownload className="me-2" /> Descargar Estado de Cuenta {/* Icono de descarga */}
               </Button>
               <Button
-                variant="danger"
-                className="ms-2"
-                onClick={() => setShowModal(true)}
-              >
-                <FaTrashAlt className="me-2" /> Eliminar Tarjeta {/* Icono de eliminar */}
-              </Button>
-              <Button
                 variant="warning"
                 className="ms-2"
                 onClick={() => setShowUpdateModal(true)} // Abrir el modal de actualización
               >
                 <FaEdit className="me-2" /> Actualizar Tarjeta {/* Icono de edición */}
               </Button>
+              <Button
+                variant="danger"
+                className="ms-2"
+                onClick={() => setShowModal(true)}
+              >
+                <FaTrashAlt className="me-2" /> Eliminar Tarjeta {/* Icono de eliminar */}
+              </Button>
+             
             </>
           )}
         </Card.Body>

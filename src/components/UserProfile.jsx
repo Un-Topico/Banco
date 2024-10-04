@@ -156,13 +156,13 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
 
               {/* Mostrar email y tipo de cuenta */}
               <div className="mb-3">
-                <FaEnvelope className="me-2" /> <span className="text-muted">{currentUser.email}</span>
+                <FaEnvelope className="me-2" /> {currentUser.email}
               </div>
               <div className="mb-3">
-                <FaUser className="me-2" /> <strong>Tipo de cuenta:</strong> {accountData.accountType}
+                <FaUser className="me-2" /> Tipo de cuenta: {accountData.accountType}
               </div>
               <div className="mb-3">
-                <FaMoneyBillWave className="me-2" /> <strong>Total del saldo en todas las tarjetas:</strong> ${totalBalance} MXN
+                <FaMoneyBillWave className="me-2" /> Total del saldo en todas las tarjetas: ${totalBalance} MXN
               </div>
 
               {/* Botón para cambiar contraseña */}
