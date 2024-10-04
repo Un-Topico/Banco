@@ -6,7 +6,7 @@ import { FaEdit, FaSave, FaKey } from "react-icons/fa"; // Íconos de edición, 
 import { getFirestore, doc, updateDoc } from "firebase/firestore"; // Firebase para actualizar el nombre
 import { app } from "../firebaseConfig"; // Configuración de Firebase
 
-export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate }) => { 
+export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate, totalBalance}) => { 
   const [showModal, setShowModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -135,7 +135,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
             <p className="h4 me-2">Teléfono: {accountData.phoneNumber}</p>
           )}
           <FaEdit onClick={handlePhoneEdit} style={{ cursor: "pointer" }} />
-
+          
           {isEditingPhone && (
             <Button variant="primary" size="sm" className="ms-2" onClick={handlePhoneSave}>
               <FaSave className="me-1" /> Guardar
@@ -144,6 +144,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
         </div>
 
         <p className="text-muted">{currentUser.email}</p>
+        <p><strong>Total del saldo en todas las tarjetas:</strong> ${totalBalance} MXN</p> {/* Mostramos el saldo total */}
 
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           <FaKey className="me-1" /> Cambiar Contraseña

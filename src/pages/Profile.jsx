@@ -123,8 +123,12 @@ export const Profile = () => {
         onImageUpdate={handleImageUpdate}
         onNameUpdate={handleNameUpdate}
         onPhoneUpdate={handlePhoneUpdate}
+        totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
+
       />
-      {accountData && (
+     
+      <UserCards onSelectCard={handleCardSelection} />
+      {/* {accountData && (
         <AccountInfo
           accountData={accountData}
           selectedCard={selectedCard}
@@ -132,11 +136,13 @@ export const Profile = () => {
           totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
           onCardDelete={handleCardDelete}
         />
-      )}
-      <UserCards onSelectCard={handleCardSelection} />
+      )} */}
       <TransactionSection
         selectedCard={selectedCard}
         updateCardBalance={updateCardBalance}
+        accountData={accountData}
+        transactions={transactions}
+        handleCardDelete={handleCardDelete}
       />
       <DialogFlowChat/>
       {userRole === "admin" && (
