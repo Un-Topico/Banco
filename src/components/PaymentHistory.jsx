@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { app } from "../firebaseConfig";
-import { Card, ListGroup, Spinner, Container, Form, Row, Col } from "react-bootstrap";
+import { Card, ListGroup, Spinner, Container, Form, Row, Col, Pagination } from "react-bootstrap";
 import { FaShoppingCart } from "react-icons/fa";
 import { Bar, Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement } from 'chart.js';
@@ -14,6 +14,8 @@ export const PaymentHistory = ({ currentUser }) => {
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const transactionsPerPage = 3;
 
   useEffect(() => {
     const fetchUserCards = async () => {
@@ -96,6 +98,13 @@ export const PaymentHistory = ({ currentUser }) => {
     ],
   };
 
+  // Paginación
+  const indexOfLastTransaction = currentPage * transactionsPerPage;
+  const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
+  const currentTransactions = transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   if (loading) {
     return (
       <Container className="text-center my-5">
@@ -127,48 +136,67 @@ export const PaymentHistory = ({ currentUser }) => {
         </Form.Group>
       )}
 
-      {/* Gráficos */}
-      {selectedCardId && transactions.length > 0 && (
-        <Row className="mb-4">
-          <Col md={6}>
-            <h4>Gastos por Categoría</h4>
-            <Bar data={barChartData} />
-          </Col>
-          <Col md={6}>
-            <h4>Gastos a lo Largo del Tiempo</h4>
-            <Line data={lineChartData} />
-          </Col>
-        </Row>
-      )}
+      <Row>
+        {/* Historial de compras con paginación */}
+        <Col md={6}>
+          {selectedCardId && currentTransactions.length > 0 && (
+            currentTransactions.map((transaction) => (
+              <Card key={transaction.transaction_id} className="mb-3 shadow-sm">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                  <span>
+                    <FaShoppingCart /> Compra
+                  </span>
+                  <small className="text-muted">
+                    {new Date(transaction.transaction_date.seconds * 1000).toLocaleString()}
+                  </small>
+                </Card.Header>
+                <ListGroup variant="flush">
+                  <ListGroup.Item><strong>Monto:</strong> ${transaction.amount}</ListGroup.Item>
+                  <ListGroup.Item><strong>Descripción:</strong> {transaction.description}</ListGroup.Item>
+                  <ListGroup.Item><strong>Categoría:</strong> {transaction.category}</ListGroup.Item>
+                  <ListGroup.Item>
+                    <strong>Status:</strong>{" "}
+                    <span className={transaction.status === "pagado" ? "text-success" : "text-danger"}>
+                      {transaction.status}
+                    </span>
+                  </ListGroup.Item>
+                </ListGroup>
+              </Card>
+            ))
+          )}
 
-      {/* Historial de compras */}
-      {selectedCardId && transactions.length === 0 && !loading && (
-        <p className="text-center">No hay transacciones para esta tarjeta.</p>
-      )}
+          {selectedCardId && currentTransactions.length === 0 && !loading && (
+            <p className="text-center">No hay transacciones para esta tarjeta.</p>
+          )}
 
-      {transactions.map((transaction) => (
-        <Card key={transaction.transaction_id} className="mb-3 shadow-sm">
-          <Card.Header className="d-flex justify-content-between align-items-center">
-            <span>
-              <FaShoppingCart /> Compra
-            </span>
-            <small className="text-muted">
-              {new Date(transaction.transaction_date.seconds * 1000).toLocaleString()}
-            </small>
-          </Card.Header>
-          <ListGroup variant="flush">
-            <ListGroup.Item><strong>Monto:</strong> ${transaction.amount}</ListGroup.Item>
-            <ListGroup.Item><strong>Descripción:</strong> {transaction.description}</ListGroup.Item>
-            <ListGroup.Item><strong>Categoría:</strong> {transaction.category}</ListGroup.Item>
-            <ListGroup.Item>
-              <strong>Status:</strong>{" "}
-              <span className={transaction.status === "pagado" ? "text-success" : "text-danger"}>
-                {transaction.status}
-              </span>
-            </ListGroup.Item>
-          </ListGroup>
-        </Card>
-      ))}
+          {/* Paginación */}
+          {transactions.length > transactionsPerPage && (
+            <Pagination className="justify-content-center mt-3">
+              {[...Array(Math.ceil(transactions.length / transactionsPerPage)).keys()].map((number) => (
+                <Pagination.Item
+                  key={number + 1}
+                  active={number + 1 === currentPage}
+                  onClick={() => paginate(number + 1)}
+                >
+                  {number + 1}
+                </Pagination.Item>
+              ))}
+            </Pagination>
+          )}
+        </Col>
+
+        {/* Gráficos */}
+        <Col md={6}>
+          {selectedCardId && transactions.length > 0 && (
+            <>
+              <h4>Gastos por Categoría</h4>
+              <Bar data={barChartData} className="mb-4" />
+              <h4>Gastos a lo Largo del Tiempo</h4>
+              <Line data={lineChartData} />
+            </>
+          )}
+        </Col>
+      </Row>
     </Container>
   );
 };
