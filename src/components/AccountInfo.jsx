@@ -37,7 +37,6 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
         <Card.Body>
           <h2>Información de la tarjeta <FaIdCard /></h2>
           <Card.Text>
-            <p><strong>Tipo de cuenta:</strong> {accountData.accountType}</p>
             {selectedCard && (
               <>
                 <p><strong>CLABE:</strong> {selectedCard.clabeNumber}</p>

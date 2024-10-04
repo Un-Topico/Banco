@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 import { UserProfile } from "../components/UserProfile";
-import { AccountInfo } from "../components/AccountInfo";
 import { TransactionSection } from "../components/TransactionSection";
 import UserCards from "../components/UserCard";
 import DialogFlowChat from "../components/DialogFlowChat";
@@ -128,15 +127,6 @@ export const Profile = () => {
       />
      
       <UserCards onSelectCard={handleCardSelection} />
-      {/* {accountData && (
-        <AccountInfo
-          accountData={accountData}
-          selectedCard={selectedCard}
-          transactions={transactions}
-          totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
-          onCardDelete={handleCardDelete}
-        />
-      )} */}
       <TransactionSection
         selectedCard={selectedCard}
         updateCardBalance={updateCardBalance}

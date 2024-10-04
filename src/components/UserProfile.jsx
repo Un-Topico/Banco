@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { reauthenticateUser, updatePasswordForUser } from "../auth/auth"; // Funciones para reautenticar y actualizar contraseña
-import { Row, Col, Button, Modal, Form, Alert } from "react-bootstrap";
+import { Row, Col, Button, Modal, Form, Alert, Card, Container } from "react-bootstrap";
 import { ProfileImageUpload } from './ProfileImageUpload';
-import { FaEdit, FaSave, FaKey } from "react-icons/fa"; // Íconos de edición, guardado y cambio de contraseña
+import { FaEdit, FaSave, FaKey, FaUser, FaPhoneAlt, FaEnvelope, FaMoneyBillWave } from "react-icons/fa"; // Íconos adicionales para mejorar la UI
 import { getFirestore, doc, updateDoc } from "firebase/firestore"; // Firebase para actualizar el nombre
 import { app } from "../firebaseConfig"; // Configuración de Firebase
 
-export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate, totalBalance}) => { 
+export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate, totalBalance }) => {
   const [showModal, setShowModal] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -95,116 +95,139 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
   };
 
   return (
-    <Row className="text-center mb-4">
-      <Col>
-        <h2>Perfil</h2>
-        <ProfileImageUpload currentImageUrl={accountData.profileImage} onImageUpdate={onImageUpdate} />
+    <Container className="my-4">
+      <Card className="p-4 shadow-sm">
+        <Card.Body>
+          <Row className="align-items-center mb-4">
+            {/* Imagen de perfil */}
+            <Col md={4} className="text-center">
+              <ProfileImageUpload currentImageUrl={accountData.profileImage} onImageUpdate={onImageUpdate} />
+            </Col>
 
-        {/* Mostrar el nombre con opción de editar */}
-        <div className="d-flex justify-content-center align-items-center mb-3">
-          {isEditingName ? (
-            <Form.Control
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="me-2"
-              style={{ maxWidth: "200px" }}
-            />
-          ) : (
-            <p className="h4 me-2">Bienvenido, {accountData.name}</p>
-          )}
-          <FaEdit onClick={handleNameEdit} style={{ cursor: "pointer" }} />
+            {/* Información del perfil */}
+            <Col md={8}>
+              <h2 className="mb-4 d-flex align-items-center">
+                <FaUser className="me-2" /> Perfil de Usuario
+              </h2>
 
-          {isEditingName && (
-            <Button variant="primary" size="sm" className="ms-2" onClick={handleNameSave}>
-              <FaSave className="me-1" /> Guardar
-            </Button>
-          )}
-        </div>
+              {/* Mostrar el nombre con opción de editar */}
+              <div className="d-flex align-items-center mb-3">
+                <FaUser className="me-2" />
+                {isEditingName ? (
+                  <Form.Control
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="me-2"
+                    style={{ maxWidth: "200px" }}
+                  />
+                ) : (
+                  <p className="h5 me-2 mb-0">{accountData.name}</p>
+                )}
+                <FaEdit onClick={handleNameEdit} style={{ cursor: "pointer" }} />
+                {isEditingName && (
+                  <Button variant="primary" size="sm" className="ms-2" onClick={handleNameSave}>
+                    <FaSave className="me-1" /> Guardar
+                  </Button>
+                )}
+              </div>
 
-        <div className="d-flex justify-content-center align-items-center mb-3">
-          {isEditingPhone ? (
-            <Form.Control
-              type="number"
-              value={newPhone}
-              onChange={(e) => setNewPhone(e.target.value)}
-              className="me-2"
-              style={{ maxWidth: "200px" }}
-            />
-          ) : (
-            <p className="h4 me-2">Teléfono: {accountData.phoneNumber}</p>
-          )}
-          <FaEdit onClick={handlePhoneEdit} style={{ cursor: "pointer" }} />
-          
-          {isEditingPhone && (
-            <Button variant="primary" size="sm" className="ms-2" onClick={handlePhoneSave}>
-              <FaSave className="me-1" /> Guardar
-            </Button>
-          )}
-        </div>
+              {/* Mostrar el teléfono con opción de editar */}
+              <div className="d-flex align-items-center mb-3">
+                <FaPhoneAlt className="me-2" />
+                {isEditingPhone ? (
+                  <Form.Control
+                    type="number"
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    className="me-2"
+                    style={{ maxWidth: "200px" }}
+                  />
+                ) : (
+                  <p className="h5 me-2 mb-0">{accountData.phoneNumber}</p>
+                )}
+                <FaEdit onClick={handlePhoneEdit} style={{ cursor: "pointer" }} />
+                {isEditingPhone && (
+                  <Button variant="primary" size="sm" className="ms-2" onClick={handlePhoneSave}>
+                    <FaSave className="me-1" /> Guardar
+                  </Button>
+                )}
+              </div>
 
-        <p className="text-muted">{currentUser.email}</p>
-        <p><strong>Total del saldo en todas las tarjetas:</strong> ${totalBalance} MXN</p> {/* Mostramos el saldo total */}
+              {/* Mostrar email y tipo de cuenta */}
+              <div className="mb-3">
+                <FaEnvelope className="me-2" /> <span className="text-muted">{currentUser.email}</span>
+              </div>
+              <div className="mb-3">
+                <FaUser className="me-2" /> <strong>Tipo de cuenta:</strong> {accountData.accountType}
+              </div>
+              <div className="mb-3">
+                <FaMoneyBillWave className="me-2" /> <strong>Total del saldo en todas las tarjetas:</strong> ${totalBalance} MXN
+              </div>
 
-        <Button variant="secondary" onClick={() => setShowModal(true)}>
-          <FaKey className="me-1" /> Cambiar Contraseña
-        </Button>
+              {/* Botón para cambiar contraseña */}
+              <Button variant="secondary" onClick={() => setShowModal(true)} className="mt-3">
+                <FaKey className="me-1" /> Cambiar Contraseña
+              </Button>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
-        {/* Modal para cambiar la contraseña */}
-        <Modal show={showModal} onHide={() => setShowModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Cambiar Contraseña</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group controlId="currentPassword">
-                <Form.Label>Contraseña actual</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Ingresa tu contraseña actual"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                />
-              </Form.Group>
+      {/* Modal para cambiar la contraseña */}
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Cambiar Contraseña</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group controlId="currentPassword">
+              <Form.Label>Contraseña actual</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Ingresa tu contraseña actual"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+            </Form.Group>
 
-              <Form.Group controlId="newPassword" className="mt-3">
-                <Form.Label>Nueva contraseña</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Ingresa tu nueva contraseña"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-              </Form.Group>
+            <Form.Group controlId="newPassword" className="mt-3">
+              <Form.Label>Nueva contraseña</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Ingresa tu nueva contraseña"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </Form.Group>
 
-              <Form.Group controlId="confirmPassword" className="mt-3">
-                <Form.Label>Confirmar nueva contraseña</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Confirma tu nueva contraseña"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </Form.Group>
+            <Form.Group controlId="confirmPassword" className="mt-3">
+              <Form.Label>Confirmar nueva contraseña</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Confirma tu nueva contraseña"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </Form.Group>
 
-              {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-              {success && <Alert variant="success" className="mt-3">Contraseña actualizada exitosamente</Alert>}
-            </Form>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              variant="primary" 
-              onClick={handlePasswordChange} 
-              disabled={isPasswordChangeButtonDisabled} // Deshabilitar el botón si faltan campos
-            >
-              Cambiar Contraseña
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </Col>
-    </Row>
+            {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+            {success && <Alert variant="success" className="mt-3">Contraseña actualizada exitosamente</Alert>}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handlePasswordChange}
+            disabled={isPasswordChangeButtonDisabled} // Deshabilitar el botón si faltan campos
+          >
+            Cambiar Contraseña
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 };

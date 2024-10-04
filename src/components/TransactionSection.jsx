@@ -1,9 +1,10 @@
 import React from "react";
-import { Card, Row, Col } from "react-bootstrap";
+import { Card, Row, Col, Button } from "react-bootstrap";
 import { TransactionsForm } from "./TransactionForm";
 import { TransactionHistory } from './TransactionHistory';
 import { useAuth } from "../auth/authContext";
 import { AccountInfo } from "./AccountInfo";
+import { Link } from "react-router-dom";
 
 export const TransactionSection = ({ selectedCard, updateCardBalance, accountData, transactions, totalBalance, handleCardDelete }) => {
   const { currentUser } = useAuth(); // Obtener currentUser del contexto
@@ -11,43 +12,54 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
   return (
     <div>
       <Row>
+        {/* Primera Columna: AccountInfo y Botón */}
         <Col md={7} className="mb-4">
-          <Card>
+          <Card className="mb-3">
             <Card.Body>
-            {accountData && (
+              {accountData && selectedCard ? (
                 <AccountInfo
                   accountData={accountData}
                   selectedCard={selectedCard}
                   transactions={transactions}
-                  totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
+                  totalBalance={totalBalance}
                   handleCardDelete={handleCardDelete}
                 />
-              )}
-
-             
+              ):(
+                <p>Selecciona una tarjeta para ver la informacion de la tarjeta</p>
+              ) }
             </Card.Body>
           </Card>
+          {/* Botón para llevar a la seccion de pagos*/}
+          <Link to="/pagos">
+            <Button variant="primary" className="w-100 mb-3">
+              Ir a compras realizadas
+            </Button>
+          </Link>
         </Col>
 
+        {/* Segunda Columna: TransactionsForm */}
         <Col md={5} className="mb-4">
           <Card>
             <Card.Body>
-            {selectedCard ? (
+              {selectedCard ? (
                 <TransactionsForm
                   selectedCardId={selectedCard.cardId}
                   updateBalance={updateCardBalance}
                   currentUser={currentUser}
                 />
               ) : (
-                <p>Selecciona una tarjeta para ver las transacciones</p>
+                <p>Selecciona una tarjeta para realizar transacciones</p>
               )}
             </Card.Body>
           </Card>
         </Col>
       </Row>
+
+      {/* TransactionHistory en la fila completa */}
       <Row>
-        <Col md={12} className="mb-4">
+        <Col xs={12} className="mb-4">
           <Card>
+            <Card.Header>Historial de Transacciones</Card.Header>
             <Card.Body>
               {selectedCard ? (
                 <TransactionHistory selectedCardId={selectedCard.cardId} />
