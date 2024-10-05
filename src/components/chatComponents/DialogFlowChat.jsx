@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { FaCommentAlt, FaTimes } from "react-icons/fa";
 import { Button } from "react-bootstrap";
-import { useAuth } from "../auth/authContext";
+import { useAuth } from "../../auth/authContext";
 import {
   getFirestore,
   collection,
@@ -10,8 +10,8 @@ import {
   arrayUnion,
   onSnapshot,
 } from "firebase/firestore";
-import { app } from "../firebaseConfig";
-import "../styles/Chat.css";
+import { app } from "../../firebaseConfig";
+import "../../styles/Chat.css";
 
 const DialogFlowChat = () => {
   const db = getFirestore(app);

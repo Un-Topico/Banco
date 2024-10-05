@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { Modal, Button } from 'react-bootstrap';
-import { app } from '../firebaseConfig';
+import { app } from '../../firebaseConfig';
 import { getAuth } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 

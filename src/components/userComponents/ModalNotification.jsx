@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Badge } from 'react-bootstrap'; // Puedes importar ambos desde react-bootstrap
-import { markNotificationAsRead } from '../services/transactionService'; 
+import { markNotificationAsRead } from '../../services/transactionService'; 
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, onSnapshot } from 'firebase/firestore'; // Importar onSnapshot
 import { getFirestore } from 'firebase/firestore';
-import '../styles/Notification.css'
+import '../../styles/Notification.css'
 
 const db = getFirestore();
 

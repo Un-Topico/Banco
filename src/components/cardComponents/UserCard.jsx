@@ -6,8 +6,8 @@ import {
   where,
   onSnapshot,
 } from "firebase/firestore";
-import { useAuth } from "../auth/authContext";
-import { app } from "../firebaseConfig";
+import { useAuth } from "../../auth/authContext";
+import { app } from "../../firebaseConfig";
 import CardComponent from "./Card";
 import { Container, Row, Alert, Card, Col } from "react-bootstrap";
 import { AddCardModal } from "./AddCardModal";

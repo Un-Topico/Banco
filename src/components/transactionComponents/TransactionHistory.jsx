@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getFirestore, collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
-import { app } from "../firebaseConfig";
+import { app } from "../../firebaseConfig";
 import { Table, Container, Row, Col, Form, Alert, Pagination } from "react-bootstrap";
 
 export const TransactionHistory = ({ selectedCardId }) => {

@@ -3,10 +3,10 @@ import { useAuth } from "../auth/authContext";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { app } from "../firebaseConfig";
-import { UserProfile } from "../components/UserProfile";
-import { TransactionSection } from "../components/TransactionSection";
-import UserCards from "../components/UserCard";
-import DialogFlowChat from "../components/DialogFlowChat";
+import { UserProfile } from "../components/userComponents/UserProfile";
+import { TransactionSection } from "../components/transactionComponents/TransactionSection";
+import UserCards from "../components/cardComponents/UserCard";
+import DialogFlowChat from "../components/chatComponents/DialogFlowChat";
 import { Container, Spinner, Button } from "react-bootstrap";
 
 export const Profile = () => {

@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { reauthenticateUser, updatePasswordForUser } from "../auth/auth"; // Funciones para reautenticar y actualizar contraseña
+import { reauthenticateUser, updatePasswordForUser } from "../../auth/auth"; // Funciones para reautenticar y actualizar contraseña
 import { Row, Col, Button, Modal, Form, Alert, Card, Container } from "react-bootstrap";
 import { ProfileImageUpload } from './ProfileImageUpload';
 import { FaEdit, FaSave, FaKey, FaUser, FaPhoneAlt, FaEnvelope, FaMoneyBillWave } from "react-icons/fa"; // Íconos adicionales para mejorar la UI
 import { getFirestore, doc, updateDoc } from "firebase/firestore"; // Firebase para actualizar el nombre
-import { app } from "../firebaseConfig"; // Configuración de Firebase
+import { app } from "../../firebaseConfig"; // Configuración de Firebase
 
 export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpdate, onPhoneUpdate, totalBalance }) => {
   const [showModal, setShowModal] = useState(false);
@@ -97,6 +97,7 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
   return (
     <Container className="my-4">
       <Card className="p-4 shadow-sm">
+        <Card.Header> <FaUser className="me-2" /> Perfil de Usuario</Card.Header>
         <Card.Body>
           <Row className="align-items-center mb-4">
             {/* Imagen de perfil */}
@@ -106,10 +107,6 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
 
             {/* Información del perfil */}
             <Col md={8}>
-              <h2 className="mb-4 d-flex align-items-center">
-                <FaUser className="me-2" /> Perfil de Usuario
-              </h2>
-
               {/* Mostrar el nombre con opción de editar */}
               <div className="d-flex align-items-center mb-3">
                 <FaUser className="me-2" />

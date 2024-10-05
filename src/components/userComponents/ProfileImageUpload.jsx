@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
-import { useAuth } from "../auth/authContext";
-import { app } from "../firebaseConfig";
+import { useAuth } from "../../auth/authContext";
+import { app } from "../../firebaseConfig";
 import { Spinner, Image } from "react-bootstrap";
 
 export const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }) => {

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Card, Button, Modal, Form } from "react-bootstrap";
-import { downloadPDF } from "../utils/downloadPDF";
-import { reauthenticateUser, reauthenticateWithGoogle } from "../auth/auth";
-import { auth } from "../auth/auth"; // Importa auth desde tu archivo de autenticación
-import { deleteCard } from "../auth/deleteCard";
-import UpdateCardModal from './UpdateCardModal'; // Importar el modal de actualización de tarjeta
-import { FaDownload, FaTrashAlt, FaEdit, FaIdCard } from "react-icons/fa";
+import { downloadPDF } from "../../utils/downloadPDF";
+import { reauthenticateUser, reauthenticateWithGoogle } from "../../auth/auth";
+import { auth } from "../../auth/auth"; // Importa auth desde tu archivo de autenticación
+import { deleteCard } from "../../auth/deleteCard";
+import UpdateCardModal from "../cardComponents/UpdateCardModal"; // Importar el modal de actualización de tarjeta
+import { FaDownload, FaTrashAlt, FaEdit } from "react-icons/fa";
 
 export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDelete }) => {
   const [showModal, setShowModal] = useState(false);
@@ -35,7 +35,6 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
   return (
     <>
         <Card.Body>
-          <h2>Información de la tarjeta <FaIdCard /></h2>
           <Card.Text>
             {selectedCard && (
               <>

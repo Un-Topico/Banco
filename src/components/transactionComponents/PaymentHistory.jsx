@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
-import { app } from "../firebaseConfig";
+import { app } from "../../firebaseConfig";
 import { Card, ListGroup, Spinner, Container, Form, Row, Col, Pagination } from "react-bootstrap";
 import { FaShoppingCart } from "react-icons/fa";
 import { Bar, Line } from "react-chartjs-2";

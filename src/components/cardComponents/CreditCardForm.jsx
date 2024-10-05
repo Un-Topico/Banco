@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Form, Button, Row, Col, Card, Alert } from 'react-bootstrap';
 import { getFirestore, collection, doc, setDoc, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { app } from '../firebaseConfig';
+import { app } from '../../firebaseConfig';
 
 export const CreditCardForm = ({ onCardSaved }) => {
   const db = getFirestore(app);

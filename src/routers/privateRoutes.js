@@ -1,8 +1,8 @@
 import React from 'react';
 import { Profile } from "../pages/Profile";
 import { CreateAccount } from '../pages/CreateAccount';
-import AdminUsers from "../components/AdminUsers";
-import { TransactionDetail } from "../components/TransactionDetail";
+import AdminUsers from "../components/userComponents/AdminUsers";
+import { TransactionDetail } from "../components/transactionComponents/TransactionDetail";
 import { SoporteChatScreen } from "../pages/SoporteChatScreen";
 import { PaymentDetails } from '../pages/PaymentDetails';
 export const privateRoutes = [

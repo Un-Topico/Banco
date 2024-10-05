@@ -1,4 +1,4 @@
-import { PaymentHistory } from "../components/PaymentHistory"
+import { PaymentHistory } from "../components/transactionComponents/PaymentHistory"
 import { useAuth } from "../auth/authContext";
 
 export const PaymentDetails = () => {

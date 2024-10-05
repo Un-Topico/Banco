@@ -2,9 +2,10 @@ import React from "react";
 import { Card, Row, Col, Button } from "react-bootstrap";
 import { TransactionsForm } from "./TransactionForm";
 import { TransactionHistory } from './TransactionHistory';
-import { useAuth } from "../auth/authContext";
-import { AccountInfo } from "./AccountInfo";
+import { useAuth } from "../../auth/authContext";
+import { AccountInfo } from "../userComponents/AccountInfo";
 import { Link } from "react-router-dom";
+import { FaExchangeAlt, FaIdCard, FaHistory } from "react-icons/fa";
 
 export const TransactionSection = ({ selectedCard, updateCardBalance, accountData, transactions, totalBalance, handleCardDelete }) => {
   const { currentUser } = useAuth(); // Obtener currentUser del contexto
@@ -15,6 +16,7 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
         {/* Primera Columna: AccountInfo y Botón */}
         <Col md={7} className="mb-4">
           <Card className="mb-3">
+          <Card.Header><FaIdCard /> Información de la tarjeta </Card.Header>
             <Card.Body>
               {accountData && selectedCard ? (
                 <AccountInfo
@@ -40,6 +42,7 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
         {/* Segunda Columna: TransactionsForm */}
         <Col md={5} className="mb-4">
           <Card>
+          <Card.Header><FaExchangeAlt /> Realizar Transacción </Card.Header>
             <Card.Body>
               {selectedCard ? (
                 <TransactionsForm
@@ -59,7 +62,7 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
       <Row>
         <Col xs={12} className="mb-4">
           <Card>
-            <Card.Header>Historial de Transacciones</Card.Header>
+            <Card.Header><FaHistory /> Historial de Transacciones </Card.Header>
             <Card.Body>
               {selectedCard ? (
                 <TransactionHistory selectedCardId={selectedCard.cardId} />

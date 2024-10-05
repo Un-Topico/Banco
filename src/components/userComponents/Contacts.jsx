@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Collapse, InputGroup } from "react-bootstrap";
-import { fetchContacts, saveContact } from "../services/firestoreTransactionService";
+import { fetchContacts, saveContact } from "../../services/firestoreTransactionService";
 import { FaEnvelope, FaUser, FaPlusCircle, FaList } from "react-icons/fa"; // Importa los íconos de react-icons
 
 const Contacts = ({ currentUser, setError, setSuccess, onContactSelect }) => {
