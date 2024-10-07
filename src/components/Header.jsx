@@ -6,6 +6,7 @@ import { useAuth } from "../auth/authContext";
 import { FaBell } from 'react-icons/fa'; // Icono de campana
 import ModalNotification from "./userComponents/ModalNotification";
 import { getFirestore, query, collection, where, onSnapshot } from "firebase/firestore"; 
+import { Button } from "react-bootstrap";
 
 export const Header = () => {
   const { currentUser } = useAuth(); // Obtenemos el usuario actual del contexto
@@ -91,6 +92,10 @@ export const Header = () => {
               {currentUser ? (
                 <div>
                   <button className="btn btn-danger me-2" onClick={handleSignOut}>Logout</button>
+                  <Link to="/pago-servicio" color="white">
+                        Pagar servicio
+                  </Link>
+
                   <div style={{ position: 'relative', display: 'inline-block' }}>
                     <FaBell onClick={handleShow} style={{cursor: 'pointer', fontSize: '1.5rem'}} />
                     {unreadCount > 0 && (
@@ -110,6 +115,7 @@ export const Header = () => {
                       </span>
                     )}
                   </div>
+                     
                   <ModalNotification show={showModal} handleClose={handleClose} ownerId={currentUser.uid} />
                 </div>
               ) : (

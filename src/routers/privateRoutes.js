@@ -5,7 +5,7 @@ import AdminUsers from "../components/userComponents/AdminUsers";
 import { TransactionDetail } from "../components/transactionComponents/TransactionDetail";
 import { SoporteChatScreen } from "../pages/SoporteChatScreen";
 import { PaymentDetails } from '../pages/PaymentDetails';
-import ServicePaymentForm from '../components/servicePayment/ServicePaymentForm';
+import ServicePaymentForm from '../pages/ServicePaymentForm';
 export const privateRoutes = [
     { path: "/perfil", element: <Profile />, protected:true },
     { path: "/transaccion/:id", element: <TransactionDetail />, protected:true },

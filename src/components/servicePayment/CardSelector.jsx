@@ -3,6 +3,7 @@ import { getFirestore, collection, query, where, getDocs } from "firebase/firest
 import { useAuth } from "../../auth/authContext";
 import { Card as BootstrapCard, Form } from "react-bootstrap";
 import { app } from "../../firebaseConfig";
+import { FaCreditCard } from "react-icons/fa"; // Icono de tarjeta
 
 const CardSelector = ({ selectedCard, setSelectedCard }) => {
   const { currentUser } = useAuth();
@@ -23,7 +24,9 @@ const CardSelector = ({ selectedCard, setSelectedCard }) => {
 
   return (
     <Form.Group controlId="cardSelect" className="mt-3">
-      <Form.Label>Selecciona la Tarjeta</Form.Label>
+      <Form.Label>
+        <FaCreditCard /> Selecciona la Tarjeta
+      </Form.Label>
       {cards.map((card) => (
         <BootstrapCard
           key={card.cardId}

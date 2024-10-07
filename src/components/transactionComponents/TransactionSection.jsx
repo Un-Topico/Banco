@@ -32,11 +32,18 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
             </Card.Body>
           </Card>
           {/* Botón para llevar a la seccion de pagos*/}
+          <Link to="/pago-servicio">
+            <Button variant="success" className="w-100 mb-3">
+              Realiza el pago de luz, agua
+            </Button>
+          </Link>
+
           <Link to="/pagos">
             <Button variant="primary" className="w-100 mb-3">
               Ir a compras realizadas
             </Button>
           </Link>
+          
         </Col>
 
         {/* Segunda Columna: TransactionsForm */}
