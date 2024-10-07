@@ -6,7 +6,6 @@ import { useAuth } from "../auth/authContext";
 import { FaBell } from 'react-icons/fa'; // Icono de campana
 import ModalNotification from "./userComponents/ModalNotification";
 import { getFirestore, query, collection, where, onSnapshot } from "firebase/firestore"; 
-import { Button } from "react-bootstrap";
 
 export const Header = () => {
   const { currentUser } = useAuth(); // Obtenemos el usuario actual del contexto
