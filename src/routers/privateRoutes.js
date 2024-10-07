@@ -5,6 +5,7 @@ import AdminUsers from "../components/userComponents/AdminUsers";
 import { TransactionDetail } from "../components/transactionComponents/TransactionDetail";
 import { SoporteChatScreen } from "../pages/SoporteChatScreen";
 import { PaymentDetails } from '../pages/PaymentDetails';
+import ServicePaymentForm from '../components/servicePayment/ServicePaymentForm';
 export const privateRoutes = [
     { path: "/perfil", element: <Profile />, protected:true },
     { path: "/transaccion/:id", element: <TransactionDetail />, protected:true },
@@ -12,6 +13,7 @@ export const privateRoutes = [
     { path: "/admin/users", element: <AdminUsers />, protected:true },
     { path: "/soporte", element: <SoporteChatScreen />, protected:true },
     { path: "/pagos", element: <PaymentDetails />, protected:true },
+    { path: "/pago-servicio", element: <ServicePaymentForm />, protected:true },
 
 
 

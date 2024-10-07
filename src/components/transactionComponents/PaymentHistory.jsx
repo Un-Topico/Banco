@@ -15,7 +15,7 @@ export const PaymentHistory = ({ currentUser }) => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const transactionsPerPage = 3;
+  const transactionsPerPage = 5;
 
   useEffect(() => {
     const fetchUserCards = async () => {
@@ -44,19 +44,30 @@ export const PaymentHistory = ({ currentUser }) => {
 
     // Obtener las transacciones de la tarjeta seleccionada
     const transactionsRef = collection(db, "transactions");
+
+    // Consulta para "compra"
     const purchaseQuery = query(
       transactionsRef,
-      where("transaction_type", "==", "compra"),
+      where("transaction_type", "==", "compraEnLinea"),
       where("card_id", "==", cardId)
     );
+    const purchaseSnapshot = await getDocs(purchaseQuery);
+    const purchasesData = purchaseSnapshot.docs.map((doc) => doc.data());
 
-    const transactionsSnapshot = await getDocs(purchaseQuery);
-    const purchasesData = transactionsSnapshot.docs.map((doc) => doc.data());
+    // Consulta para "pagoServicio"
+    const servicePaymentQuery = query(
+      transactionsRef,
+      where("transaction_type", "==", "pagoServicio"),
+      where("card_id", "==", cardId)
+    );
+    const servicePaymentSnapshot = await getDocs(servicePaymentQuery);
+    const servicePaymentsData = servicePaymentSnapshot.docs.map((doc) => doc.data());
 
-    // Ordenar las transacciones por fecha (de más reciente a más antigua)
-    purchasesData.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
+    // Combinar y ordenar las transacciones
+    const combinedTransactions = [...purchasesData, ...servicePaymentsData];
+    combinedTransactions.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
 
-    setTransactions(purchasesData);
+    setTransactions(combinedTransactions);
     setLoading(false);
   };
 
@@ -98,6 +109,26 @@ export const PaymentHistory = ({ currentUser }) => {
     ],
   };
 
+  // Datos para el gráfico de barras por tipo de servicio
+  const serviceTypeData = transactions.reduce((acc, transaction) => {
+    if (transaction.transaction_type === "pagoServicio") {
+      const { service_type, amount } = transaction;
+      acc[service_type] = (acc[service_type] || 0) + amount;
+    }
+    return acc;
+  }, {});
+
+  const serviceBarChartData = {
+    labels: Object.keys(serviceTypeData),
+    datasets: [
+      {
+        label: 'Gastos por Tipo de Servicio',
+        data: Object.values(serviceTypeData),
+        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+      },
+    ],
+  };
+
   // Paginación
   const indexOfLastTransaction = currentPage * transactionsPerPage;
   const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
@@ -117,7 +148,7 @@ export const PaymentHistory = ({ currentUser }) => {
 
   return (
     <Container className="my-4">
-      <h2 className="text-center mb-4">Historial de Compras</h2>
+      <h2 className="text-center mb-4">Historial de Compras y Pagos de Servicios</h2>
 
       {/* Selección de tarjetas */}
       {cards.length === 0 ? (
@@ -144,7 +175,7 @@ export const PaymentHistory = ({ currentUser }) => {
               <Card key={transaction.transaction_id} className="mb-3 shadow-sm">
                 <Card.Header className="d-flex justify-content-between align-items-center">
                   <span>
-                    <FaShoppingCart /> Compra
+                    <FaShoppingCart /> {transaction.transaction_type === "compra" ? "Compra" : "Pago de Servicio"}
                   </span>
                   <small className="text-muted">
                     {new Date(transaction.transaction_date.seconds * 1000).toLocaleString()}
@@ -192,7 +223,9 @@ export const PaymentHistory = ({ currentUser }) => {
               <h4>Gastos por Categoría</h4>
               <Bar data={barChartData} className="mb-4" />
               <h4>Gastos a lo Largo del Tiempo</h4>
-              <Line data={lineChartData} />
+              <Line data={lineChartData} className="mb-4" />
+              <h4>Gastos por Tipo de Servicio</h4>
+              <Bar data={serviceBarChartData} />
             </>
           )}
         </Col>
