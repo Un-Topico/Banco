@@ -15,7 +15,12 @@ const CardSelector = ({ selectedCard, setSelectedCard }) => {
       const cardsCollection = collection(db, "cards");
       const q = query(cardsCollection, where("ownerId", "==", currentUser.uid));
       const querySnapshot = await getDocs(q);
-      const userCards = querySnapshot.docs.map((doc) => ({ ...doc.data(), cardId: doc.id }));
+      // Solo obtener los campos necesarios
+      const userCards = querySnapshot.docs.map((doc) => ({
+        cardNumber: doc.data().cardNumber,
+        balance: doc.data().balance,
+        cardId: doc.id, // Necesitamos el ID de la tarjeta
+      }));
       setCards(userCards);
     };
 
