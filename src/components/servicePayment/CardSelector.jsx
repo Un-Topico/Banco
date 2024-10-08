@@ -32,10 +32,11 @@ const CardSelector = ({ selectedCard, setSelectedCard }) => {
           key={card.cardId}
           className={`mb-2 ${selectedCard?.cardId === card.cardId ? "border-primary" : ""}`}
           onClick={() => setSelectedCard(card)}
+          style={{"cursor": "pointer"}}
         >
           <BootstrapCard.Body>
             <BootstrapCard.Title>{card.cardNumber}</BootstrapCard.Title>
-            <BootstrapCard.Text>Saldo: {card.balance}</BootstrapCard.Text>
+            <BootstrapCard.Text>Saldo: ${card.balance} MXN</BootstrapCard.Text>
           </BootstrapCard.Body>
         </BootstrapCard>
       ))}

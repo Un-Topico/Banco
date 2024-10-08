@@ -3,12 +3,14 @@ import { Form, Button, Alert, Container, Row, Col } from "react-bootstrap"; // A
 import { getFirestore, collection, doc, updateDoc, addDoc } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 import { FaWater, FaLightbulb, FaMoneyCheckAlt } from "react-icons/fa";
+import { MdNumbers } from "react-icons/md";
 import CardSelector from "../components/servicePayment/CardSelector";
 import PaymentSummary from "../components/servicePayment/PaymentSummary";
 
 const ServicePaymentForm = () => {
   const [selectedService, setSelectedService] = useState("");
   const [paymentAmount, setPaymentAmount] = useState();
+  const [referenceNumber, setReferenceNumber] = useState(""); // Estado para el número de referencia
   const [selectedCard, setSelectedCard] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,10 +18,11 @@ const ServicePaymentForm = () => {
 
   const handleServiceChange = (e) => setSelectedService(e.target.value);
   const handleAmountChange = (e) => setPaymentAmount(Number(e.target.value));
+  const handleReferenceChange = (e) => setReferenceNumber(e.target.value); // Manejar cambios del número de referencia
 
   const handlePayment = async () => {
     setError("");
-    if (!selectedService || !paymentAmount || !selectedCard) {
+    if (!selectedService || !paymentAmount || !referenceNumber || !selectedCard) {
       setError("Por favor, completa todos los campos");
       return;
     }
@@ -41,6 +44,7 @@ const ServicePaymentForm = () => {
       const transactionData = {
         amount: paymentAmount,
         description: `Pago de servicio de ${selectedService}`,
+        reference_number: referenceNumber, // Número de referencia
         status: "pagado",
         transaction_type: "pagoServicio",
         category: "servicio",
@@ -55,6 +59,7 @@ const ServicePaymentForm = () => {
       // Limpiar formulario después del éxito
       setSelectedService("");
       setPaymentAmount(0);
+      setReferenceNumber(""); // Limpiar el número de referencia
       setSelectedCard(null);
     } catch (err) {
       setError("Hubo un error al procesar el pago");
@@ -62,7 +67,7 @@ const ServicePaymentForm = () => {
     setLoading(false);
   };
 
-  const isFormComplete = selectedService && paymentAmount > 0 && selectedCard;
+  const isFormComplete = selectedService && paymentAmount > 0 && referenceNumber && selectedCard;
 
   return (
     <Container className="my-3">
@@ -87,20 +92,30 @@ const ServicePaymentForm = () => {
               </option>
             </Form.Control>
           </Form.Group>
-
+          <Form.Group controlId="referenceInput" className="mt-3">
+            <Form.Label><MdNumbers /> Número de Referencia</Form.Label>
+            <Form.Control
+              type="text"
+              value={referenceNumber}
+              onChange={handleReferenceChange}
+              placeholder="Ingresa el número de referencia"
+            />
+          </Form.Group>
           <Form.Group controlId="amountInput" className="mt-3">
             <Form.Label>
               <FaMoneyCheckAlt /> Monto a Pagar
             </Form.Label>
-            <Form.Control type="number"  value={paymentAmount} onChange={handleAmountChange} />
+            <Form.Control type="number" value={paymentAmount} onChange={handleAmountChange} />
           </Form.Group>
+
+         
 
           <CardSelector selectedCard={selectedCard} setSelectedCard={setSelectedCard} />
         </Col>
 
         {/* Columna derecha: Resumen de pago y botón */}
         <Col md={6}>
-          <PaymentSummary service={selectedService} amount={paymentAmount} card={selectedCard} />
+          <PaymentSummary service={selectedService} amount={paymentAmount} card={selectedCard} referenceNumber={referenceNumber}/>
 
           {isFormComplete && (
             <Button
@@ -108,8 +123,7 @@ const ServicePaymentForm = () => {
               onClick={handlePayment}
               disabled={loading} // Deshabilitar el botón mientras está cargando
               className="mt-4 w-100"
-
-              block // El botón ocupará todo el ancho de la columna
+              block
             >
               {loading ? "Procesando..." : <> <FaMoneyCheckAlt /> Realizar Pago</>}
             </Button>
