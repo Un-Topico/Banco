@@ -48,7 +48,7 @@ const ServicePaymentForm = () => {
         status: "pagado",
         transaction_type: "pagoServicio",
         category: "servicio",
-        transaction_id: `${selectedService}-${new Date().getTime()}`,
+        transaction_id: `transaction_${selectedService}_${new Date().getTime()}`,
         transaction_date: new Date(),
         card_id: selectedCard.cardId,
         service_type: selectedService,
