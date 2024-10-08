@@ -76,6 +76,7 @@ export const CreateAccount = () => {
         email: userEmail,
         createdAt: new Date(),
         updatedAt: new Date(),
+        termsAndConditions: 'accepted'
       };
 
       const accountsCollection = collection(db, "accounts");
