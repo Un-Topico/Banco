@@ -117,7 +117,7 @@ export const PaymentHistory = ({ currentUser }) => {
     }
     return acc;
   }, {});
-
+  console.log(Object.values(serviceTypeData))
   const serviceBarChartData = {
     labels: Object.keys(serviceTypeData),
     datasets: [
