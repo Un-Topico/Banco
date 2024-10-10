@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Container, Row, Col, InputGroup } from 'react-bootstrap';
-import { getFirestore, doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { useAuth } from '../../auth/authContext';
 import jsQR from "jsqr";  // Biblioteca para leer el QR desde una imagen
 
@@ -123,7 +123,9 @@ export const QrScanForm = ({ updateBalance }) => {
       await updateDoc(qrDocRef, { used: true });
 
       // Guardar la transacción en Firestore
-      const transactionData = {
+
+      //deposito quien lo manda
+      await addDoc(collection(db, 'transactions'),{
         transaction_id: `transaction_${Date.now()}`,
         card_id: qrData.cardId,
         transaction_type: "Deposito",
@@ -131,9 +133,37 @@ export const QrScanForm = ({ updateBalance }) => {
         transaction_date: new Date(),
         description: "Depósito vía QR",
         status: "sent",
-      };
-      await setDoc(doc(db, 'transactions', transactionData.transaction_id), transactionData);
-
+      })
+      await addDoc(collection(db, 'transactions'),{
+        transaction_id: `transaction_${Date.now()}`,
+        card_id: receiverCardData.cardId,
+        transaction_type: "Deposito",
+        amount: qrData.amount,
+        transaction_date: new Date(),
+        description: "Depósito vía QR",
+        status: "received",
+      })
+      // const transactionData = {
+      //   transaction_id: `transaction_${Date.now()}`,
+      //   card_id: qrData.cardId,
+      //   transaction_type: "Deposito",
+      //   amount: qrData.amount,
+      //   transaction_date: new Date(),
+      //   description: "Depósito vía QR",
+      //   status: "sent",
+      // };
+      //Deposito quien lo recibe
+      // const transactionDataRecibe = {
+      //   transaction_id: `transaction_${Date.now()}`,
+      //   card_id: receiverCardData.cardId,
+      //   transaction_type: "Deposito",
+      //   amount: qrData.amount,
+      //   transaction_date: new Date(),
+      //   description: "Depósito vía QR",
+      //   status: "received",
+      // };
+      // await setDoc(doc(db, 'transactions', transactionData.transaction_id), transactionData);
+      // await setDoc(doc(db, 'transactions', transactionDataRecibe.transaction_id), transactionDataRecibe);
       setSuccess('Depósito procesado exitosamente.');
       setQrCodeData(null);  // Limpiar el input del QR
     } catch (error) {
