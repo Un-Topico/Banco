@@ -91,7 +91,7 @@ export const Header = () => {
               {currentUser ? (
                 <div>
                   <button className="btn btn-danger me-2" onClick={handleSignOut}>Logout</button>
-                  <Link to="/pago-servicio" color="white">
+                  <Link  className="btn btn-warning me-2" to="/pago-servicio">
                         Pagar servicio
                   </Link>
 

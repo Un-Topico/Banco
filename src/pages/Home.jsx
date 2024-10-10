@@ -122,6 +122,38 @@ export const Home = () => {
             </div>
           </div>
         </section>
+        {/* Sección promocional movil */}
+        <section className="section-promocion-movil-container mt-5">
+          <div className="container text-center">
+            <div className="row align-items-center">
+              {/* Texto de promoción */}
+              <div className="col-md-6 mb-4">
+              <h2 className="display-5">Descarga nuestra aplicación móvil</h2>
+              <p className="lead">
+              Lleva tu banco en la palma de tu mano. Realiza transacciones, consulta
+              saldos y mucho más con nuestra app para dispositivos móviles.
+              </p>
+              <div className="d-flex justify-content-center">
+                {/* Botones de descarga */}
+                <a href="#playstore" className="btn btn-dark btn-lg mx-2">
+                <i className="fab fa-google-play mr-2"></i> Google Play
+                </a>
+                <a href="#appstore" className="btn btn-dark btn-lg mx-2">
+                <i className="fab fa-apple mr-2"></i> App Store
+                </a>
+              </div>
+              </div>
+               {/* Imagen promocional */}
+               <div className="col-md-6">
+               <img
+                src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fmobile.png?alt=media&token=e01ecbd7-4dde-4c91-9d8f-91d6794bf037"
+                alt="App móvil"
+                className="img-fluid"/>
+               </div>
+            </div>
+          </div>
+        </section>
+
       </div>
     );
   };
