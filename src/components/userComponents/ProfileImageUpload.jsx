@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
-import { useAuth } from "../auth/authContext";
-import { app } from "../firebaseConfig";
-import { Button, Spinner, Image } from "react-bootstrap";
+import { useAuth } from "../../auth/authContext";
+import { app } from "../../firebaseConfig";
+import { Spinner, Image } from "react-bootstrap";
 
 export const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }) => {
   const { currentUser } = useAuth();
-  const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState(currentImageUrl);
-  const [buttonVisible, setButtonVisible] = useState(false);
   const [defaultImageUrl, setDefaultImageUrl] = useState(null);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     // Obtener la imagen por defecto de Firebase Storage
@@ -27,7 +26,7 @@ export const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }) => {
     }
   }, [currentImageUrl]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
 
     // Validar tamaño de imagen (máximo 5MB)
@@ -36,21 +35,15 @@ export const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }) => {
       return;
     }
 
-    setImage(file);
     setImagePreview(URL.createObjectURL(file));
-    setButtonVisible(true); // Mostrar botón para subir cuando se selecciona una imagen
-  };
-
-  const handleUpload = async () => {
-    if (!image) return;
-
     setUploading(true);
+
     const storage = getStorage(app);
     const storageRef = ref(storage, `profileImages/${currentUser.uid}`);
 
     try {
       // Subir la imagen a Firebase Storage
-      await uploadBytes(storageRef, image);
+      await uploadBytes(storageRef, file);
 
       // Obtener la URL de descarga de la imagen
       const imageUrl = await getDownloadURL(storageRef);
@@ -62,9 +55,6 @@ export const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }) => {
 
       // Notificar al componente padre que la imagen ha sido actualizada
       onImageUpdate(imageUrl);
-
-      // Ocultar botón de subir imagen
-      setButtonVisible(false);
       alert("Imagen de perfil actualizada correctamente.");
     } catch (error) {
       console.error("Error al subir la imagen: ", error);
@@ -77,9 +67,9 @@ export const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }) => {
     <div className="text-center">
       <div
         className="position-relative d-inline-block"
-        onMouseEnter={() => setButtonVisible(true)}
-        onMouseLeave={() => !image && setButtonVisible(false)}
         style={{ width: "150px", height: "150px" }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
         <Image
           src={imagePreview || defaultImageUrl}
@@ -101,28 +91,16 @@ export const ProfileImageUpload = ({ currentImageUrl, onImageUpdate }) => {
           style={{
             backgroundColor: "rgba(0, 0, 0, 0.5)",
             color: "white",
-            display: buttonVisible ? "flex" : "none",
+            display: hovered ? "flex" : "none",
             justifyContent: "center",
             alignItems: "center",
             cursor: "pointer",
             borderRadius: "50%",
           }}
         >
-          Cambiar Imagen
+          {uploading ? <Spinner animation="border" size="sm" /> : "Cambiar Imagen"}
         </label>
       </div>
-
-      {buttonVisible && (
-        <Button
-          onClick={handleUpload}
-          variant="primary"
-          className="mt-3"
-          disabled={uploading}
-        >
-          {uploading ? <Spinner animation="border" size="sm" /> : "Subir Imagen"}
-        </Button>
-      )}
     </div>
   );
 };
-

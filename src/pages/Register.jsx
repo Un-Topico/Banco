@@ -7,6 +7,7 @@ import { app } from '../firebaseConfig';
 import { FaGoogle, FaEnvelope, FaLock } from 'react-icons/fa';
 import { Container, Row, Col, Form, Button, Alert, InputGroup } from 'react-bootstrap';
 import ReCAPTCHA from "react-google-recaptcha";
+import TermsAndConditions from "../components/terminos/TermsAndConditions";
 
 const db = getFirestore(app);
 
@@ -17,6 +18,8 @@ export const Register = () => {
   const [error, setError] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [captchaToken, setCaptchaToken] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const recaptchaRef = useRef();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -69,6 +72,10 @@ export const Register = () => {
     setCaptchaToken(token);
   };
 
+  const handleAcceptTerms = () => {
+    setTermsAccepted(true);
+  };
+
   return (
     <Container className="d-flex justify-content-center mt-5" style={{ minHeight: '100vh' }}>
       <Row className="w-100">
@@ -116,6 +123,19 @@ export const Register = () => {
               </InputGroup>
             </Form.Group>
             
+            <Form.Group className="mb-3 d-flex align-items-center">
+              <Form.Check 
+                type="checkbox" 
+                label={
+                  <span className="ms-2">
+                    Acepto los <Button variant="link" className="p-0" onClick={() => setShowTerms(true)}>Términos y Condiciones</Button>
+                  </span>
+                }
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+              />
+            </Form.Group>
+            
             <ReCAPTCHA
               ref={recaptchaRef}
               sitekey="6Lei2DoqAAAAANZjygCn2y8Z0r10NT_NqQAN06y5"
@@ -123,20 +143,28 @@ export const Register = () => {
               className="mb-3"
             />
 
-            <Button variant="primary" type="submit" className="w-100 mb-3">
+            <Button 
+              variant="primary" 
+              type="submit" 
+              className="w-100 mb-3" 
+              disabled={!termsAccepted}
+            >
               Registrar
             </Button>
 
             <Button 
               variant="secondary" 
               className="w-100 d-flex align-items-center justify-content-center" 
-              onClick={handleLoginWithGoogle}
+              onClick={handleLoginWithGoogle} 
+              disabled={!termsAccepted}
             >
               <FaGoogle className="me-2" /> Crear cuenta con Google
             </Button>
           </Form>
         </Col>
       </Row>
+
+      <TermsAndConditions show={showTerms} onHide={() => setShowTerms(false)} onAccept={handleAcceptTerms} />
     </Container>
   );
 };

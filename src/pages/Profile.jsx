@@ -3,11 +3,10 @@ import { useAuth } from "../auth/authContext";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { app } from "../firebaseConfig";
-import { UserProfile } from "../components/UserProfile";
-import { AccountInfo } from "../components/AccountInfo";
-import { TransactionSection } from "../components/TransactionSection";
-import UserChat from "../components/UserChat";
-import UserCards from "../components/UserCard";
+import { UserProfile } from "../components/userComponents/UserProfile";
+import { TransactionSection } from "../components/transactionComponents/TransactionSection";
+import UserCards from "../components/cardComponents/UserCard";
+import DialogFlowChat from "../components/chatComponents/DialogFlowChat";
 import { Container, Spinner, Button } from "react-bootstrap";
 
 export const Profile = () => {
@@ -123,22 +122,19 @@ export const Profile = () => {
         onImageUpdate={handleImageUpdate}
         onNameUpdate={handleNameUpdate}
         onPhoneUpdate={handlePhoneUpdate}
+        totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
+
       />
-      {accountData && (
-        <AccountInfo
-          accountData={accountData}
-          selectedCard={selectedCard}
-          transactions={transactions}
-          totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
-          onCardDelete={handleCardDelete}
-        />
-      )}
+     
       <UserCards onSelectCard={handleCardSelection} />
       <TransactionSection
         selectedCard={selectedCard}
         updateCardBalance={updateCardBalance}
+        accountData={accountData}
+        transactions={transactions}
+        handleCardDelete={handleCardDelete}
       />
-      <UserChat />
+      <DialogFlowChat/>
       {userRole === "admin" && (
         <Button
           variant="secondary"

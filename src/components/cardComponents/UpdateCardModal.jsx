@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Row, Col, Alert } from 'react-bootstrap';
 import { getFirestore, collection, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { reauthenticateUser, reauthenticateWithGoogle } from '../auth/auth'; // Importamos la reautenticación
-import { app } from '../firebaseConfig';
+import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Importamos la reautenticación
+import { app } from '../../firebaseConfig';
 import { FaUser, FaCreditCard, FaCalendarAlt, FaLock, FaKey } from 'react-icons/fa'; // Importar iconos
 
 const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {

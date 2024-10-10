@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, Row, Col, Badge } from "react-bootstrap";
 import { FaMoneyCheckAlt, FaCalendarAlt, FaInfoCircle } from "react-icons/fa";
-import { getTransferById, getCardById } from "../services/transactionService"; // Asegúrate de crear la función getCardById
+import { getTransferById, getCardById } from "../../services/transactionService"; // Asegúrate de crear la función getCardById
 
 export const TransactionDetail = () => {
   const { id } = useParams();

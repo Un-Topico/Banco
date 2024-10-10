@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Form, Button, Alert, Container, Row, Col, InputGroup } from "react-bootstrap";
-import Contacts from "./Contacts";
-import { handleTransaction } from "../services/transactionService";
-import { getCardDoc, listenToCardDoc } from "../services/firestoreTransactionService";
-import { FaMoneyBillAlt, FaUser, FaCommentAlt, FaExchangeAlt, FaPiggyBank } from "react-icons/fa"; // Importa los íconos de react-icons
+import Contacts from "../userComponents/Contacts";
+import { handleTransaction } from "../../services/transactionService";
+import { getCardDoc, listenToCardDoc } from "../../services/firestoreTransactionService";
+import { FaMoneyBillAlt, FaUser, FaCommentAlt, FaPiggyBank } from "react-icons/fa"; // Importa los íconos de react-icons
 
 export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance }) => {
   const [transactionType, setTransactionType] = useState("Deposito");
@@ -74,7 +74,6 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
     <Container>
       <Row className="justify-content-center">
         <Col>
-          <h2>Realizar Transacción <FaExchangeAlt /></h2>
           {error && <Alert variant="danger">{error}</Alert>}
           {success && <Alert variant="success">{success}</Alert>}
 

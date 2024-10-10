@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { signOut, getAuth } from "firebase/auth";
 import { app } from "../firebaseConfig";
 import { useAuth } from "../auth/authContext"; 
-import { CiBellOn } from 'react-icons/ci'; // Icono de campana
-import ModalNotification from "./ModalNotification"; 
+import { FaBell } from 'react-icons/fa'; // Icono de campana
+import ModalNotification from "./userComponents/ModalNotification";
 import { getFirestore, query, collection, where, onSnapshot } from "firebase/firestore"; 
 
 export const Header = () => {
@@ -91,8 +91,12 @@ export const Header = () => {
               {currentUser ? (
                 <div>
                   <button className="btn btn-danger me-2" onClick={handleSignOut}>Logout</button>
+                  <Link to="/pago-servicio" color="white">
+                        Pagar servicio
+                  </Link>
+
                   <div style={{ position: 'relative', display: 'inline-block' }}>
-                    <CiBellOn onClick={handleShow} style={{cursor: 'pointer', fontSize: '1.5rem'}} />
+                    <FaBell onClick={handleShow} style={{cursor: 'pointer', fontSize: '1.5rem'}} />
                     {unreadCount > 0 && (
                       <span 
                         style={{
@@ -110,6 +114,7 @@ export const Header = () => {
                       </span>
                     )}
                   </div>
+                     
                   <ModalNotification show={showModal} handleClose={handleClose} ownerId={currentUser.uid} />
                 </div>
               ) : (

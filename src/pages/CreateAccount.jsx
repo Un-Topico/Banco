@@ -11,7 +11,7 @@ import {
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { app } from "../firebaseConfig";
-import { CreditCardForm } from "../components/CreditCardForm";
+import { CreditCardForm } from "../components/cardComponents/CreditCardForm";
 import { Form, Button, Container, Card } from "react-bootstrap";
 import { checkUserAccount } from "../auth/checkUserAccount";
 
@@ -76,6 +76,7 @@ export const CreateAccount = () => {
         email: userEmail,
         createdAt: new Date(),
         updatedAt: new Date(),
+        termsAndConditions: 'accepted'
       };
 
       const accountsCollection = collection(db, "accounts");

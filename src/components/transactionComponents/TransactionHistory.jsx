@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getFirestore, collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
-import { app } from "../firebaseConfig";
-import { Table, Container, Row, Col, Form, Alert } from "react-bootstrap";
+import { app } from "../../firebaseConfig";
+import { Table, Container, Row, Col, Form, Alert, Pagination } from "react-bootstrap";
 
 export const TransactionHistory = ({ selectedCardId }) => {
   const [transactions, setTransactions] = useState([]);
@@ -9,6 +9,8 @@ export const TransactionHistory = ({ selectedCardId }) => {
   const [startDate, setStartDate] = useState(""); // Estado para la fecha de inicio
   const [endDate, setEndDate] = useState(""); // Estado para la fecha de fin
   const [error, setError] = useState(null); // Estado para mostrar errores
+  const [currentPage, setCurrentPage] = useState(1); // Estado para la pagina actual
+  const transactionsPerPage = 5; // Definir el numero de transacciones por pagina
   const db = getFirestore(app);
 
   useEffect(() => {
@@ -63,10 +65,16 @@ export const TransactionHistory = ({ selectedCardId }) => {
     return () => unsubscribe();
   }, [db, selectedCardId, filter, startDate, endDate]); // Añadido startDate y endDate como dependencias
 
-  return (
-    <Container className="text-center mt-5">
-      <h2>Historial de Transacciones</h2>
+  // Obtener las transacciones de la pagina actual
+  const indexOfLastTransaction = currentPage * transactionsPerPage;
+  const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
+  const currentTransactions = transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
 
+  // Cambiar de pagina
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  return (
+    <Container className="text-center">
       {/* Menú de selección de filtro */}
       <Row className="mb-4">
         <Col md={6} className="mx-auto">
@@ -79,6 +87,7 @@ export const TransactionHistory = ({ selectedCardId }) => {
               <option value="all">Todas</option>
               <option value="sent">Realizadas</option>
               <option value="received">Recibidas</option>
+              <option value="pagado">Compras</option>
             </Form.Select>
           </Form.Group>
         </Col>
@@ -113,31 +122,46 @@ export const TransactionHistory = ({ selectedCardId }) => {
 
       {error && <Alert variant="danger">{error}</Alert>}
 
-      {transactions.length === 0 ? (
+      {currentTransactions.length === 0 ? (
         <p>No se encontraron transacciones.</p>
       ) : (
-        <Table striped bordered hover responsive>
-          <thead>
-            <tr>
-              <th>ID de Transacción</th>
-              <th>Tipo</th>
-              <th>Monto</th>
-              <th>Fecha</th>
-              <th>Descripción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction) => (
-              <tr key={transaction.id}>
-                <td>{transaction.transaction_id}</td>
-                <td>{transaction.status}</td>
-                <td>${transaction.amount.toFixed(2)}</td>
-                <td>{transaction.transaction_date.toDate().toLocaleString()}</td>
-                <td>{transaction.description || "Sin descripción"}</td>
+        <>
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>ID de Transacción</th>
+                <th>Tipo</th>
+                <th>Monto</th>
+                <th>Fecha</th>
+                <th>Descripción</th>
               </tr>
+            </thead>
+            <tbody>
+              {currentTransactions.map((transaction) => (
+                <tr key={transaction.id}>
+                  <td>{transaction.transaction_id}</td>
+                  <td>{transaction.status}</td>
+                  <td>${transaction.amount.toFixed(2)}</td>
+                  <td>{transaction.transaction_date.toDate().toLocaleString()}</td>
+                  <td>{transaction.description || "Sin descripción"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+
+          {/* Paginación */}
+          <Pagination className="justify-content-center">
+            {[...Array(Math.ceil(transactions.length / transactionsPerPage)).keys()].map((number) => (
+              <Pagination.Item
+                key={number + 1}
+                active={number + 1 === currentPage}
+                onClick={() => paginate(number + 1)}
+              >
+                {number + 1}
+              </Pagination.Item>
             ))}
-          </tbody>
-        </Table>
+          </Pagination>
+        </>
       )}
     </Container>
   );
