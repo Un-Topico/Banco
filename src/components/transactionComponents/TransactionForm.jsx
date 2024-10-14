@@ -31,12 +31,34 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
     }
   }, [selectedCardId, memoizedUpdateBalance]);
 
+  // Función para manejar cambios en el monto y validar la entrada
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+    // Remover cualquier carácter que no sea número o punto decimal
+    const sanitizedValue = value.replace(/[^0-9.]/g, '');
+    // Permitir solo dos decimales
+    const regex = /^\d*\.?\d{0,2}$/;
+    if (regex.test(sanitizedValue) || sanitizedValue === '') {
+      setAmount(sanitizedValue);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
     try {
+      if (!amount || parseFloat(amount) <= 0) {
+        throw new Error("Por favor, ingresa una cantidad válida (número positivo con hasta dos decimales).");
+      }
+
+      const parsedAmount = parseFloat(amount);
+
+      if (parsedAmount > 10000) {
+        throw new Error("El monto máximo permitido es 10,000.");
+      }
+
       const cardDoc = await getCardDoc(selectedCardId);
       if (transactionType === "Transferencia" && !recipientEmail && !recipientClabe) {
         throw new Error("Debes ingresar un correo electrónico o un número CLABE del destinatario.");
@@ -45,7 +67,7 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
       await handleTransaction(
         cardDoc,
         transactionType,
-        amount,
+        parsedAmount,
         description,
         recipientEmail,
         recipientClabe,
@@ -59,7 +81,7 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
       setRecipientClabe("");
       setSuccess("Transacción realizada con éxito.");
     } catch (error) {
-      setError(error.message);
+      setError(error.message || "Ha ocurrido un error. Inténtalo de nuevo.");
     }
   };
 
@@ -100,9 +122,9 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
                   <InputGroup>
                     <InputGroup.Text><FaMoneyBillAlt /></InputGroup.Text>
                     <Form.Control
-                      type="number"
+                      type="text"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={handleAmountChange}
                       placeholder="Ingresa el monto"
                       required
                     />
@@ -146,7 +168,7 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
                         <Form.Control
                           type="text"
                           value={recipientClabe}
-                          onChange={(e) => setRecipientClabe(e.target.value)}
+                          onChange={(e) => setRecipientClabe(e.target.value.replace(/\D/g, ''))}
                           placeholder="Ingresa el número CLABE del destinatario"
                           disabled={isClabeDisabled}
                         />
@@ -161,7 +183,7 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
                   </>
                 )}
 
-                <Button variant="primary" type="submit">
+                <Button variant="primary" type="submit" disabled={!amount}>
                   Realizar Transacción
                 </Button>
               </>

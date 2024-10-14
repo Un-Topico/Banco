@@ -13,13 +13,44 @@ export const QrDepositForm = ({ selectedCardId }) => {
   const { currentUser } = useAuth();
   const db = getFirestore();
 
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+
+    // Remover cualquier carácter que no sea número o punto decimal
+    const sanitizedValue = value.replace(/[^0-9.]/g, '');
+
+    // Permitir solo dos decimales
+    const regex = /^\d*\.?\d{0,2}$/;
+
+    if (regex.test(sanitizedValue) || sanitizedValue === '') {
+      setAmount(sanitizedValue);
+    }
+  };
+
+  const isValidAmount = (amount) => {
+    // Verificar que el monto es un número positivo con hasta dos decimales
+    const regex = /^\d+(\.\d{1,2})?$/;
+    return regex.test(amount) && parseFloat(amount) > 0;
+  };
+
   const handleGenerateQrCode = async () => {
     setError(null);
     setSuccess(null);
 
     try {
-      if (!amount || parseFloat(amount) <= 0) {
-        throw new Error('Por favor, ingresa una cantidad válida.');
+      if (!amount || !isValidAmount(amount)) {
+        throw new Error('Por favor, ingresa una cantidad válida (número positivo con hasta dos decimales).');
+      }
+
+      const parsedAmount = parseFloat(amount);
+
+      // Limitar el monto máximo permitido (por ejemplo, 10,000)
+      if (parsedAmount > 10000) {
+        throw new Error('El monto máximo permitido es 10,000.');
+      }
+
+      if (!currentUser) {
+        throw new Error('Usuario no autenticado.');
       }
 
       // Obtener la tarjeta seleccionada
@@ -27,22 +58,29 @@ export const QrDepositForm = ({ selectedCardId }) => {
       const cardDoc = await getDoc(cardDocRef);
 
       if (!cardDoc.exists()) {
-        throw new Error('Tarjeta no encontrada');
+        throw new Error('Tarjeta no encontrada.');
       }
 
       const cardData = cardDoc.data();
-      if (cardData.balance < parseFloat(amount)) {
-        throw new Error('No tienes suficiente saldo para generar el código QR');
+
+      // Verificar que la tarjeta pertenece al usuario actual
+      if (cardData.ownerId !== currentUser.uid) {
+        throw new Error('No tienes permiso para generar un código QR para esta tarjeta.');
       }
 
-      // Generar un código QR único
-      const transactionId = `qr_${Date.now()}`;
+      if (cardData.balance < parsedAmount) {
+        throw new Error('No tienes suficiente saldo para generar el código QR.');
+      }
+
+      // Generar un ID único para la transacción
+      const transactionId = `qr_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       const qrData = {
         transactionId,
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         creatorId: currentUser.uid,
         cardId: selectedCardId,
         used: false,  // Indica si ya fue utilizado
+        createdAt: new Date(),
       };
 
       // Guardar la información en Firestore
@@ -50,9 +88,10 @@ export const QrDepositForm = ({ selectedCardId }) => {
 
       // Generar el código QR para mostrar
       setQrCode(transactionId);
-      setSuccess('Código QR generado exitosamente');
+      setSuccess('Código QR generado exitosamente.');
     } catch (error) {
-      setError(error.message);
+      console.error(error);
+      setError(error.message || 'Ha ocurrido un error. Inténtalo de nuevo.');
     }
   };
 
@@ -75,15 +114,15 @@ export const QrDepositForm = ({ selectedCardId }) => {
 
           <InputGroup className="mb-3">
             <FormControl
-              type="number"
+              type="text"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={handleAmountChange}
               placeholder="Ingresa el monto"
               required
             />
           </InputGroup>
 
-          <Button variant="primary" onClick={handleGenerateQrCode}>
+          <Button variant="primary" onClick={handleGenerateQrCode} disabled={!amount}>
             Generar Código QR
           </Button>
 
