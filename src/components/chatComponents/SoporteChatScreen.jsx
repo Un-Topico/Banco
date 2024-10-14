@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Accordion, Button } from 'react-bootstrap';
 import { getFirestore, collection, query, onSnapshot, doc, setDoc, arrayUnion } from 'firebase/firestore';
-import '../styles/Chat.css';
+import '../../styles/Chat.css';
 
 export const SoporteChatScreen = () => {
   const [chats, setChats] = useState([]);

@@ -52,7 +52,7 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
           </Button>
 
           {/* Mostrar el formulario QrScanForm si el botón fue presionado */}
-          {showQrScan && <QrScanForm updateBalance={updateCardBalance} />}
+          {showQrScan && <QrScanForm />}
         </Col>
 
         {/* Segunda Columna: TransactionsForm */}
