@@ -122,7 +122,7 @@ const DialogFlowChat = () => {
         text: newMessage,
         createdAt: new Date(),
         userId: currentUser.uid,
-        userName: currentUser.name,
+        userName: currentUser.displayName,
       };
 
       setMessages((prevMessages) => [...prevMessages, userMessage]);

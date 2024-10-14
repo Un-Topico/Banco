@@ -83,7 +83,7 @@ export const SoporteChatScreen = () => {
         {chats.map((chat) => (
           <Accordion.Item eventKey={chat.id} key={chat.id}>
             <Accordion.Header>
-              Chat con Usuario
+            Chat con {chat.userName || "Usuario Desconocido"}
             </Accordion.Header>
             <Accordion.Body>
               <div className="chat-messages" style={{  maxHeight: '300px', overflowY: 'auto' }}>
