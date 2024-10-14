@@ -13,6 +13,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
   const [cvv, setCvv] = useState('');
   const [cardHolderName, setCardHolderName] = useState('');
   const [cardType, setCardType] = useState('');
+  const [accountType, setAccountType] = useState(''); // Nuevo estado para el tipo de cuenta
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [error, setError] = useState(null);
@@ -26,17 +27,22 @@ export const CreditCardForm = ({ onCardSaved }) => {
   }, [auth.currentUser, navigate]);
 
   useEffect(() => {
-    if (cardNumber && expiryDate && cvv && cardHolderName) {
+    const cardNumberDigits = cardNumber.replace(/\s/g, '');
+    const isCardNumberValid = cardNumberDigits.length >= 18;
+    const isCvvValid = cvv.length >= 3;
+    const isExpiryDateValid = /^\d{2}\/\d{2}$/.test(expiryDate);
+
+    if (cardHolderName && isCardNumberValid && isCvvValid && isExpiryDateValid && accountType) {
       setIsButtonDisabled(false);
     } else {
       setIsButtonDisabled(true);
     }
-  }, [cardNumber, expiryDate, cvv, cardHolderName]);
+  }, [cardNumber, expiryDate, cvv, cardHolderName, accountType]);
 
   const generateClabeNumber = () => {
     const date = new Date();
     const timestamp = date.getTime().toString().slice(-10); // Últimos 10 dígitos del timestamp
-    const randomNumbers = Math.floor(1000000000 + Math.random() * 9000000000); // Generar 9 dígitos aleatorios
+    const randomNumbers = Math.floor(1000000000 + Math.random() * 9000000000); // Generar 10 dígitos aleatorios
     return `${timestamp}${randomNumbers}`;
   };
 
@@ -69,8 +75,31 @@ export const CreditCardForm = ({ onCardSaved }) => {
       return;
     }
 
+    const cardNumberDigits = cardNumber.replace(/\s/g, '');
+
+    // Validaciones adicionales en el frontend
+    if (cardNumberDigits.length < 18) {
+      setError('El número de tarjeta debe tener al menos 18 dígitos.');
+      return;
+    }
+
+    if (cvv.length < 3) {
+      setError('El CVV debe tener al menos 3 dígitos.');
+      return;
+    }
+
+    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+      setError('La fecha de expiración debe tener el formato MM/AA.');
+      return;
+    }
+
+    if (!['Nomina', 'Ahorro', 'Corriente'].includes(accountType)) {
+      setError('Selecciona un tipo de cuenta válido.');
+      return;
+    }
+
     // Validar si el número de tarjeta ya existe en la base de datos
-    const cardsQuery = query(collection(db, 'cards'), where('cardNumber', '==', cardNumber.replace(/\s/g, '')));
+    const cardsQuery = query(collection(db, 'cards'), where('cardNumber', '==', cardNumberDigits));
     const querySnapshot = await getDocs(cardsQuery);
 
     if (!querySnapshot.empty) {
@@ -84,7 +113,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
 
       const cardData = {
         cardId: cardId,
-        cardNumber: cardNumber.replace(/\s/g, ''),
+        cardNumber: cardNumberDigits,
         expiryDate: expiryDate,
         cvv: cvv,
         balance: 100,
@@ -94,8 +123,9 @@ export const CreditCardForm = ({ onCardSaved }) => {
         updatedAt: new Date(),
         cardType: cardType, // Tipo de tarjeta (Visa, MasterCard, American Express)
         clabeNumber: clabeNumber, // Número CLABE generado
+        accountType: accountType, // Tipo de cuenta
       };
-
+      console.log(cardData);
       const cardsCollection = collection(db, 'cards');
       const cardDocRef = doc(cardsCollection, cardId);
 
@@ -106,6 +136,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
       onCardSaved(true);
     } catch (error) {
       console.error("Error al guardar la tarjeta:", error);
+      setError('Hubo un error al guardar la tarjeta. Inténtalo de nuevo.');
     }
   };
 
@@ -133,14 +164,32 @@ export const CreditCardForm = ({ onCardSaved }) => {
           <Col sm={8}>
             <Form.Control
               type="text"
-              placeholder="0000 0000 0000 0000"
-              maxLength="19"
+              placeholder="0000 0000 0000 0000 0000"
+              maxLength="23" // Ajustado para permitir más dígitos y espacios
               value={cardNumber}
               onChange={handleCardNumberChange}
               required
               disabled={isCardSaved}
             />
             {cardType && <small>Tipo de tarjeta: {cardType}</small>}
+          </Col>
+        </Form.Group>
+
+        <Form.Group as={Row} controlId="accountType" className="mb-3">
+          <Form.Label column sm={4}>Tipo de Cuenta</Form.Label>
+          <Col sm={8}>
+            <Form.Control
+              as="select"
+              value={accountType}
+              onChange={(e) => setAccountType(e.target.value)}
+              required
+              disabled={isCardSaved}
+            >
+              <option value="">Seleccione el tipo de cuenta</option>
+              <option value="Nomina">Nómina</option>
+              <option value="Ahorro">Ahorro</option>
+              <option value="Corriente">Corriente</option>
+            </Form.Control>
           </Col>
         </Form.Group>
 

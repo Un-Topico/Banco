@@ -26,7 +26,7 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
                   selectedCard={selectedCard}
                   transactions={transactions}
                   totalBalance={totalBalance}
-                  handleCardDelete={handleCardDelete}
+                  onCardDelete={handleCardDelete} // Cambiamos el nombre de la prop
                 />
               ) : (
                 <p>Selecciona una tarjeta para ver la información de la tarjeta</p>
