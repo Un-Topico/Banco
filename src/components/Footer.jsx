@@ -1,5 +1,6 @@
 import React from "react";
-import {FaFacebook, FaGithub, FaInstagram} from 'react-icons/fa';
+import { FaFacebook, FaGithub, FaInstagram } from 'react-icons/fa';
+import { Link } from "react-router-dom";
 
 export const Footer = () => {
   return (
@@ -9,33 +10,63 @@ export const Footer = () => {
           <div className="col-6 col-md-2 mb-3">
             <h5>Section</h5>
             <ul className="nav flex-column">
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Home</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Features</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Pricing</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">FAQs</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">About</a></li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Home</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Features</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Pricing</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">FAQs</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">About</Link>
+              </li>
             </ul>
           </div>
 
           <div className="col-6 col-md-2 mb-3">
             <h5>Section</h5>
             <ul className="nav flex-column">
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Home</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Features</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Pricing</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">FAQs</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">About</a></li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Home</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Features</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Pricing</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">FAQs</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">About</Link>
+              </li>
             </ul>
           </div>
 
           <div className="col-6 col-md-2 mb-3">
             <h5>Section</h5>
             <ul className="nav flex-column">
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Home</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Features</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">Pricing</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">FAQs</a></li>
-              <li className="nav-item mb-2"><a to="/" className="nav-link p-0 text-body-secondary">About</a></li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Home</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Features</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">Pricing</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">FAQs</Link>
+              </li>
+              <li className="nav-item mb-2">
+                <Link to="/" className="nav-link p-0 text-body-secondary">About</Link>
+              </li>
             </ul>
           </div>
 
@@ -55,9 +86,21 @@ export const Footer = () => {
         <div className="d-flex flex-column flex-sm-row justify-content-between py-4 my-4 border-top">
           <p>&copy; 2024 Company, Inc. All rights reserved.</p>
           <ul className="list-unstyled d-flex">
-            <li className="ms-3"><a className="link-body-emphasis" to="/"><FaFacebook size="3em" className="my-3" /></a></li>
-            <li className="ms-3"><a className="link-body-emphasis" to="/"><FaInstagram size="3em" className="my-3" /></a></li>
-            <li className="ms-3"><a className="link-body-emphasis" to="/"><FaGithub size="3em" className="my-3" /></a></li>
+            <li className="ms-3">
+              <Link className="link-body-emphasis" to="/">
+                <FaFacebook size="3em" className="my-3" />
+              </Link>
+            </li>
+            <li className="ms-3">
+              <Link className="link-body-emphasis" to="/">
+                <FaInstagram size="3em" className="my-3" />
+              </Link>
+            </li>
+            <li className="ms-3">
+              <Link className="link-body-emphasis" to="/">
+                <FaGithub size="3em" className="my-3" />
+              </Link>
+            </li>
           </ul>
         </div>
       </footer>
