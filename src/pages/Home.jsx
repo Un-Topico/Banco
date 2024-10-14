@@ -154,6 +154,8 @@ export const Home = () => {
           </div>
         </section>
 
+        <div class="b-example-divider"></div>
+
       </div>
     );
   };
