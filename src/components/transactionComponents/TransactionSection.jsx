@@ -1,14 +1,16 @@
-import React from "react";
-import { Card, Row, Col, Button } from "react-bootstrap";
-import { TransactionsForm } from "./TransactionForm";
+import React, { useState } from 'react';
+import { Card, Row, Col, Button } from 'react-bootstrap';
+import { TransactionsForm } from './TransactionForm';
 import { TransactionHistory } from './TransactionHistory';
-import { useAuth } from "../../auth/authContext";
-import { AccountInfo } from "../userComponents/AccountInfo";
-import { Link } from "react-router-dom";
-import { FaExchangeAlt, FaIdCard, FaHistory } from "react-icons/fa";
+import { useAuth } from '../../auth/authContext';
+import { AccountInfo } from '../userComponents/AccountInfo';
+import { Link } from 'react-router-dom';
+import { FaExchangeAlt, FaIdCard, FaHistory } from 'react-icons/fa';
+import { QrScanForm } from './QrScanForm'; // Importa el componente de escaneo QR
 
 export const TransactionSection = ({ selectedCard, updateCardBalance, accountData, transactions, totalBalance, handleCardDelete }) => {
   const { currentUser } = useAuth(); // Obtener currentUser del contexto
+  const [showQrScan, setShowQrScan] = useState(false); // Estado para mostrar/ocultar el formulario QRScan
 
   return (
     <div>
@@ -16,7 +18,7 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
         {/* Primera Columna: AccountInfo y Botón */}
         <Col md={7} className="mb-4">
           <Card className="mb-3">
-          <Card.Header><FaIdCard /> Información de la tarjeta </Card.Header>
+            <Card.Header><FaIdCard /> Información de la tarjeta </Card.Header>
             <Card.Body>
               {accountData && selectedCard ? (
                 <AccountInfo
@@ -26,12 +28,12 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
                   totalBalance={totalBalance}
                   handleCardDelete={handleCardDelete}
                 />
-              ):(
-                <p>Selecciona una tarjeta para ver la informacion de la tarjeta</p>
-              ) }
+              ) : (
+                <p>Selecciona una tarjeta para ver la información de la tarjeta</p>
+              )}
             </Card.Body>
           </Card>
-          {/* Botón para llevar a la seccion de pagos*/}
+          {/* Botón para llevar a la sección de pagos */}
           <Link to="/pago-servicio">
             <Button variant="success" className="w-100 mb-3">
               Realiza el pago de luz, agua
@@ -43,13 +45,20 @@ export const TransactionSection = ({ selectedCard, updateCardBalance, accountDat
               Ir a compras realizadas
             </Button>
           </Link>
-          
+
+          {/* Botón para escanear el código QR */}
+          <Button variant="secondary" className="w-100 mb-3" onClick={() => setShowQrScan(!showQrScan)}>
+            {showQrScan ? "Ocultar Escáner QR" : "Escanear Código QR"}
+          </Button>
+
+          {/* Mostrar el formulario QrScanForm si el botón fue presionado */}
+          {showQrScan && <QrScanForm updateBalance={updateCardBalance} />}
         </Col>
 
         {/* Segunda Columna: TransactionsForm */}
         <Col md={5} className="mb-4">
           <Card>
-          <Card.Header><FaExchangeAlt /> Realizar Transacción </Card.Header>
+            <Card.Header><FaExchangeAlt /> Realizar Transacción </Card.Header>
             <Card.Body>
               {selectedCard ? (
                 <TransactionsForm

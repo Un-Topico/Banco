@@ -76,13 +76,14 @@ export const SoporteChatScreen = () => {
   }, [chats]);
 
   return (
+  
     <div className="soporte-chat">
       <h3>Chats Pendientes</h3>
       <Accordion>
         {chats.map((chat) => (
           <Accordion.Item eventKey={chat.id} key={chat.id}>
             <Accordion.Header>
-              Chat con {chat.userName || "Usuario Desconocido"}
+              Chat con Usuario
             </Accordion.Header>
             <Accordion.Body>
               <div className="chat-messages" style={{  maxHeight: '300px', overflowY: 'auto' }}>
