@@ -1,5 +1,3 @@
-// src/components/servicePayment/ServicePaymentForm.jsx
-
 import React, { useState, useEffect } from "react";
 import { Form, Button, Alert, Container, Row, Col, Modal } from "react-bootstrap";
 import { getFirestore, doc, collection, getDoc, runTransaction } from "firebase/firestore";

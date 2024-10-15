@@ -1,5 +1,3 @@
-// src/components/transactions/TransactionSection.jsx
-
 import React, { useState } from 'react';
 import { Card, Row, Col, Button } from 'react-bootstrap';
 import { TransactionsForm } from './TransactionForm';
