@@ -196,10 +196,13 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
                     />
                   </>
                 )}
-
+              <Row className="mt-4">
+              <Col sm={{ span: 8, offset: 4 }} className="text-end">
                 <Button variant="primary" type="submit" disabled={!amount}>
                   Realizar Transacción
                 </Button>
+                </Col>
+                </Row>
               </>
             )}
           </Form>

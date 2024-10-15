@@ -44,11 +44,13 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
         const result = await updatePasswordForUser(newPassword);
         if (result.success) {
           setSuccess(true);
-          setShowModal(false); // Cerrar el modal en caso de éxito
+          alert("Contraseña actualizada correctamente")
           // Resetear campos de contraseña
           setNewPassword("");
           setConfirmPassword("");
           setCurrentPassword(""); // Limpiar el input de contraseña actual
+          setShowModal(false); // Cerrar el modal en caso de éxito
+
         } else {
           setError(result.message);
         }

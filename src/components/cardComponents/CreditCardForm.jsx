@@ -1,19 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Button, Row, Col, Card, Alert } from 'react-bootstrap';
-import { getFirestore, collection, doc, setDoc, query, where, getDocs } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { app } from '../../firebaseConfig';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Form, Button, Row, Col, Card, Alert } from "react-bootstrap";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { app } from "../../firebaseConfig";
 
 export const CreditCardForm = ({ onCardSaved }) => {
   const db = getFirestore(app);
   const auth = getAuth(app);
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardHolderName, setCardHolderName] = useState('');
-  const [cardType, setCardType] = useState('');
-  const [accountType, setAccountType] = useState(''); // Nuevo estado para el tipo de cuenta
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [cardHolderName, setCardHolderName] = useState("");
+  const [cardType, setCardType] = useState("");
+  const [accountType, setAccountType] = useState(""); // Nuevo estado para el tipo de cuenta
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [error, setError] = useState(null);
@@ -22,17 +30,23 @@ export const CreditCardForm = ({ onCardSaved }) => {
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [auth.currentUser, navigate]);
 
   useEffect(() => {
-    const cardNumberDigits = cardNumber.replace(/\s/g, '');
+    const cardNumberDigits = cardNumber.replace(/\s/g, "");
     const isCardNumberValid = cardNumberDigits.length >= 18;
     const isCvvValid = cvv.length >= 3;
     const isExpiryDateValid = /^\d{2}\/\d{2}$/.test(expiryDate);
 
-    if (cardHolderName && isCardNumberValid && isCvvValid && isExpiryDateValid && accountType) {
+    if (
+      cardHolderName &&
+      isCardNumberValid &&
+      isCvvValid &&
+      isExpiryDateValid &&
+      accountType
+    ) {
       setIsButtonDisabled(false);
     } else {
       setIsButtonDisabled(true);
@@ -49,20 +63,23 @@ export const CreditCardForm = ({ onCardSaved }) => {
   const detectCardType = (number) => {
     const firstDigit = parseInt(number[0], 10);
     if (firstDigit >= 1 && firstDigit <= 4) {
-      setCardType('Visa');
+      setCardType("Visa");
     } else if (firstDigit >= 5 && firstDigit <= 8) {
-      setCardType('MasterCard');
+      setCardType("MasterCard");
     } else if (firstDigit === 0 || firstDigit === 9) {
-      setCardType('American Express');
+      setCardType("American Express");
     } else {
-      setCardType('');
+      setCardType("");
     }
   };
 
   const handleCardNumberChange = (e) => {
-    const formattedNumber = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+    const formattedNumber = e.target.value
+      .replace(/\D/g, "")
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
     setCardNumber(formattedNumber);
-    detectCardType(formattedNumber.replace(/\s/g, '')); // Detectar tipo de tarjeta
+    detectCardType(formattedNumber.replace(/\s/g, "")); // Detectar tipo de tarjeta
   };
 
   const handleSubmit = async (e) => {
@@ -75,35 +92,38 @@ export const CreditCardForm = ({ onCardSaved }) => {
       return;
     }
 
-    const cardNumberDigits = cardNumber.replace(/\s/g, '');
+    const cardNumberDigits = cardNumber.replace(/\s/g, "");
 
     // Validaciones adicionales en el frontend
     if (cardNumberDigits.length < 18) {
-      setError('El número de tarjeta debe tener al menos 18 dígitos.');
+      setError("El número de tarjeta debe tener al menos 18 dígitos.");
       return;
     }
 
     if (cvv.length < 3) {
-      setError('El CVV debe tener al menos 3 dígitos.');
+      setError("El CVV debe tener al menos 3 dígitos.");
       return;
     }
 
     if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-      setError('La fecha de expiración debe tener el formato MM/AA.');
+      setError("La fecha de expiración debe tener el formato MM/AA.");
       return;
     }
 
-    if (!['Nomina', 'Ahorro', 'Corriente'].includes(accountType)) {
-      setError('Selecciona un tipo de cuenta válido.');
+    if (!["Nomina", "Ahorro", "Corriente"].includes(accountType)) {
+      setError("Selecciona un tipo de cuenta válido.");
       return;
     }
 
     // Validar si el número de tarjeta ya existe en la base de datos
-    const cardsQuery = query(collection(db, 'cards'), where('cardNumber', '==', cardNumberDigits));
+    const cardsQuery = query(
+      collection(db, "cards"),
+      where("cardNumber", "==", cardNumberDigits)
+    );
     const querySnapshot = await getDocs(cardsQuery);
 
     if (!querySnapshot.empty) {
-      setError('El número de tarjeta ya ha sido registrado. Intenta con otro.');
+      setError("El número de tarjeta ya ha sido registrado. Intenta con otro.");
       return;
     }
 
@@ -126,7 +146,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
         accountType: accountType, // Tipo de cuenta
       };
       console.log(cardData);
-      const cardsCollection = collection(db, 'cards');
+      const cardsCollection = collection(db, "cards");
       const cardDocRef = doc(cardsCollection, cardId);
 
       await setDoc(cardDocRef, cardData);
@@ -136,16 +156,18 @@ export const CreditCardForm = ({ onCardSaved }) => {
       onCardSaved(true);
     } catch (error) {
       console.error("Error al guardar la tarjeta:", error);
-      setError('Hubo un error al guardar la tarjeta. Inténtalo de nuevo.');
+      setError("Hubo un error al guardar la tarjeta. Inténtalo de nuevo.");
     }
   };
 
   return (
-    <Card className="p-4 shadow-sm">
+    <Card className="p-4 shadow-sm" >
       <h2 className="mb-4">Añadir Tarjeta</h2>
       <Form onSubmit={handleSubmit}>
         <Form.Group as={Row} controlId="cardHolderName" className="mb-3">
-          <Form.Label column sm={4}>Nombre en la Tarjeta</Form.Label>
+          <Form.Label column sm={4}>
+            Nombre en la Tarjeta
+          </Form.Label>
           <Col sm={8}>
             <Form.Control
               type="text"
@@ -160,7 +182,9 @@ export const CreditCardForm = ({ onCardSaved }) => {
         </Form.Group>
 
         <Form.Group as={Row} controlId="cardNumber" className="mb-3">
-          <Form.Label column sm={4}>Número de Tarjeta</Form.Label>
+          <Form.Label column sm={4}>
+            Número de Tarjeta
+          </Form.Label>
           <Col sm={8}>
             <Form.Control
               type="text"
@@ -176,7 +200,9 @@ export const CreditCardForm = ({ onCardSaved }) => {
         </Form.Group>
 
         <Form.Group as={Row} controlId="accountType" className="mb-3">
-          <Form.Label column sm={4}>Tipo de Cuenta</Form.Label>
+          <Form.Label column sm={4}>
+            Tipo de Cuenta
+          </Form.Label>
           <Col sm={8}>
             <Form.Control
               as="select"
@@ -202,7 +228,13 @@ export const CreditCardForm = ({ onCardSaved }) => {
                 placeholder="MM/AA"
                 maxLength="5"
                 value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value.replace(/[^0-9/]/g, '').replace(/(\d{2})(\d{1,2})/, '$1/$2'))}
+                onChange={(e) =>
+                  setExpiryDate(
+                    e.target.value
+                      .replace(/[^0-9/]/g, "")
+                      .replace(/(\d{2})(\d{1,2})/, "$1/$2")
+                  )
+                }
                 required
                 disabled={isCardSaved}
               />
@@ -217,7 +249,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
                 placeholder="123"
                 maxLength="4"
                 value={cvv}
-                onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
                 required
                 disabled={isCardSaved}
               />
@@ -226,10 +258,18 @@ export const CreditCardForm = ({ onCardSaved }) => {
         </Row>
 
         {error && <Alert variant="danger">{error}</Alert>}
-
-        <Button variant="primary" type="submit" className="mt-3" disabled={isButtonDisabled || isCardSaved}>
-          {isCardSaved ? 'Tarjeta Guardada' : 'Guardar Tarjeta'}
-        </Button>
+        <Row className="mt-4">
+          <Col sm={{ span: 8, offset: 4 }} className="text-end">
+            <Button
+              variant="primary"
+              type="submit"
+              className="mt-3"
+              disabled={isButtonDisabled || isCardSaved}
+            >
+              {isCardSaved ? "Tarjeta Guardada" : "Guardar Tarjeta"}
+            </Button>
+          </Col>
+        </Row>
       </Form>
     </Card>
   );
