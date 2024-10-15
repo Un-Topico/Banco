@@ -3,7 +3,7 @@ import { Button, Alert, Container, Row, Col, InputGroup, FormControl, Modal, For
 import { QRCodeCanvas } from 'qrcode.react';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../auth/authContext';
-import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de importar las funciones de reautenticación
+import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; 
 
 export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
   const [amount, setAmount] = useState('');

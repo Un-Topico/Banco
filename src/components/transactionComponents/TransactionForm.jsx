@@ -5,7 +5,7 @@ import { handleTransaction } from '../../services/transactionService';
 import { getCardDoc, listenToCardDoc } from '../../services/firestoreTransactionService';
 import { FaMoneyBillAlt, FaUser, FaCommentAlt, FaPiggyBank } from 'react-icons/fa';
 import { QrDepositForm } from './QrDepositForm';
-import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de importar las funciones de reautenticación
+import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth';
 
 export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance }) => {
   const [transactionType, setTransactionType] = useState('Deposito');
