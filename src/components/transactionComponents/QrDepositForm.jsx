@@ -1,25 +1,26 @@
 import React, { useState, useRef } from 'react';
-import { Button, Alert, Container, Row, Col, InputGroup, FormControl } from 'react-bootstrap';
-import { QRCodeCanvas } from 'qrcode.react';  // Importa QRCodeCanvas para generar el QR
+import { Button, Alert, Container, Row, Col, InputGroup, FormControl, Modal, Form } from 'react-bootstrap';
+import { QRCodeCanvas } from 'qrcode.react';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../auth/authContext';
+import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de importar las funciones de reautenticación
 
-export const QrDepositForm = ({ selectedCardId }) => {
+export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
   const [amount, setAmount] = useState('');
   const [qrCode, setQrCode] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const qrRef = useRef(null);  // Referencia al elemento QRCodeCanvas
+  const [showReauthModal, setShowReauthModal] = useState(false);
+  const [reauthPassword, setReauthPassword] = useState('');
+  const [reauthError, setReauthError] = useState(null);
+  const qrRef = useRef(null);
   const { currentUser } = useAuth();
   const db = getFirestore();
 
+  // Función para manejar el cambio de monto
   const handleAmountChange = (e) => {
     const value = e.target.value;
-
-    // Remover cualquier carácter que no sea número o punto decimal
     const sanitizedValue = value.replace(/[^0-9.]/g, '');
-
-    // Permitir solo dos decimales
     const regex = /^\d*\.?\d{0,2}$/;
 
     if (regex.test(sanitizedValue) || sanitizedValue === '') {
@@ -27,13 +28,14 @@ export const QrDepositForm = ({ selectedCardId }) => {
     }
   };
 
+  // Validar el monto ingresado
   const isValidAmount = (amount) => {
-    // Verificar que el monto es un número positivo con hasta dos decimales
     const regex = /^\d+(\.\d{1,2})?$/;
     return regex.test(amount) && parseFloat(amount) > 0;
   };
 
-  const handleGenerateQrCode = async () => {
+  // Función para generar el QR
+  const generateQrCode = async () => {
     setError(null);
     setSuccess(null);
 
@@ -79,7 +81,7 @@ export const QrDepositForm = ({ selectedCardId }) => {
         amount: parsedAmount,
         creatorId: currentUser.uid,
         cardId: selectedCardId,
-        used: false,  // Indica si ya fue utilizado
+        used: false,
         createdAt: new Date(),
       };
 
@@ -89,19 +91,68 @@ export const QrDepositForm = ({ selectedCardId }) => {
       // Generar el código QR para mostrar
       setQrCode(transactionId);
       setSuccess('Código QR generado exitosamente.');
+
+      // Actualizar el saldo si es necesario
+      if (onBalanceUpdate) {
+        onBalanceUpdate(cardData.balance - parsedAmount);
+      }
     } catch (error) {
       console.error(error);
       setError(error.message || 'Ha ocurrido un error. Inténtalo de nuevo.');
     }
   };
 
+  // Función para manejar la solicitud de reautenticación
+  const handleRequestReauth = () => {
+    setShowReauthModal(true);
+  };
+
+  // Función para manejar la confirmación de reautenticación y generar el QR
+  const handleConfirmReauth = async () => {
+    setReauthError(null);
+    try {
+      // Determinar el método de inicio de sesión
+      const providerData = currentUser.providerData;
+      const isGoogleUser = providerData.some(provider => provider.providerId === 'google.com');
+
+      if (isGoogleUser) {
+        // Reautenticación con Google
+        const reauthResult = await reauthenticateWithGoogle();
+
+        if (reauthResult.success) {
+          setShowReauthModal(false);
+          await generateQrCode();
+        } else {
+          setReauthError(reauthResult.message);
+        }
+      } else {
+        // Reautenticación con correo y contraseña
+        if (!reauthPassword) {
+          setReauthError('Por favor, ingresa tu contraseña actual.');
+          return;
+        }
+
+        const reauthResult = await reauthenticateUser(reauthPassword);
+
+        if (reauthResult.success) {
+          setShowReauthModal(false);
+          await generateQrCode();
+        } else {
+          setReauthError(reauthResult.message);
+        }
+      }
+    } catch (error) {
+      setReauthError(error.message || 'Error en la reautenticación.');
+    }
+  };
+
+  // Función para manejar la descarga del QR
   const handleDownloadQrCode = () => {
     const qrCanvas = qrRef.current.querySelector('canvas');
-    const pngUrl = qrCanvas.toDataURL('image/png');  // Convertir el canvas a imagen PNG
-
+    const pngUrl = qrCanvas.toDataURL('image/png');
     const downloadLink = document.createElement('a');
     downloadLink.href = pngUrl;
-    downloadLink.download = `codigo_qr_${Date.now()}.png`;  // Nombre del archivo
+    downloadLink.download = `codigo_qr_${Date.now()}.png`;
     downloadLink.click();
   };
 
@@ -122,7 +173,7 @@ export const QrDepositForm = ({ selectedCardId }) => {
             />
           </InputGroup>
 
-          <Button variant="primary" onClick={handleGenerateQrCode} disabled={!amount}>
+          <Button variant="primary" onClick={handleRequestReauth} disabled={!amount}>
             Generar Código QR
           </Button>
 
@@ -130,7 +181,7 @@ export const QrDepositForm = ({ selectedCardId }) => {
             <div className="mt-3">
               <h5>Escanea este código QR para depositar:</h5>
               <div ref={qrRef}>
-                <QRCodeCanvas value={qrCode} size={256} /> {/* Cambiado a QRCodeCanvas */}
+                <QRCodeCanvas value={qrCode} size={256} />
               </div>
               <Button className="mt-2" onClick={handleDownloadQrCode} variant="secondary">
                 Descargar Código QR
@@ -139,6 +190,49 @@ export const QrDepositForm = ({ selectedCardId }) => {
           )}
         </Col>
       </Row>
+
+      {/* Modal para reautenticación */}
+      <Modal show={showReauthModal} onHide={() => setShowReauthModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Reautenticación Requerida</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {/* Determinar el método de autenticación */}
+          {currentUser.providerData.some(provider => provider.providerId === 'google.com') ? (
+            <div>
+              <p>Para continuar, por favor reautentícate usando Google.</p>
+              {reauthError && <Alert variant="danger">{reauthError}</Alert>}
+            </div>
+          ) : (
+            <Form>
+              <Form.Group controlId="reauthPassword">
+                <Form.Label>Contraseña Actual</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Ingresa tu contraseña actual"
+                  value={reauthPassword}
+                  onChange={(e) => setReauthPassword(e.target.value)}
+                />
+              </Form.Group>
+              {reauthError && <Alert variant="danger" className="mt-3">{reauthError}</Alert>}
+            </Form>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowReauthModal(false)}>
+            Cancelar
+          </Button>
+          {currentUser.providerData.some(provider => provider.providerId === 'google.com') ? (
+            <Button variant="danger" onClick={handleConfirmReauth}>
+              Reautenticarse con Google
+            </Button>
+          ) : (
+            <Button variant="primary" onClick={handleConfirmReauth} disabled={!reauthPassword}>
+              Reautenticar y Generar QR
+            </Button>
+          )}
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

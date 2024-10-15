@@ -1,12 +1,11 @@
-// src/components/transactions/TransactionForm.jsx
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Form, Button, Alert, Container, Row, Col, InputGroup } from 'react-bootstrap';
+import { Form, Button, Alert, Container, Row, Col, InputGroup, Modal } from 'react-bootstrap';
 import Contacts from '../userComponents/Contacts';
 import { handleTransaction } from '../../services/transactionService';
 import { getCardDoc, listenToCardDoc } from '../../services/firestoreTransactionService';
 import { FaMoneyBillAlt, FaUser, FaCommentAlt, FaPiggyBank } from 'react-icons/fa';
 import { QrDepositForm } from './QrDepositForm';
+import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de importar las funciones de reautenticación
 
 export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance }) => {
   const [transactionType, setTransactionType] = useState('Deposito');
@@ -16,6 +15,11 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
   const [recipientClabe, setRecipientClabe] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  
+  // Estados para la reautenticación
+  const [showReauthModal, setShowReauthModal] = useState(false);
+  const [reauthPassword, setReauthPassword] = useState('');
+  const [reauthError, setReauthError] = useState(null);
 
   const lastBalanceRef = useRef(null);
 
@@ -45,6 +49,15 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
     }
   };
 
+  const handleContactSelect = (email) => {
+    setRecipientEmail(email);
+    setRecipientClabe('');
+  };
+
+  const isEmailDisabled = recipientClabe !== '';
+  const isClabeDisabled = recipientEmail !== '';
+
+  // Función para manejar el envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -63,12 +76,64 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
         throw new Error('El monto máximo permitido es 10,000.');
       }
 
-      const cardDoc = await getCardDoc(selectedCardId);
+      // const cardDoc = await getCardDoc(selectedCardId);
       if (transactionType === 'Transferencia' && !recipientEmail && !recipientClabe) {
         throw new Error(
           'Debes ingresar un correo electrónico o un número CLABE del destinatario.'
         );
       }
+
+      // Mostrar el modal de reautenticación
+      setShowReauthModal(true);
+    } catch (error) {
+      setError(error.message || 'Ha ocurrido un error. Inténtalo de nuevo.');
+    }
+  };
+
+  // Función para manejar la confirmación de reautenticación y procesar la transacción
+  const handleConfirmReauth = async () => {
+    setReauthError(null);
+    try {
+      // Determinar el método de inicio de sesión
+      const providerData = currentUser.providerData;
+      const isGoogleUser = providerData.some(provider => provider.providerId === 'google.com');
+
+      if (isGoogleUser) {
+        // Reautenticación con Google
+        const reauthResult = await reauthenticateWithGoogle();
+
+        if (reauthResult.success) {
+          setShowReauthModal(false);
+          await processTransaction();
+        } else {
+          setReauthError(reauthResult.message);
+        }
+      } else {
+        // Reautenticación con correo y contraseña
+        if (!reauthPassword) {
+          setReauthError('Por favor, ingresa tu contraseña actual.');
+          return;
+        }
+
+        const reauthResult = await reauthenticateUser(reauthPassword);
+
+        if (reauthResult.success) {
+          setShowReauthModal(false);
+          await processTransaction();
+        } else {
+          setReauthError(reauthResult.message);
+        }
+      }
+    } catch (error) {
+      setReauthError(error.message || 'Error en la reautenticación.');
+    }
+  };
+
+  // Función para procesar la transacción
+  const processTransaction = async () => {
+    try {
+      const parsedAmount = parseFloat(amount);
+      const cardDoc = await getCardDoc(selectedCardId);
 
       await handleTransaction(
         cardDoc,
@@ -90,14 +155,6 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
       setError(error.message || 'Ha ocurrido un error. Inténtalo de nuevo.');
     }
   };
-
-  const handleContactSelect = (email) => {
-    setRecipientEmail(email);
-    setRecipientClabe('');
-  };
-
-  const isEmailDisabled = recipientClabe !== '';
-  const isClabeDisabled = recipientEmail !== '';
 
   return (
     <Container>
@@ -196,18 +253,60 @@ export const TransactionsForm = ({ currentUser, selectedCardId, updateBalance })
                     />
                   </>
                 )}
-              <Row className="mt-4">
-              <Col sm={{ span: 8, offset: 4 }} className="text-end">
-                <Button variant="primary" type="submit" disabled={!amount}>
-                  Realizar Transacción
-                </Button>
-                </Col>
+                <Row className="mt-4">
+                  <Col sm={{ span: 8, offset: 4 }} className="text-end">
+                    <Button variant="primary" type="submit" disabled={!amount}>
+                      Realizar Transacción
+                    </Button>
+                  </Col>
                 </Row>
               </>
             )}
           </Form>
         </Col>
       </Row>
+
+      {/* Modal para reautenticación */}
+      <Modal show={showReauthModal} onHide={() => setShowReauthModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Reautenticación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {/* Determinar el método de autenticación */}
+          {currentUser.providerData.some(provider => provider.providerId === 'google.com') ? (
+            <div>
+              <p>Para continuar, reautentícate usando tu cuenta de Google.</p>
+             
+            </div>
+          ) : (
+            <Form>
+              <Form.Group controlId="reauthPassword">
+                <Form.Label>Contraseña Actual</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Ingresa tu contraseña actual"
+                  value={reauthPassword}
+                  onChange={(e) => setReauthPassword(e.target.value)}
+                />
+              </Form.Group>
+              {reauthError && <Alert variant="danger" className="mt-3">{reauthError}</Alert>}
+            </Form>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowReauthModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleConfirmReauth}>
+                Reautenticarse con Google
+              </Button>
+          {!currentUser.providerData.some(provider => provider.providerId === 'google.com') && (
+            <Button variant="primary" onClick={handleConfirmReauth} disabled={!reauthPassword}>
+              Reautenticar y Realizar Transacción
+            </Button>
+          )}
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };
