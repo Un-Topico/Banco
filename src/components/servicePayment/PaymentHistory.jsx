@@ -1,4 +1,3 @@
-// src/components/paymentHistory/PaymentHistory.jsx
 import React, { useEffect, useState } from "react";
 import { Card, ListGroup, Spinner, Container, Form, Row, Col, Pagination } from "react-bootstrap";
 import { FaShoppingCart } from "react-icons/fa";
@@ -53,8 +52,6 @@ export const PaymentHistory = ({ currentUser }) => {
       setTransactions([]);
     }
   };
-
-  // ... Resto del código del componente (gráficos, paginación, etc.)
 
   // Datos para el gráfico de barras por categoría
   const categoryData = transactions.reduce((acc, transaction) => {
