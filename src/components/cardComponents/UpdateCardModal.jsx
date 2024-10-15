@@ -4,13 +4,6 @@ import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { reauthenticateUser, reauthenticateWithGoogle } from "../../auth/auth";
 import { app } from "../../firebaseConfig";
-import {
-  FaUser,
-  FaCreditCard,
-  FaCalendarAlt,
-  FaLock,
-  FaKey,
-} from "react-icons/fa";
 
 const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
   const db = getFirestore(app);
@@ -40,9 +33,28 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
     setError(null); // Limpia los errores anteriores
   }, [cardData]);
 
+  // Función para validar el número de tarjeta usando el algoritmo de Luhn
+  const validateLuhn = (number) => {
+    let sum = 0;
+    let shouldDouble = false;
+    // Procesar los dígitos de derecha a izquierda
+    for (let i = number.length - 1; i >= 0; i--) {
+      let digit = parseInt(number.charAt(i), 10);
+
+      if (shouldDouble) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+
+      sum += digit;
+      shouldDouble = !shouldDouble;
+    }
+    return sum % 10 === 0;
+  };
+
   useEffect(() => {
     const cardNumberDigits = cardNumber.replace(/\s/g, "");
-    const isCardNumberValid = cardNumberDigits.length >= 18;
+    const isCardNumberValid = cardNumberDigits.length >= 16 && validateLuhn(cardNumberDigits);
     const isCvvValid = cvv.length >= 3;
     const isExpiryDateValid = /^\d{2}\/\d{2}$/.test(expiryDate);
 
@@ -98,8 +110,13 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
     const cardNumberDigits = cardNumber.replace(/\s/g, "");
 
     // Validaciones adicionales en el frontend
-    if (cardNumberDigits.length < 18) {
-      setError("El número de tarjeta debe tener al menos 18 dígitos.");
+    if (cardNumberDigits.length < 16) { // Ajuste a 16 dígitos estándar
+      setError("El número de tarjeta debe tener al menos 16 dígitos.");
+      return;
+    }
+
+    if (!validateLuhn(cardNumberDigits)) {
+      setError("El número de tarjeta no es válido según el algoritmo de Luhn.");
       return;
     }
 
@@ -164,7 +181,7 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
         <Form onSubmit={handleUpdateCard}>
           <Form.Group as={Row} controlId="cardHolderName" className="mb-3">
             <Form.Label column sm={4}>
-              <FaUser className="me-2" /> Nombre en la Tarjeta
+             Nombre en la Tarjeta
             </Form.Label>
             <Col sm={8}>
               <Form.Control
@@ -172,20 +189,21 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
                 value={cardHolderName}
                 onChange={(e) => setCardHolderName(e.target.value)}
                 required
+                maxLength={80}
               />
             </Col>
           </Form.Group>
 
           <Form.Group as={Row} controlId="cardNumber" className="mb-3">
             <Form.Label column sm={4}>
-              <FaCreditCard className="me-2" /> Número de Tarjeta
+               Número de Tarjeta
             </Form.Label>
             <Col sm={8}>
               <Form.Control
                 type="text"
                 value={cardNumber}
                 onChange={handleCardNumberChange}
-                maxLength="23" // Ajustado para permitir más dígitos y espacios
+                maxLength="19" // 16 dígitos + 3 espacios
                 required
               />
               {cardType && <small>Tipo de tarjeta: {cardType}</small>}
@@ -215,7 +233,7 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
             <Col>
               <Form.Group controlId="expiryDate">
                 <Form.Label>
-                  <FaCalendarAlt className="me-2" /> Fecha de Expiración
+                  Fecha de Expiración
                 </Form.Label>
                 <Form.Control
                   type="text"
@@ -237,10 +255,10 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
             <Col>
               <Form.Group controlId="cvv">
                 <Form.Label>
-                  <FaLock className="me-2" /> CVV
+                   CVV
                 </Form.Label>
                 <Form.Control
-                  type="text"
+                  type="password" // Cambiado a 'password' para mayor seguridad
                   value={cvv}
                   onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
                   maxLength="4"
@@ -253,7 +271,7 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
           {auth.currentUser.providerData[0].providerId === "password" && (
             <Form.Group controlId="formPassword" className="mb-3">
               <Form.Label>
-                <FaKey className="me-2" /> Contraseña
+                Contraseña
               </Form.Label>
               <Form.Control
                 type="password"

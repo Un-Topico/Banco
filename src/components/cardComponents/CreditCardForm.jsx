@@ -34,9 +34,28 @@ export const CreditCardForm = ({ onCardSaved }) => {
     }
   }, [auth.currentUser, navigate]);
 
+  // Función para validar el número de tarjeta usando el algoritmo de Luhn
+  const validateLuhn = (number) => {
+    let sum = 0;
+    let shouldDouble = false;
+    // Procesar los dígitos de derecha a izquierda
+    for (let i = number.length - 1; i >= 0; i--) {
+      let digit = parseInt(number.charAt(i), 10);
+
+      if (shouldDouble) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+
+      sum += digit;
+      shouldDouble = !shouldDouble;
+    }
+    return sum % 10 === 0;
+  };
+
   useEffect(() => {
     const cardNumberDigits = cardNumber.replace(/\s/g, "");
-    const isCardNumberValid = cardNumberDigits.length >= 18;
+    const isCardNumberValid = cardNumberDigits.length >= 16 && validateLuhn(cardNumberDigits);
     const isCvvValid = cvv.length >= 3;
     const isExpiryDateValid = /^\d{2}\/\d{2}$/.test(expiryDate);
 
@@ -95,8 +114,13 @@ export const CreditCardForm = ({ onCardSaved }) => {
     const cardNumberDigits = cardNumber.replace(/\s/g, "");
 
     // Validaciones adicionales en el frontend
-    if (cardNumberDigits.length < 18) {
-      setError("El número de tarjeta debe tener al menos 18 dígitos.");
+    if (cardNumberDigits.length < 16) { // Ajuste a 16 dígitos estándar
+      setError("El número de tarjeta debe tener al menos 16 dígitos.");
+      return;
+    }
+
+    if (!validateLuhn(cardNumberDigits)) {
+      setError("El número de tarjeta no es válido según el algoritmo de Luhn.");
       return;
     }
 
@@ -161,8 +185,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
   };
 
   return (
-    <Card className="p-4 shadow-sm" >
-      <h2 className="mb-4">Añadir Tarjeta</h2>
+    <Card className="p-4 shadow-sm">
       <Form onSubmit={handleSubmit}>
         <Form.Group as={Row} controlId="cardHolderName" className="mb-3">
           <Form.Label column sm={4}>
@@ -188,8 +211,8 @@ export const CreditCardForm = ({ onCardSaved }) => {
           <Col sm={8}>
             <Form.Control
               type="text"
-              placeholder="0000 0000 0000 0000 0000"
-              maxLength="23" // Ajustado para permitir más dígitos y espacios
+              placeholder="0000 0000 0000 0000"
+              maxLength="19" // 16 dígitos + 3 espacios
               value={cardNumber}
               onChange={handleCardNumberChange}
               required
@@ -245,7 +268,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
             <Form.Group controlId="cvv">
               <Form.Label>CVV</Form.Label>
               <Form.Control
-                type="text"
+                type="password" // Cambiado a 'password' para mayor seguridad
                 placeholder="123"
                 maxLength="4"
                 value={cvv}
