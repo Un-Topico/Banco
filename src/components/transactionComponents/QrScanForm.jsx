@@ -4,7 +4,7 @@ import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs
 import { useAuth } from '../../auth/authContext';
 import jsQR from "jsqr";  // Biblioteca para leer el QR desde una imagen
 
-export const QrScanForm = ({ updateBalance }) => {
+export const QrScanForm = () => {
   const [qrCodeData, setQrCodeData] = useState(null); // Para almacenar los datos del QR
   const [selectedCard, setSelectedCard] = useState(''); // Para la tarjeta seleccionada
   const [userCards, setUserCards] = useState([]); // Tarjetas del usuario receptor

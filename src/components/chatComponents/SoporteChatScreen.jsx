@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Accordion, Button } from 'react-bootstrap';
 import { getFirestore, collection, query, onSnapshot, doc, setDoc, arrayUnion } from 'firebase/firestore';
-import '../styles/Chat.css';
+import '../../styles/Chat.css';
 
 export const SoporteChatScreen = () => {
   const [chats, setChats] = useState([]);
@@ -83,7 +83,7 @@ export const SoporteChatScreen = () => {
         {chats.map((chat) => (
           <Accordion.Item eventKey={chat.id} key={chat.id}>
             <Accordion.Header>
-              Chat con Usuario
+            Chat con {chat.userName || "Usuario Desconocido"}
             </Accordion.Header>
             <Accordion.Body>
               <div className="chat-messages" style={{  maxHeight: '300px', overflowY: 'auto' }}>

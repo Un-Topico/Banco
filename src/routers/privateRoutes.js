@@ -3,7 +3,7 @@ import { Profile } from "../pages/Profile";
 import { CreateAccount } from '../pages/CreateAccount';
 import AdminUsers from "../components/userComponents/AdminUsers";
 import { TransactionDetail } from "../components/transactionComponents/TransactionDetail";
-import { SoporteChatScreen } from "../pages/SoporteChatScreen";
+import { SoporteChatScreen } from "../components/chatComponents/SoporteChatScreen";
 import { PaymentDetails } from '../pages/PaymentDetails';
 import ServicePaymentForm from '../pages/ServicePaymentForm';
 export const privateRoutes = [

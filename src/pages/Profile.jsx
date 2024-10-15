@@ -28,7 +28,7 @@ export const Profile = () => {
 
       const db = getFirestore(app);
 
-      // Fetch user role
+      // Obtener rol del usuario
       const rolesCollection = collection(db, "roles");
       const roleQuery = query(rolesCollection, where("email", "==", currentUser.email));
       const rolesSnapshot = await getDocs(roleQuery);
@@ -38,7 +38,7 @@ export const Profile = () => {
         setUserRole(userRoleData.role);
       }
 
-      // Fetch account data
+      // Obtener datos de la cuenta
       const accountsCollection = collection(db, "accounts");
       const accountQuery = query(accountsCollection, where("ownerId", "==", currentUser.uid));
       const accountSnapshot = await getDocs(accountQuery);
@@ -122,17 +122,16 @@ export const Profile = () => {
         onImageUpdate={handleImageUpdate}
         onNameUpdate={handleNameUpdate}
         onPhoneUpdate={handlePhoneUpdate}
-        totalBalance={totalBalance}  // Pasamos el balance total al componente AccountInfo
-
+        totalBalance={totalBalance}  // Pasamos el balance total
       />
-     
       <UserCards onSelectCard={handleCardSelection} />
       <TransactionSection
         selectedCard={selectedCard}
         updateCardBalance={updateCardBalance}
         accountData={accountData}
         transactions={transactions}
-        handleCardDelete={handleCardDelete}
+        totalBalance={totalBalance}
+        handleCardDelete={handleCardDelete} // Pasamos la función correctamente
       />
       <DialogFlowChat/>
       {userRole === "admin" && (

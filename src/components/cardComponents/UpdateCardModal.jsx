@@ -1,49 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Row, Col, Alert } from 'react-bootstrap';
-import { getFirestore, collection, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Importamos la reautenticación
-import { app } from '../../firebaseConfig';
-import { FaUser, FaCreditCard, FaCalendarAlt, FaLock, FaKey } from 'react-icons/fa'; // Importar iconos
+import React, { useState, useEffect } from "react";
+import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { reauthenticateUser, reauthenticateWithGoogle } from "../../auth/auth";
+import { app } from "../../firebaseConfig";
+import {
+  FaUser,
+  FaCreditCard,
+  FaCalendarAlt,
+  FaLock,
+  FaKey,
+} from "react-icons/fa";
 
 const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  const [cardNumber, setCardNumber] = useState(cardData.cardNumber || '');
-  const [expiryDate, setExpiryDate] = useState(cardData.expiryDate || '');
-  const [cvv, setCvv] = useState(cardData.cvv || '');
-  const [cardHolderName, setCardHolderName] = useState(cardData.cardHolderName || '');
-  const [cardType, setCardType] = useState(cardData.cardType || '');
-  const [password, setPassword] = useState(''); // Campo para la contraseña
+  const [cardNumber, setCardNumber] = useState(cardData.cardNumber || "");
+  const [expiryDate, setExpiryDate] = useState(cardData.expiryDate || "");
+  const [cvv, setCvv] = useState(cardData.cvv || "");
+  const [cardHolderName, setCardHolderName] = useState(
+    cardData.cardHolderName || ""
+  );
+  const [cardType, setCardType] = useState(cardData.cardType || "");
+  const [accountType, setAccountType] = useState(cardData.accountType || "");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
+  // Este efecto se ejecuta cuando cardData cambia
   useEffect(() => {
-    if (cardNumber && expiryDate && cvv && cardHolderName) {
+    setCardNumber(cardData.cardNumber || "");
+    setExpiryDate(cardData.expiryDate || "");
+    setCvv(cardData.cvv || "");
+    setCardHolderName(cardData.cardHolderName || "");
+    setCardType(cardData.cardType || "");
+    setAccountType(cardData.accountType || "");
+    setPassword(""); // Limpia la contraseña cuando se cambia de tarjeta
+    setError(null); // Limpia los errores anteriores
+  }, [cardData]);
+
+  useEffect(() => {
+    const cardNumberDigits = cardNumber.replace(/\s/g, "");
+    const isCardNumberValid = cardNumberDigits.length >= 18;
+    const isCvvValid = cvv.length >= 3;
+    const isExpiryDateValid = /^\d{2}\/\d{2}$/.test(expiryDate);
+
+    if (
+      cardHolderName &&
+      isCardNumberValid &&
+      isCvvValid &&
+      isExpiryDateValid &&
+      accountType
+    ) {
       setIsButtonDisabled(false);
     } else {
       setIsButtonDisabled(true);
     }
-  }, [cardNumber, expiryDate, cvv, cardHolderName]);
+  }, [cardNumber, expiryDate, cvv, cardHolderName, accountType]);
 
   const detectCardType = (number) => {
+    if (!number) {
+      setCardType("");
+      return;
+    }
     const firstDigit = parseInt(number[0], 10);
     if (firstDigit >= 1 && firstDigit <= 4) {
-      setCardType('Visa');
+      setCardType("Visa");
     } else if (firstDigit >= 5 && firstDigit <= 8) {
-      setCardType('MasterCard');
+      setCardType("MasterCard");
     } else if (firstDigit === 0 || firstDigit === 9) {
-      setCardType('American Express');
+      setCardType("American Express");
     } else {
-      setCardType('');
+      setCardType("");
     }
   };
 
   const handleCardNumberChange = (e) => {
-    const formattedNumber = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+    const formattedNumber = e.target.value
+      .replace(/\D/g, "")
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
     setCardNumber(formattedNumber);
-    detectCardType(formattedNumber.replace(/\s/g, ''));
+    detectCardType(formattedNumber.replace(/\s/g, ""));
   };
 
   const handleUpdateCard = async (e) => {
@@ -56,45 +95,63 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
       return;
     }
 
-    // Reautenticación antes de actualizar la tarjeta
-    let result;
-    if (auth.currentUser.providerData[0].providerId === "password") {
-      result = await reauthenticateUser(password); // Reautenticación con contraseña
-    } else {
-      result = await reauthenticateWithGoogle(); // Reautenticación con Google
-    }
+    const cardNumberDigits = cardNumber.replace(/\s/g, "");
 
-    if (!result.success) {
-      setError("Error en la autenticación. Por favor, verifica tu información.");
+    // Validaciones adicionales en el frontend
+    if (cardNumberDigits.length < 18) {
+      setError("El número de tarjeta debe tener al menos 18 dígitos.");
       return;
     }
 
-    // Validar si el número de tarjeta ya existe (excluyendo la actual)
-    const cardsQuery = query(collection(db, 'cards'), where('cardNumber', '==', cardNumber.replace(/\s/g, '')));
-    const querySnapshot = await getDocs(cardsQuery);
+    if (cvv.length < 3) {
+      setError("El CVV debe tener al menos 3 dígitos.");
+      return;
+    }
 
-    if (!querySnapshot.empty && querySnapshot.docs[0].id !== cardData.cardId) {
-      setError('El número de tarjeta ya ha sido registrado. Intenta con otro.');
+    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+      setError("La fecha de expiración debe tener el formato MM/AA.");
+      return;
+    }
+
+    if (!["Nomina", "Ahorro", "Corriente"].includes(accountType)) {
+      setError("Selecciona un tipo de cuenta válido.");
+      return;
+    }
+
+    // Reautenticación antes de actualizar la tarjeta
+    let result;
+    if (auth.currentUser.providerData[0].providerId === "password") {
+      result = await reauthenticateUser(password);
+    } else {
+      result = await reauthenticateWithGoogle();
+    }
+
+    if (!result.success) {
+      setError(
+        "Error en la autenticación. Por favor, verifica tu información."
+      );
       return;
     }
 
     try {
-      const cardDocRef = doc(db, 'cards', cardData.cardId);
+      const cardDocRef = doc(db, "cards", cardData.cardId);
 
       await updateDoc(cardDocRef, {
-        cardNumber: cardNumber.replace(/\s/g, ''),
+        cardNumber: cardNumberDigits,
         expiryDate: expiryDate,
-        cvv: cvv,
+        // cvv: cvv, // No almacenes el CVV
         cardHolderName: cardHolderName,
         cardType: cardType,
+        accountType: accountType,
         updatedAt: new Date(),
       });
-      
+
       alert("Tarjeta actualizada correctamente");
       onCardUpdated(); // Notificar que la tarjeta ha sido actualizada
       handleClose(); // Cerrar el modal
     } catch (error) {
       console.error("Error al actualizar la tarjeta:", error);
+      setError("Hubo un error al actualizar la tarjeta. Inténtalo de nuevo.");
     }
   };
 
@@ -128,10 +185,29 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
                 type="text"
                 value={cardNumber}
                 onChange={handleCardNumberChange}
-                maxLength="19"
+                maxLength="23" // Ajustado para permitir más dígitos y espacios
                 required
               />
               {cardType && <small>Tipo de tarjeta: {cardType}</small>}
+            </Col>
+          </Form.Group>
+
+          <Form.Group as={Row} controlId="accountType" className="mb-3">
+            <Form.Label column sm={4}>
+              Tipo de Cuenta
+            </Form.Label>
+            <Col sm={8}>
+              <Form.Control
+                as="select"
+                value={accountType}
+                onChange={(e) => setAccountType(e.target.value)}
+                required
+              >
+                <option value="">Seleccione el tipo de cuenta</option>
+                <option value="Nomina">Nómina</option>
+                <option value="Ahorro">Ahorro</option>
+                <option value="Corriente">Corriente</option>
+              </Form.Control>
             </Col>
           </Form.Group>
 
@@ -144,7 +220,15 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
                 <Form.Control
                   type="text"
                   value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value.replace(/[^0-9/]/g, '').replace(/(\d{2})(\d{1,2})/, '$1/$2'))}
+                  placeholder="MM/AA"
+                  maxLength="5"
+                  onChange={(e) =>
+                    setExpiryDate(
+                      e.target.value
+                        .replace(/[^0-9/]/g, "")
+                        .replace(/(\d{2})(\d{1,2})/, "$1/$2")
+                    )
+                  }
                   required
                 />
               </Form.Group>
@@ -158,7 +242,7 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
                 <Form.Control
                   type="text"
                   value={cvv}
-                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
                   maxLength="4"
                   required
                 />
@@ -166,7 +250,6 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
             </Col>
           </Row>
 
-          {/* Campo de contraseña si el usuario inició sesión con correo y contraseña */}
           {auth.currentUser.providerData[0].providerId === "password" && (
             <Form.Group controlId="formPassword" className="mb-3">
               <Form.Label>
@@ -184,9 +267,17 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
 
           {error && <Alert variant="danger">{error}</Alert>}
 
-          <Button variant="primary" type="submit" disabled={isButtonDisabled}>
-            Actualizar Tarjeta
-          </Button>
+          <Row className="mt-4">
+            <Col sm={{ span: 8, offset: 4 }} className="text-end">
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={isButtonDisabled}
+              >
+                Actualizar Tarjeta
+              </Button>
+            </Col>
+          </Row>
         </Form>
       </Modal.Body>
     </Modal>
