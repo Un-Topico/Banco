@@ -158,9 +158,6 @@ export const UserProfile = ({ accountData, currentUser, onImageUpdate, onNameUpd
                 <FaEnvelope className="me-2" /> {currentUser.email}
               </div>
               <div className="mb-3">
-                <FaUser className="me-2" /> Tipo de cuenta: {accountData.accountType}
-              </div>
-              <div className="mb-3">
                 <FaMoneyBillWave className="me-2" /> Total del saldo en todas las tarjetas: ${totalBalance} MXN
               </div>
 
