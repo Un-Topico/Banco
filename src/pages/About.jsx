@@ -16,17 +16,17 @@ export const About = () => {
       <div className="container my-5">
         <div className="row text-center">
           <div className="col-md-4 mb-4">
-            <FaBullseye size="3rem" className="my-3" /> 
+            <FaBullseye size="3rem" className="my-3" />
             <h3>Misión</h3>
             <p>Proporcionar soluciones financieras accesibles y efectivas para todos.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <FaEye size="3rem" className="my-3" /> 
+            <FaEye size="3rem" className="my-3" />
             <h3>Visión</h3>
             <p>Ser líderes en innovación bancaria a nivel global.</p>
           </div>
           <div className="col-md-4 mb-4">
-            <FaHandshake size="3rem" className="my-3" /> 
+            <FaHandshake size="3rem" className="my-3" />
             <h3>Valores</h3>
             <p>Compromiso, integridad y confianza son nuestros pilares.</p>
           </div>
@@ -47,46 +47,61 @@ export const About = () => {
       </div>
 
       {/* Nuestro equipo */}
+      {/*
+          No supe cómo ajustar correctamente el tamaño de la imagen y le puse Max-width Att:César
+      */}
       <div className="container mb-5">
         <h2 className="text-center">Nuestro Equipo</h2>
-        <div className="row text-center">
-          <div className="col-md-4 mb-4">
+
+        <div className="row text-center g-1">
+
+          <div className="col-md-3 mb-4">
             <div className="team-member">
-              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fgabo.jpeg?alt=media&token=6581e226-31d2-46e8-ad3c-b9d711544073" 
-              className="rounded-circle w-50" alt="CEO" />
+              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fgabo.jpeg?alt=media&token=6581e226-31d2-46e8-ad3c-b9d711544073"
+                className="rounded-circle w-65" 
+                style={{ maxWidth: '250px', height: 'auto' }} 
+                alt="CEO" />
               <h5>Gabriel Feregrino</h5>
               <p>CEO</p>
             </div>
           </div>
-          <div className="col-md-4">
+
+          <div className="col-md-3 mb-4">
             <div className="team-member">
-              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Falexis.jpeg?alt=media&token=f8ec6dc7-2b28-470c-b083-3044029ab1ef" 
-              className="rounded-circle w-50"  
-              alt="CFO" />
+              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2FAlexis.jpg?alt=media&token=3c226615-fde3-4b03-88b6-b570234b8747"
+                className="rounded-circle w-65"
+                style={{ maxWidth: '250px', height: 'auto' }} 
+                alt="CFO" />
               <h5>Alexis Pathé</h5>
               <p>CFO</p>
             </div>
           </div>
-          <div className="col-md-4">
+
+          <div className="col-md-3 mb-4">
             <div className="team-member">
-              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fcesar.jpeg?alt=media&token=5ebc476f-4576-4c2b-b544-391a9f43e148" 
-              className="rounded-circle w-50"  
-              alt="CTO" />
+              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fcesar.jpg?alt=media&token=20372cee-f0eb-4cc4-8cf5-7f872c325a9a"
+                className="rounded-circle w-65"
+                style={{ maxWidth: '250px', height: 'auto' }} 
+                alt="CTO" />
               <h5>Cesar Pescador</h5>
               <p>CTO</p>
             </div>
           </div>
-          <div className="col-md-4">
+
+          <div className="col-md-3 mb-4">
             <div className="team-member">
-              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2FEinar.jpg?alt=media&token=d17c1da8-036e-41d8-8196-ef9df0736131" 
-              className="rounded-circle w-50"  
-              alt="Founder" />
+              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2FEinar.jpg?alt=media&token=d17c1da8-036e-41d8-8196-ef9df0736131"
+                className="rounded-circle w-65"
+                style={{ maxWidth: '250px', height: 'auto' }} 
+                alt="Founder" />
               <h5>Einar Rodríguez</h5>
               <p>Founder</p>
             </div>
           </div>
+          
         </div>
       </div>
+
     </div>
   );
 };
