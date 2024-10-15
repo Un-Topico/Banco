@@ -76,6 +76,15 @@ export const About = () => {
               <p>CTO</p>
             </div>
           </div>
+          <div className="col-md-4">
+            <div className="team-member">
+              <img src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2FEinar.jpg?alt=media&token=d17c1da8-036e-41d8-8196-ef9df0736131" 
+              className="rounded-circle w-50"  
+              alt="Founder" />
+              <h5>Einar Rodríguez</h5>
+              <p>Founder</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
