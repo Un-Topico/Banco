@@ -1,19 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Accordion, Button, Spinner, Alert, Row, Col } from 'react-bootstrap';
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  onSnapshot, 
-  doc, 
-  setDoc, 
-  arrayUnion, 
-  where, 
-  getDocs 
-} from 'firebase/firestore';
 import '../../styles/Chat.css';
 import { useAuth } from "../../auth/authContext";
 import { useNavigate } from 'react-router-dom';
+import {
+  verifyUserRole,
+  subscribeToChats,
+  sendReply,
+  toggleHumanSupport,
+} from "../../api/soporteChatApi";
 
 export const SoporteChat = () => {
   const { currentUser } = useAuth();
@@ -23,12 +18,14 @@ export const SoporteChat = () => {
   const [error, setError] = useState(null);
   const [authorized, setAuthorized] = useState(false); // Estado para autorización
   const [loading, setLoading] = useState(true); // Estado para carga
-  const db = getFirestore();
   const messagesEndRef = useRef(null); // Referencia para el final del contenedor de mensajes
   const navigate = useNavigate(); // Inicializar useNavigate
 
+  // Ref para rastrear la longitud anterior de mensajes
+  const prevChatsLengthRef = useRef(0);
+
   useEffect(() => {
-    const verifyUserRole = async () => {
+    const checkAuthorization = async () => {
       if (!currentUser) {
         // Si no hay usuario autenticado, redirigir a NotFound
         navigate('/notfound');
@@ -36,41 +33,8 @@ export const SoporteChat = () => {
       }
 
       try {
-        // 1. Obtener el correo electrónico del usuario desde la colección 'accounts'
-        const accountsRef = collection(db, 'accounts');
-        const qAccounts = query(accountsRef, where('ownerId', '==', currentUser.uid));
-        const querySnapshotAccounts = await getDocs(qAccounts);
-
-        if (querySnapshotAccounts.empty) {
-          // No se encontró el documento de la cuenta
-          navigate('/notfound');
-          return;
-        }
-
-        const accountData = querySnapshotAccounts.docs[0].data();
-        const userEmail = accountData.email;
-
-        if (!userEmail) {
-          // Si no se encuentra el correo electrónico, redirigir
-          navigate('/notfound');
-          return;
-        }
-
-        // 2. Usar el correo electrónico para buscar el rol en la colección 'roles'
-        const rolesRef = collection(db, 'roles');
-        const qRoles = query(rolesRef, where('email', '==', userEmail));
-        const querySnapshotRoles = await getDocs(qRoles);
-
-        if (querySnapshotRoles.empty) {
-          // No se encontró el rol del usuario
-          navigate('/notfound');
-          return;
-        }
-
-        const roleData = querySnapshotRoles.docs[0].data();
-        const userRole = roleData.role;
-
-        if (userRole === 'soporte') { // Asegúrate de que el rol sea exactamente 'soporte'
+        const userRole = await verifyUserRole(currentUser.uid);
+        if (userRole === 'soporte') {
           setAuthorized(true);
         } else {
           navigate('/notfound');
@@ -83,31 +47,46 @@ export const SoporteChat = () => {
       }
     };
 
-    verifyUserRole();
-  }, [currentUser, db, navigate]);
+    checkAuthorization();
+  }, [currentUser, navigate]);
 
   useEffect(() => {
     if (!authorized) return; // No cargar chats si no está autorizado
 
-    const q = query(collection(db, 'chats'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const chatsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setChats(chatsData);
-    }, (error) => {
-      console.error("Error obteniendo chats:", error);
-      setError("Error obteniendo chats. Inténtalo de nuevo más tarde.");
-    });
+    const handleChatsUpdate = (chatsData, errorMsg) => {
+      if (errorMsg) {
+        setError(errorMsg);
+        return;
+      }
+
+      if (chatsData) {
+        // Reproducir sonido si hay nuevos chats
+        if (chatsData.length > prevChatsLengthRef.current) {
+          // Puedes implementar una lógica similar para reproducir sonidos si lo deseas
+          // Por ejemplo, si tienes una referencia a un sonido, puedes reproducirlo aquí
+          // notificationSoundRef.current.play();
+        }
+        // Actualizar la referencia de la longitud anterior
+        prevChatsLengthRef.current = chatsData.length;
+        setChats(chatsData);
+      }
+    };
+
+    const unsubscribe = subscribeToChats(handleChatsUpdate);
 
     return () => unsubscribe();
-  }, [db, authorized]);
+  }, [authorized]);
 
-  const sendReply = async (e, chatId) => {
+  // Hook para desplazar hacia abajo al final de los mensajes
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chats]);
+
+  const handleSendReply = async (e, chatId) => {
     e.preventDefault();
     if (newReply.trim()) {
-      const chatRef = doc(db, 'chats', chatId);
       const newMessage = {
         text: newReply,
         createdAt: new Date(),
@@ -117,9 +96,7 @@ export const SoporteChat = () => {
 
       try {
         setIsSending(true);
-        await setDoc(chatRef, {
-          messages: arrayUnion(newMessage)
-        }, { merge: true });
+        await sendReply(chatId, newMessage);
         setNewReply('');
       } catch (error) {
         console.error("Error enviando respuesta: ", error);
@@ -130,34 +107,14 @@ export const SoporteChat = () => {
     }
   };
 
-  const toggleHumanSupport = async (chatId, isActive) => {
-    const chatRef = doc(db, 'chats', chatId);
+  const handleToggleHumanSupport = async (chatId, isActive) => {
     try {
-      await setDoc(chatRef, { isHumanSupport: isActive }, { merge: true });
-
-      if (!isActive) {
-        const botMessage = {
-          text: "El agente ha finalizado el soporte. El bot retomará la conversación.",
-          createdAt: new Date(),
-          userId: 'bot',
-          userName: 'Bot',
-        };
-        await setDoc(chatRef, {
-          messages: arrayUnion(botMessage)
-        }, { merge: true });
-      }
+      await toggleHumanSupport(chatId, isActive);
     } catch (error) {
       console.error("Error al cambiar el estado del soporte humano: ", error);
       setError("Error al cambiar el estado del soporte. Inténtalo de nuevo.");
     }
   };
-
-  // Hook para desplazar hacia abajo al final de los mensajes
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chats]);
 
   if (loading) {
     // Mostrar un indicador de carga mientras se verifica el rol
@@ -176,7 +133,7 @@ export const SoporteChat = () => {
   return (
     <div className="soporte-chat">
       <h3>Chats Pendientes</h3>
-      {error && <Alert variant="danger">{error}</Alert>}
+      {error && <Alert variant="danger" onClose={() => setError(null)} dismissible>{error}</Alert>}
       <Accordion>
         {chats.map((chat) => (
           <Accordion.Item eventKey={chat.id} key={chat.id}>
@@ -187,7 +144,7 @@ export const SoporteChat = () => {
               <div className="chat-messages" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 {/* Mostrar todos los mensajes del chat */}
                 {chat.messages && chat.messages.map((msg, idx) => (
-                  <div key={idx} className="message">
+                  <div key={idx} className={`message ${msg.userId === 'soporte' ? "sent" : "received"}`}>
                     <strong>{msg.userName}:</strong> {msg.text}
                     {msg.createdAt ? new Date(msg.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                   </div>
@@ -198,7 +155,7 @@ export const SoporteChat = () => {
               {/* Botón para activar/desactivar el soporte humano */}
               <Button
                 variant={chat.isHumanSupport ? "danger" : "primary"}
-                onClick={() => toggleHumanSupport(chat.id, !chat.isHumanSupport)}
+                onClick={() => handleToggleHumanSupport(chat.id, !chat.isHumanSupport)}
                 className="mt-2"
               >
                 {chat.isHumanSupport ? "Finalizar Soporte Humano" : "Activar Soporte Humano"}
@@ -206,7 +163,7 @@ export const SoporteChat = () => {
 
               {/* Formulario para responder */}
               {chat.isHumanSupport && (
-                <form onSubmit={(e) => sendReply(e, chat.id)} className="reply-form mt-3">
+                <form onSubmit={(e) => handleSendReply(e, chat.id)} className="reply-form mt-3">
                   <Row>
                     <Col>
                       <input
