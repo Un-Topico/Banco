@@ -1,10 +1,10 @@
+// src/components/paymentHistory/PaymentHistory.jsx
 import React, { useEffect, useState } from "react";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
-import { app } from "../../firebaseConfig";
 import { Card, ListGroup, Spinner, Container, Form, Row, Col, Pagination } from "react-bootstrap";
 import { FaShoppingCart } from "react-icons/fa";
 import { Bar, Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement } from 'chart.js';
+import { getUserCards, getPurchaseHistory } from "../../api/paymentHistoryApi"; // Importar las funciones de la API
 
 // Registrar los componentes de ChartJS
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement);
@@ -19,63 +19,42 @@ export const PaymentHistory = ({ currentUser }) => {
 
   useEffect(() => {
     const fetchUserCards = async () => {
-      const db = getFirestore(app);
-
-      // Obtener las tarjetas del usuario
-      const cardsRef = collection(db, "cards");
-      const cardsQuery = query(cardsRef, where("ownerId", "==", currentUser.uid));
-      const cardsSnapshot = await getDocs(cardsQuery);
-
-      const userCards = cardsSnapshot.docs.map((doc) => ({
-        cardId: doc.id,
-        ...doc.data(),
-      }));
-
-      setCards(userCards);
-      setLoading(false);
+      try {
+        const userCards = await getUserCards(currentUser.uid);
+        setCards(userCards);
+      } catch (error) {
+        console.error("Error al obtener las tarjetas del usuario:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchUserCards();
   }, [currentUser]);
 
-  const fetchPurchaseHistory = async (cardId) => {
-    const db = getFirestore(app);
-    setLoading(true);
-
-    // Obtener las transacciones de la tarjeta seleccionada
-    const transactionsRef = collection(db, "transactions");
-
-    // Consulta para "compra"
-    const purchaseQuery = query(
-      transactionsRef,
-      where("transaction_type", "==", "compraEnLinea"),
-      where("card_id", "==", cardId)
-    );
-    const purchaseSnapshot = await getDocs(purchaseQuery);
-    const purchasesData = purchaseSnapshot.docs.map((doc) => doc.data());
-
-    // Consulta para "pagoServicio"
-    const servicePaymentQuery = query(
-      transactionsRef,
-      where("transaction_type", "==", "pagoServicio"),
-      where("card_id", "==", cardId)
-    );
-    const servicePaymentSnapshot = await getDocs(servicePaymentQuery);
-    const servicePaymentsData = servicePaymentSnapshot.docs.map((doc) => doc.data());
-
-    // Combinar y ordenar las transacciones
-    const combinedTransactions = [...purchasesData, ...servicePaymentsData];
-    combinedTransactions.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
-
-    setTransactions(combinedTransactions);
-    setLoading(false);
+  const fetchPurchaseHistoryData = async (cardId) => {
+    try {
+      setLoading(true);
+      const purchaseHistory = await getPurchaseHistory(cardId);
+      setTransactions(purchaseHistory);
+    } catch (error) {
+      console.error("Error al obtener el historial de compras:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCardSelection = (e) => {
     const cardId = e.target.value;
     setSelectedCardId(cardId);
-    fetchPurchaseHistory(cardId);
+    if (cardId) {
+      fetchPurchaseHistoryData(cardId);
+    } else {
+      setTransactions([]);
+    }
   };
+
+  // ... Resto del código del componente (gráficos, paginación, etc.)
 
   // Datos para el gráfico de barras por categoría
   const categoryData = transactions.reduce((acc, transaction) => {
@@ -117,7 +96,7 @@ export const PaymentHistory = ({ currentUser }) => {
     }
     return acc;
   }, {});
-  console.log(Object.values(serviceTypeData))
+
   const serviceBarChartData = {
     labels: Object.keys(serviceTypeData),
     datasets: [
@@ -175,7 +154,7 @@ export const PaymentHistory = ({ currentUser }) => {
               <Card key={transaction.transaction_id} className="mb-3 shadow-sm">
                 <Card.Header className="d-flex justify-content-between align-items-center">
                   <span>
-                    <FaShoppingCart /> {transaction.transaction_type === "compra" ? "Compra" : "Pago de Servicio"}
+                    <FaShoppingCart /> {transaction.transaction_type === "compraEnLinea" ? "Compra en Línea" : "Pago de Servicio"}
                   </span>
                   <small className="text-muted">
                     {new Date(transaction.transaction_date.seconds * 1000).toLocaleString()}
