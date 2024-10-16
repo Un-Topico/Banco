@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Form, Button, Alert, Container, Row, Col, Modal } from "react-bootstrap";
-import { getFirestore, doc, collection, getDoc, runTransaction } from "firebase/firestore";
-import { app } from "../firebaseConfig";
+import { Form, Button, Alert, Container, Row, Col, Modal, Spinner } from "react-bootstrap";
 import { FaWater, FaLightbulb, FaMoneyCheckAlt } from "react-icons/fa";
 import { MdNumbers } from "react-icons/md";
 import CardSelector from "../components/servicePayment/CardSelector";
 import PaymentSummary from "../components/servicePayment/PaymentSummary";
 import { useAuth } from "../auth/authContext";
 import { reauthenticateUser, reauthenticateWithGoogle } from "../auth/auth"; // Importa las funciones de reautenticación
+import { processPayment } from "../api/servicePaymentApi"; // Importa la función de procesamiento de pago
 
 const ServicePaymentForm = () => {
   const [selectedService, setSelectedService] = useState("");
@@ -24,7 +23,6 @@ const ServicePaymentForm = () => {
   const [reauthError, setReauthError] = useState(null);
 
   const { currentUser } = useAuth();
-  const db = getFirestore(app);
 
   // Funciones para manejar cambios en los inputs
   const handleServiceChange = (e) => setSelectedService(e.target.value);
@@ -77,7 +75,7 @@ const ServicePaymentForm = () => {
 
         if (reauthResult.success) {
           setShowReauthModal(false);
-          await processPayment();
+          await handleProcessPayment();
         } else {
           setReauthError(reauthResult.message);
         }
@@ -92,7 +90,7 @@ const ServicePaymentForm = () => {
 
         if (reauthResult.success) {
           setShowReauthModal(false);
-          await processPayment();
+          await handleProcessPayment();
         } else {
           setReauthError(reauthResult.message);
         }
@@ -103,70 +101,19 @@ const ServicePaymentForm = () => {
   };
 
   // Función para procesar el pago después de la reautenticación
-  const processPayment = async () => {
+  const handleProcessPayment = async () => {
     setError("");
     setSuccess(false);
     setLoading(true);
 
     try {
-      // Validaciones en el backend
-      if (!selectedService || !paymentAmount || !referenceNumber || !selectedCard) {
-        throw new Error("Por favor, completa todos los campos.");
-      }
-
-      const parsedAmount = parseFloat(paymentAmount);
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        throw new Error("El monto a pagar debe ser un número positivo.");
-      }
-
-      // Obtener la tarjeta actualizada desde la base de datos
-      const cardRef = doc(db, "cards", selectedCard.cardId);
-      const cardSnapshot = await getDoc(cardRef);
-      if (!cardSnapshot.exists()) {
-        throw new Error("La tarjeta seleccionada no existe.");
-      }
-
-      const cardData = cardSnapshot.data();
-
-      // Verificar que la tarjeta pertenezca al usuario actual
-      if (cardData.ownerId !== currentUser.uid) {
-        throw new Error("No tienes permiso para usar esta tarjeta.");
-      }
-
-      // Verificar que el usuario tenga fondos suficientes
-      if (cardData.balance < parsedAmount) {
-        throw new Error("Saldo insuficiente en la tarjeta seleccionada.");
-      }
-
-      // Usar una transacción atómica para garantizar la consistencia
-      await runTransaction(db, async (transaction) => {
-        const cardDoc = await transaction.get(cardRef);
-        const currentBalance = cardDoc.data().balance;
-
-        if (currentBalance < parsedAmount) {
-          throw new Error("Saldo insuficiente en la tarjeta seleccionada.");
-        }
-
-        const newBalance = currentBalance - parsedAmount;
-        transaction.update(cardRef, { balance: newBalance });
-
-        // Guardar la transacción del pago
-        const transactionData = {
-          transaction_id: `transaction_${selectedService}_${Date.now()}`,
-          amount: parsedAmount,
-          description: `Pago de servicio de ${selectedService}`,
-          reference_number: referenceNumber,
-          status: "pagado",
-          transaction_type: "pagoServicio",
-          category: "servicio",
-          transaction_date: new Date(),
-          card_id: selectedCard.cardId,
-          service_type: selectedService,
-        };
-
-        const transactionsCollection = collection(db, "transactions");
-        transaction.set(doc(transactionsCollection), transactionData);
-      });
+      await processPayment(
+        selectedService,
+        paymentAmount,
+        referenceNumber,
+        selectedCard,
+        currentUser
+      );
 
       setSuccess(true);
 
@@ -190,6 +137,11 @@ const ServicePaymentForm = () => {
       <h2>Pago de Servicios</h2>
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">Pago realizado con éxito</Alert>}
+      {loading && (
+        <div className="d-flex justify-content-center my-3">
+          <Spinner animation="border" variant="primary" />
+        </div>
+      )}
 
       <Row>
         {/* Columna izquierda: Seleccionar servicio, monto y tarjeta */}
