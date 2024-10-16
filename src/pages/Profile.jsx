@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../auth/authContext";
 import { useNavigate } from "react-router-dom";
-import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
-import { app } from "../firebaseConfig";
+import { getUserRole, getUserAccount, subscribeToUserCards, getTransactionsByCardId } from "../api/profileApi";
 import { UserProfile } from "../components/userComponents/UserProfile";
 import { TransactionSection } from "../components/transactionComponents/TransactionSection";
 import UserCards from "../components/cardComponents/UserCard";
@@ -26,61 +25,51 @@ export const Profile = () => {
         return;
       }
 
-      const db = getFirestore(app);
+      try {
+        // Obtener rol del usuario
+        const role = await getUserRole(currentUser.email);
+        setUserRole(role);
 
-      // Obtener rol del usuario
-      const rolesCollection = collection(db, "roles");
-      const roleQuery = query(rolesCollection, where("email", "==", currentUser.email));
-      const rolesSnapshot = await getDocs(roleQuery);
+        // Obtener datos de la cuenta
+        const account = await getUserAccount(currentUser.uid);
+        if (!account) {
+          navigate("/crear-cuenta");
+          return;
+        }
+        setAccountData(account);
 
-      if (!rolesSnapshot.empty) {
-        const userRoleData = rolesSnapshot.docs[0].data();
-        setUserRole(userRoleData.role);
-      }
-
-      // Obtener datos de la cuenta
-      const accountsCollection = collection(db, "accounts");
-      const accountQuery = query(accountsCollection, where("ownerId", "==", currentUser.uid));
-      const accountSnapshot = await getDocs(accountQuery);
-
-      if (accountSnapshot.empty) {
-        navigate("/crear-cuenta");
-      } else {
-        const accountInfo = accountSnapshot.docs[0].data();
-        setAccountData(accountInfo);
-      }
-
-      // Listener para las tarjetas del usuario
-      const cardsCollection = collection(db, "cards");
-      const cardsQuery = query(cardsCollection, where("ownerId", "==", currentUser.uid));
-
-      const unsubscribe = onSnapshot(cardsQuery, (snapshot) => {
-        let total = 0;
-        snapshot.forEach((doc) => {
-          total += doc.data().balance;  // Sumamos el balance de cada tarjeta
+        // Suscribirse a las tarjetas del usuario
+        const unsubscribe = subscribeToUserCards(currentUser.uid, ({ cards, total }) => {
+          setTotalBalance(total);
+          // Aquí podrías también manejar las tarjetas si lo necesitas
         });
 
-        setTotalBalance(total);  // Establecemos el balance total en tiempo real
-      });
-
-      if (selectedCard) {
-        const transactionsRef = collection(db, "transactions");
-        const transactionsQuery = query(transactionsRef, where("card_id", "==", `${selectedCard.cardId}`));
-        const transactionsSnapshot = await getDocs(transactionsQuery);
-
-        const transactionsData = transactionsSnapshot.docs.map(doc => doc.data());
-        transactionsData.sort((a, b) => b.transaction_date.toDate() - a.transaction_date.toDate());
-        setTransactions(transactionsData);
+        // Cleanup: elimina el listener cuando el componente se desmonte
+        return () => unsubscribe();
+      } catch (error) {
+        console.error("Error al obtener los datos del usuario:", error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
-
-      // Cleanup: elimina el listener cuando el componente se desmonte
-      return () => unsubscribe();
     };
 
     fetchUserData();
-  }, [currentUser, navigate, selectedCard]);
+  }, [currentUser, navigate]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (selectedCard) {
+        try {
+          const trans = await getTransactionsByCardId(selectedCard.cardId);
+          setTransactions(trans);
+        } catch (error) {
+          console.error("Error al obtener transacciones:", error);
+        }
+      }
+    };
+
+    fetchTransactions();
+  }, [selectedCard]);
 
   const handleCardSelection = (card) => setSelectedCard(card);
   const handleImageUpdate = (newImageUrl) => setAccountData((prevData) => ({ ...prevData, profileImage: newImageUrl }));
