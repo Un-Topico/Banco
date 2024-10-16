@@ -1,5 +1,4 @@
-// src/api/servicePaymentApi.js
-import { getFirestore, doc, getDoc, runTransaction, collection, setDoc, arrayUnion } from "firebase/firestore";
+import { getFirestore, doc, getDoc, runTransaction, collection, } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 
 /**

@@ -1,27 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { reauthenticateUser, reauthenticateWithGoogle } from "../../auth/auth";
-import { app } from "../../firebaseConfig";
+import { reauthenticateUser, reauthenticateWithGoogle } from "../../auth/auth"; // Importar reautenticación
+import { updateCreditCard, validateLuhn } from "../../api/updateCardApi"; // Importar las funciones de la API
 
 const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-
+  const auth = getAuth();
   const [cardNumber, setCardNumber] = useState(cardData.cardNumber || "");
   const [expiryDate, setExpiryDate] = useState(cardData.expiryDate || "");
   const [cvv, setCvv] = useState(cardData.cvv || "");
-  const [cardHolderName, setCardHolderName] = useState(
-    cardData.cardHolderName || ""
-  );
+  const [cardHolderName, setCardHolderName] = useState(cardData.cardHolderName || "");
   const [cardType, setCardType] = useState(cardData.cardType || "");
   const [accountType, setAccountType] = useState(cardData.accountType || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
-  // Este efecto se ejecuta cuando cardData cambia
   useEffect(() => {
     setCardNumber(cardData.cardNumber || "");
     setExpiryDate(cardData.expiryDate || "");
@@ -29,28 +23,9 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
     setCardHolderName(cardData.cardHolderName || "");
     setCardType(cardData.cardType || "");
     setAccountType(cardData.accountType || "");
-    setPassword(""); // Limpia la contraseña cuando se cambia de tarjeta
-    setError(null); // Limpia los errores anteriores
+    setPassword(""); // Limpiar la contraseña cuando se cambia la tarjeta
+    setError(null); // Limpiar errores anteriores
   }, [cardData]);
-
-  // Función para validar el número de tarjeta usando el algoritmo de Luhn
-  const validateLuhn = (number) => {
-    let sum = 0;
-    let shouldDouble = false;
-    // Procesar los dígitos de derecha a izquierda
-    for (let i = number.length - 1; i >= 0; i--) {
-      let digit = parseInt(number.charAt(i), 10);
-
-      if (shouldDouble) {
-        digit *= 2;
-        if (digit > 9) digit -= 9;
-      }
-
-      sum += digit;
-      shouldDouble = !shouldDouble;
-    }
-    return sum % 10 === 0;
-  };
 
   useEffect(() => {
     const cardNumberDigits = cardNumber.replace(/\s/g, "");
@@ -110,7 +85,7 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
     const cardNumberDigits = cardNumber.replace(/\s/g, "");
 
     // Validaciones adicionales en el frontend
-    if (cardNumberDigits.length < 16) { // Ajuste a 16 dígitos estándar
+    if (cardNumberDigits.length < 16) {
       setError("El número de tarjeta debe tener al menos 16 dígitos.");
       return;
     }
@@ -144,23 +119,18 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
     }
 
     if (!result.success) {
-      setError(
-        "Error en la autenticación. Por favor, verifica tu información."
-      );
+      setError("Error en la autenticación. Por favor, verifica tu información.");
       return;
     }
 
     try {
-      const cardDocRef = doc(db, "cards", cardData.cardId);
-
-      await updateDoc(cardDocRef, {
+      // Actualizar los datos de la tarjeta en Firestore
+      await updateCreditCard(cardData.cardId, {
         cardNumber: cardNumberDigits,
         expiryDate: expiryDate,
-        // cvv: cvv, // No almacenes el CVV
         cardHolderName: cardHolderName,
         cardType: cardType,
         accountType: accountType,
-        updatedAt: new Date(),
       });
 
       alert("Tarjeta actualizada correctamente");
@@ -181,7 +151,7 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
         <Form onSubmit={handleUpdateCard}>
           <Form.Group as={Row} controlId="cardHolderName" className="mb-3">
             <Form.Label column sm={4}>
-             Nombre en la Tarjeta
+              Nombre en la Tarjeta
             </Form.Label>
             <Col sm={8}>
               <Form.Control
@@ -196,14 +166,14 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
 
           <Form.Group as={Row} controlId="cardNumber" className="mb-3">
             <Form.Label column sm={4}>
-               Número de Tarjeta
+              Número de Tarjeta
             </Form.Label>
             <Col sm={8}>
               <Form.Control
                 type="text"
                 value={cardNumber}
                 onChange={handleCardNumberChange}
-                maxLength="19" // 16 dígitos + 3 espacios
+                maxLength="19"
                 required
               />
               {cardType && <small>Tipo de tarjeta: {cardType}</small>}
@@ -232,9 +202,7 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
           <Row className="mb-3">
             <Col>
               <Form.Group controlId="expiryDate">
-                <Form.Label>
-                  Fecha de Expiración
-                </Form.Label>
+                <Form.Label>Fecha de Expiración</Form.Label>
                 <Form.Control
                   type="text"
                   value={expiryDate}
@@ -254,11 +222,9 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
 
             <Col>
               <Form.Group controlId="cvv">
-                <Form.Label>
-                   CVV
-                </Form.Label>
+                <Form.Label>CVV</Form.Label>
                 <Form.Control
-                  type="password" // Cambiado a 'password' para mayor seguridad
+                  type="password"
                   value={cvv}
                   onChange={(e) => setCvv(e.target.value.replace(/\D/g, ""))}
                   maxLength="4"
@@ -270,9 +236,7 @@ const UpdateCardModal = ({ show, handleClose, cardData, onCardUpdated }) => {
 
           {auth.currentUser.providerData[0].providerId === "password" && (
             <Form.Group controlId="formPassword" className="mb-3">
-              <Form.Label>
-                Contraseña
-              </Form.Label>
+              <Form.Label>Contraseña</Form.Label>
               <Form.Control
                 type="password"
                 placeholder="Ingresa tu contraseña"

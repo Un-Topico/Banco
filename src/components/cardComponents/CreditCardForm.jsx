@@ -1,52 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Form, Button, Row, Col, Card, Alert } from "react-bootstrap";
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { app } from "../../firebaseConfig";
+import { generateClabeNumber, isCardNumberExists, saveCreditCard } from "../../api/creditCardApi"; 
+import { useAuth } from "../../auth/authContext";
 
 export const CreditCardForm = ({ onCardSaved }) => {
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+  const { currentUser } = useAuth(); // Usa el hook de autenticación
   const [cardNumber, setCardNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
   const [cardHolderName, setCardHolderName] = useState("");
   const [cardType, setCardType] = useState("");
-  const [accountType, setAccountType] = useState(""); // Nuevo estado para el tipo de cuenta
+  const [accountType, setAccountType] = useState(""); // Tipo de cuenta
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) {
+    if (!currentUser) {
       navigate("/login");
     }
-  }, [auth.currentUser, navigate]);
+  }, [currentUser, navigate]);
 
   // Función para validar el número de tarjeta usando el algoritmo de Luhn
   const validateLuhn = (number) => {
     let sum = 0;
     let shouldDouble = false;
-    // Procesar los dígitos de derecha a izquierda
     for (let i = number.length - 1; i >= 0; i--) {
       let digit = parseInt(number.charAt(i), 10);
-
       if (shouldDouble) {
         digit *= 2;
         if (digit > 9) digit -= 9;
       }
-
       sum += digit;
       shouldDouble = !shouldDouble;
     }
@@ -71,13 +57,6 @@ export const CreditCardForm = ({ onCardSaved }) => {
       setIsButtonDisabled(true);
     }
   }, [cardNumber, expiryDate, cvv, cardHolderName, accountType]);
-
-  const generateClabeNumber = () => {
-    const date = new Date();
-    const timestamp = date.getTime().toString().slice(-10); // Últimos 10 dígitos del timestamp
-    const randomNumbers = Math.floor(1000000000 + Math.random() * 9000000000); // Generar 10 dígitos aleatorios
-    return `${timestamp}${randomNumbers}`;
-  };
 
   const detectCardType = (number) => {
     const firstDigit = parseInt(number[0], 10);
@@ -105,16 +84,15 @@ export const CreditCardForm = ({ onCardSaved }) => {
     e.preventDefault();
     setError(null);
 
-    const user = auth.currentUser;
-    if (!user) {
+    if (!currentUser) {
       console.error("No hay usuario autenticado.");
       return;
     }
 
     const cardNumberDigits = cardNumber.replace(/\s/g, "");
 
-    // Validaciones adicionales en el frontend
-    if (cardNumberDigits.length < 16) { // Ajuste a 16 dígitos estándar
+    // Validaciones adicionales
+    if (cardNumberDigits.length < 16) {
       setError("El número de tarjeta debe tener al menos 16 dígitos.");
       return;
     }
@@ -139,21 +117,17 @@ export const CreditCardForm = ({ onCardSaved }) => {
       return;
     }
 
-    // Validar si el número de tarjeta ya existe en la base de datos
-    const cardsQuery = query(
-      collection(db, "cards"),
-      where("cardNumber", "==", cardNumberDigits)
-    );
-    const querySnapshot = await getDocs(cardsQuery);
-
-    if (!querySnapshot.empty) {
-      setError("El número de tarjeta ya ha sido registrado. Intenta con otro.");
-      return;
-    }
-
     try {
-      const cardId = `card_${user.uid}_${Date.now()}`;
-      const clabeNumber = generateClabeNumber(); // Generar número CLABE
+      // Validar si el número de tarjeta ya existe
+      const cardExists = await isCardNumberExists(cardNumberDigits);
+      if (cardExists) {
+        setError("El número de tarjeta ya ha sido registrado. Intenta con otro.");
+        return;
+      }
+
+      // Generar datos de la tarjeta
+      const cardId = `card_${currentUser.uid}_${Date.now()}`;
+      const clabeNumber = generateClabeNumber();
 
       const cardData = {
         cardId: cardId,
@@ -162,18 +136,16 @@ export const CreditCardForm = ({ onCardSaved }) => {
         cvv: cvv,
         balance: 100,
         cardHolderName: cardHolderName,
-        ownerId: user.uid, // ID del usuario
+        ownerId: currentUser.uid, // ID del usuario
         createdAt: new Date(),
         updatedAt: new Date(),
-        cardType: cardType, // Tipo de tarjeta (Visa, MasterCard, American Express)
-        clabeNumber: clabeNumber, // Número CLABE generado
-        accountType: accountType, // Tipo de cuenta
+        cardType: cardType,
+        clabeNumber: clabeNumber,
+        accountType: accountType,
       };
-      console.log(cardData);
-      const cardsCollection = collection(db, "cards");
-      const cardDocRef = doc(cardsCollection, cardId);
 
-      await setDoc(cardDocRef, cardData);
+      // Guardar la tarjeta en Firestore
+      await saveCreditCard(cardData);
 
       setIsCardSaved(true);
       setIsButtonDisabled(true);
@@ -212,7 +184,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
             <Form.Control
               type="text"
               placeholder="0000 0000 0000 0000"
-              maxLength="19" // 16 dígitos + 3 espacios
+              maxLength="19"
               value={cardNumber}
               onChange={handleCardNumberChange}
               required
@@ -268,7 +240,7 @@ export const CreditCardForm = ({ onCardSaved }) => {
             <Form.Group controlId="cvv">
               <Form.Label>CVV</Form.Label>
               <Form.Control
-                type="password" // Cambiado a 'password' para mayor seguridad
+                type="password"
                 placeholder="123"
                 maxLength="4"
                 value={cvv}
