@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Button, Alert, Container, Row, Col, InputGroup, FormControl, Modal, Form } from 'react-bootstrap';
 import { QRCodeCanvas } from 'qrcode.react';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../auth/authContext';
-import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; 
+import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth';
+import { verifyCardOwnershipAndBalance, saveQrCode } from '../../api/qrDepositApi'; // Importar funciones de la API
 
 export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
   const [amount, setAmount] = useState('');
@@ -15,7 +15,6 @@ export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
   const [reauthError, setReauthError] = useState(null);
   const qrRef = useRef(null);
   const { currentUser } = useAuth();
-  const db = getFirestore();
 
   // Función para manejar el cambio de monto
   const handleAmountChange = (e) => {
@@ -55,24 +54,8 @@ export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
         throw new Error('Usuario no autenticado.');
       }
 
-      // Obtener la tarjeta seleccionada
-      const cardDocRef = doc(db, 'cards', selectedCardId);
-      const cardDoc = await getDoc(cardDocRef);
-
-      if (!cardDoc.exists()) {
-        throw new Error('Tarjeta no encontrada.');
-      }
-
-      const cardData = cardDoc.data();
-
-      // Verificar que la tarjeta pertenece al usuario actual
-      if (cardData.ownerId !== currentUser.uid) {
-        throw new Error('No tienes permiso para generar un código QR para esta tarjeta.');
-      }
-
-      if (cardData.balance < parsedAmount) {
-        throw new Error('No tienes suficiente saldo para generar el código QR.');
-      }
+      // Verificar la tarjeta y el saldo del usuario
+      const cardData = await verifyCardOwnershipAndBalance(selectedCardId, currentUser.uid, parsedAmount);
 
       // Generar un ID único para la transacción
       const transactionId = `qr_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -86,7 +69,7 @@ export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
       };
 
       // Guardar la información en Firestore
-      await setDoc(doc(db, 'qr_codes', transactionId), qrData);
+      await saveQrCode(qrData);
 
       // Generar el código QR para mostrar
       setQrCode(transactionId);
@@ -197,7 +180,6 @@ export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
           <Modal.Title>Reautenticación Requerida</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* Determinar el método de autenticación */}
           {currentUser.providerData.some(provider => provider.providerId === 'google.com') ? (
             <div>
               <p>Para continuar, por favor reautentícate usando Google.</p>

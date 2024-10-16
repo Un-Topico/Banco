@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Container, Row, Col, InputGroup } from 'react-bootstrap';
-import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { useAuth } from '../../auth/authContext';
 import jsQR from "jsqr";  // Biblioteca para leer el QR desde una imagen
+import { verifyQrCode, verifyCardBalance, updateCardBalance, markQrCodeAsUsed, saveTransaction, getUserCards } from '../../api/qrScanApi'; // Importar funciones desde la API
 
 export const QrScanForm = () => {
   const [qrCodeData, setQrCodeData] = useState(null); // Para almacenar los datos del QR
@@ -11,21 +11,12 @@ export const QrScanForm = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const { currentUser } = useAuth();
-  const db = getFirestore();
 
   // Obtener las tarjetas del usuario receptor (usuario actual)
   useEffect(() => {
-    const fetchUserCards = async () => {
+    const loadUserCards = async () => {
       try {
-        const cardsQuery = query(
-          collection(db, 'cards'),
-          where('ownerId', '==', currentUser.uid)
-        );
-        const cardsSnapshot = await getDocs(cardsQuery);
-        const cardsData = cardsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const cardsData = await getUserCards(currentUser.uid);
         setUserCards(cardsData);
         if (cardsData.length > 0) {
           setSelectedCard(cardsData[0].id); // Seleccionar la primera tarjeta por defecto
@@ -35,8 +26,8 @@ export const QrScanForm = () => {
       }
     };
 
-    fetchUserCards();
-  }, [db, currentUser]);
+    loadUserCards();
+  }, [currentUser]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -81,89 +72,44 @@ export const QrScanForm = () => {
 
     try {
       // Verificar si el QR ya fue usado
-      const qrDocRef = doc(db, 'qr_codes', qrCodeData);
-      const qrDoc = await getDoc(qrDocRef);
+      const qrData = await verifyQrCode(qrCodeData);
 
-      if (!qrDoc.exists()) {
-        throw new Error('El código QR no es válido.');
-      }
-
-      const qrData = qrDoc.data();
-      if (qrData.used) {
-        throw new Error('El código QR ya fue utilizado.');
-      }
-
-      // Obtener la tarjeta del usuario que generó el QR
-      const cardDocRef = doc(db, 'cards', qrData.cardId);
-      const cardDoc = await getDoc(cardDocRef);
-
-      if (!cardDoc.exists()) {
-        throw new Error('Tarjeta del creador no encontrada.');
-      }
-
-      const cardData = cardDoc.data();
-      if (cardData.balance < qrData.amount) {
-        throw new Error('El usuario no tiene suficiente saldo.');
-      }
+      // Verificar que la tarjeta del creador tenga suficiente saldo
+      const cardData = await verifyCardBalance(qrData.cardId, qrData.amount);
 
       // Descontar el dinero de la tarjeta del creador
       const newBalance = cardData.balance - qrData.amount;
-      await updateDoc(cardDocRef, { balance: newBalance });
+      await updateCardBalance(qrData.cardId, newBalance);
 
-      // Obtener la tarjeta del receptor (usuario actual)
-      const receiverCardRef = doc(db, 'cards', selectedCard);
-      const receiverCardDoc = await getDoc(receiverCardRef);
-      const receiverCardData = receiverCardDoc.data();
+      // Obtener la tarjeta del receptor (usuario actual) y actualizar su saldo
+      const receiverCardData = await verifyCardBalance(selectedCard, 0);
       const newReceiverBalance = receiverCardData.balance + qrData.amount;
-
-      // Actualizar el saldo del receptor
-      await updateDoc(receiverCardRef, { balance: newReceiverBalance });
+      await updateCardBalance(selectedCard, newReceiverBalance);
 
       // Marcar el código QR como usado
-      await updateDoc(qrDocRef, { used: true });
+      await markQrCodeAsUsed(qrCodeData);
 
-      // Guardar la transacción en Firestore
-
-      //deposito quien lo manda
-      await addDoc(collection(db, 'transactions'),{
-        transaction_id: `transaction_${Date.now()}`,
+      // Guardar las transacciones para el creador y el receptor
+      const transactionId = `transaction_${Date.now()}`;
+      await saveTransaction({
+        transaction_id: transactionId,
         card_id: qrData.cardId,
         transaction_type: "Deposito",
         amount: qrData.amount,
         transaction_date: new Date(),
         description: "Depósito vía QR",
         status: "sent",
-      })
-      await addDoc(collection(db, 'transactions'),{
-        transaction_id: `transaction_${Date.now()}`,
-        card_id: receiverCardData.cardId,
+      });
+      await saveTransaction({
+        transaction_id: `transaction_receiver_${Date.now()}`,
+        card_id: selectedCard,
         transaction_type: "Deposito",
         amount: qrData.amount,
         transaction_date: new Date(),
         description: "Depósito vía QR",
         status: "received",
-      })
-      // const transactionData = {
-      //   transaction_id: `transaction_${Date.now()}`,
-      //   card_id: qrData.cardId,
-      //   transaction_type: "Deposito",
-      //   amount: qrData.amount,
-      //   transaction_date: new Date(),
-      //   description: "Depósito vía QR",
-      //   status: "sent",
-      // };
-      //Deposito quien lo recibe
-      // const transactionDataRecibe = {
-      //   transaction_id: `transaction_${Date.now()}`,
-      //   card_id: receiverCardData.cardId,
-      //   transaction_type: "Deposito",
-      //   amount: qrData.amount,
-      //   transaction_date: new Date(),
-      //   description: "Depósito vía QR",
-      //   status: "received",
-      // };
-      // await setDoc(doc(db, 'transactions', transactionData.transaction_id), transactionData);
-      // await setDoc(doc(db, 'transactions', transactionDataRecibe.transaction_id), transactionDataRecibe);
+      });
+
       setSuccess('Depósito procesado exitosamente.');
       setQrCodeData(null);  // Limpiar el input del QR
     } catch (error) {
