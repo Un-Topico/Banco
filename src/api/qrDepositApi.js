@@ -1,4 +1,3 @@
-// src/api/qrApi.js
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 

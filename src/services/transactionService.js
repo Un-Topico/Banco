@@ -13,21 +13,27 @@ import {
   getDocs,
   setDoc,
 } from 'firebase/firestore';
-import axios from 'axios';
 
 const db = getFirestore();
 
 const sendMessage = async (phoneNumber, amount) => {
   try {
-    await axios.post(
-      'https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-ab5e80b6-8190-4404-9b75-ead553014c5a/twilio-package/send-message',
-      {
+    const response = await fetch("https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-ab5e80b6-8190-4404-9b75-ead553014c5a/twilio-package/send-message", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         to: phoneNumber,
         body: `Has recibido una transferencia de ${amount} MXN.`,
-      }
-    );
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Error en la respuesta de la API");
+    }
   } catch (error) {
-    console.error('Error al enviar el mensaje:', error);
+    console.error("Error al enviar el mensaje:", error);
   }
 };
 
