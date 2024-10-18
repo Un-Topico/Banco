@@ -1,4 +1,3 @@
-// src/services/firebaseService.js
 import { getFirestore, collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 
