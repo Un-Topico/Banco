@@ -6,6 +6,7 @@ import { TransactionDetail } from "../components/transactionComponents/Transacti
 import { SoporteChat } from "../components/chatComponents/SoporteChat";
 import { PaymentDetails } from '../pages/PaymentDetails';
 import ServicePaymentForm from '../pages/ServicePaymentForm';
+import { InicioUsuario } from '../pages/InicioUsuario';
 export const privateRoutes = [
     { path: "/perfil", element: <Profile />, protected:true },
     { path: "/transaccion/:id", element: <TransactionDetail />, protected:true },
@@ -14,7 +15,5 @@ export const privateRoutes = [
     { path: "/soporte", element: <SoporteChat />, protected:true },
     { path: "/pagos", element: <PaymentDetails />, protected:true },
     { path: "/pago-servicio", element: <ServicePaymentForm />, protected:true },
-
-
-
+    { path: "/inicio-usuario", element: <InicioUsuario />, protected:true },
 ];
