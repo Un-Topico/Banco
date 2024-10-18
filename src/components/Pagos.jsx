@@ -1,7 +1,8 @@
+import ServicePaymentForm from "../pages/ServicePaymentForm"
 export const Pagos=()=>{
     return(
         <>
-            <h1>Pagos</h1>
+            <ServicePaymentForm/>
         </>
     )
 }
