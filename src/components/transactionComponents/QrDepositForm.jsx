@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/authContext';
 import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth';
 import { verifyCardOwnershipAndBalance, saveQrCode } from '../../api/qrDepositApi'; // Importar funciones de la API
 
-export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
+export const QrDepositForm = ({ selectedCardId }) => { // Eliminamos onBalanceUpdate
   const [amount, setAmount] = useState('');
   const [qrCode, setQrCode] = useState('');
   const [error, setError] = useState(null);
@@ -75,10 +75,7 @@ export const QrDepositForm = ({ selectedCardId, onBalanceUpdate }) => {
       setQrCode(transactionId);
       setSuccess('Código QR generado exitosamente.');
 
-      // Actualizar el saldo si es necesario
-      if (onBalanceUpdate) {
-        onBalanceUpdate(cardData.balance - parsedAmount);
-      }
+      // Si necesitas actualizar el saldo en el UI, considera otras estrategias, como volver a suscribirte a las tarjetas.
     } catch (error) {
       console.error(error);
       setError(error.message || 'Ha ocurrido un error. Inténtalo de nuevo.');

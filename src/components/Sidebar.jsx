@@ -18,6 +18,19 @@ const Sidebar = ({ selectedOption, onSelect }) => {
                     <li className={selectedOption === 'operaciones' ? 'active' : ''} onClick={() => onSelect('operaciones')}>
                         <FaMoneyCheckAlt /> Operaciones
                     </li>
+                    <li className={selectedOption === 'depositar' ? 'active' : ''} onClick={() => onSelect('depositar')}>
+                        <FaTools /> Depositar 
+                    </li>
+                    <li className={selectedOption === 'transferir' ? 'active' : ''} onClick={() => onSelect('transferir')}>
+                        <FaTools /> Transferir
+                    </li>
+                    <li className={selectedOption === 'retirar' ? 'active' : ''} onClick={() => onSelect('retirar')}>
+                        <FaTools /> Retirar
+                    </li>
+                    <li className={selectedOption === 'depositarQR' ? 'active' : ''} onClick={() => onSelect('depositarQR')}>
+                        <FaTools /> Depositar QR
+                    </li>
+                    
                     <li className={selectedOption === 'pagos' ? 'active' : ''} onClick={() => onSelect('pagos')}>
                         <FaTools /> Pagos de servicios
                     </li>
