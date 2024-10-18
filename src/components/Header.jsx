@@ -2,15 +2,25 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut, getAuth } from "firebase/auth";
 import { app } from "../firebaseConfig";
-import { useAuth } from "../auth/authContext"; 
-import { FaBell } from 'react-icons/fa'; // Icono de campana
+import { useAuth } from "../auth/authContext";
+import { FaBell, FaSignOutAlt, FaMoneyBillAlt } from "react-icons/fa"; // Importación de iconos adicionales
 import ModalNotification from "./userComponents/ModalNotification";
-import { getFirestore, query, collection, where, onSnapshot } from "firebase/firestore"; 
+import {
+  getFirestore,
+  query,
+  collection,
+  where,
+  onSnapshot,
+  getDocs,
+} from "firebase/firestore";
+import "../styles/header.css";
 
 export const Header = () => {
-  const { currentUser } = useAuth(); // Obtenemos el usuario actual del contexto
+  const { currentUser } = useAuth();
+  const [showProfileCard, setShowProfileCard] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0); // Estado para el conteo de notificaciones no leídas
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [userAccount, setUserAccount] = useState(null);
   const navigate = useNavigate();
   const auth = getAuth(app);
   const db = getFirestore();
@@ -34,99 +44,207 @@ export const Header = () => {
         where("ownerId", "==", currentUser.uid),
         where("read", "==", false)
       );
-  
+
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        // El tamaño del snapshot te da el conteo de las no leídas
         setUnreadCount(snapshot.size);
       });
-  
-      return () => unsubscribe(); // Cleanup para evitar fugas de memoria
+
+      // Obtener datos de la cuenta del usuario
+      const getUserAccount = async (ownerId) => {
+        const accountsCollection = collection(db, "accounts");
+        const accountQuery = query(
+          accountsCollection,
+          where("ownerId", "==", ownerId)
+        );
+        const accountSnapshot = await getDocs(accountQuery);
+
+        if (!accountSnapshot.empty) {
+          setUserAccount(accountSnapshot.docs[0].data());
+        }
+      };
+
+      getUserAccount(currentUser.uid);
+
+      return () => unsubscribe();
     }
   }, [currentUser, db]);
 
   return (
-    <header>
-      <nav className="navbar navbar-expand-lg navbar-light" style={{backgroundColor: "#4F98CA"}}>
-        <div className="container-fluid fs-4">
-          <Link className="navbar-brand" to="/">
-            <img 
-              src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Flogo_unto.png?alt=media&token=017bedc5-b76b-46b2-bdb3-24be1107872e"
-              alt="Logo UnTópico"
-              width="40"
-              height="40"
-              className="img-fluid"
-            /> UnTópico
-          </Link>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link className="nav-link" to="/Personas">Personas</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/PyMes">PyMes</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/about">Nosotros</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/sucursales">Encuentra tu sucursal</Link>
-              </li>
-              {currentUser && (
-                <li className="nav-item">
-                  <Link className="btn btn-success position-relative me-md-2 btn-lg" to="/perfil">
-                    Perfil
-                    {unreadCount > 0 && (
-                      <span className="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </Link>
-                </li>
-              )}
-            </ul>
-            <div className="d-flex">
-              {currentUser ? (
-                <div>
-                  <button className="btn btn-danger me-2" onClick={handleSignOut}>Logout</button>
-                  <Link  className="btn btn-warning me-2" to="/pago-servicio">
-                        Pagar servicio
-                  </Link>
+    <header className="header">
+      <div className="logo">
+        <Link to="/">
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Flogo_unto.png?alt=media&token=017bedc5-b76b-46b2-bdb3-24be1107872e"
+            alt="Logo UnTópico"
+            width="40"
+            height="40"
+            className="img-fluid"
+          />
+          <span className="logo-text">UnTópico</span>
+        </Link>
+      </div>
+      <nav className="nav">
+        <div className="dropdown">
+          <button className="dropbtn">Enterprise</button>
+          <div className="dropdown-content">
+            <Link to="#">Option 1</Link>
+            <Link to="#">Option 2</Link>
+            <Link to="#">Option 3</Link>
+          </div>
+        </div>
+        <div className="dropdown">
+          <button className="dropbtn">Sucursales</button>
+          <div className="dropdown-content">
+            <Link to="#">Branch 1</Link>
+            <Link to="#">Branch 2</Link>
+            <Link to="#">Branch 3</Link>
+          </div>
+        </div>
+        <Link className="nav-link" to="/Personas">
+          Personas
+        </Link>
+        <Link className="nav-link" to="/PyMes">
+          PyMes
+        </Link>
+        <Link className="nav-link" to="/about">
+          Nosotros
+        </Link>
+        <Link className="nav-link" to="/sucursales">
+          Encuentra tu sucursal
+        </Link>
+      </nav>
 
-                  <div style={{ position: 'relative', display: 'inline-block' }}>
-                    <FaBell onClick={handleShow} style={{cursor: 'pointer', fontSize: '1.5rem'}} />
-                    {unreadCount > 0 && (
-                      <span 
-                        style={{
-                          position: 'absolute',
-                          top: '-5px',
-                          right: '-10px',
-                          background: 'red',
-                          color: 'white',
-                          borderRadius: '50%',
-                          padding: '2px 6px',
-                          fontSize: '0.8rem'
-                        }}
-                      >
-                        {unreadCount}
+      <div className="d-flex align-items-center">
+        {currentUser ? (
+          <div className="d-flex align-items-center">
+            {/* Icono de Logout */}
+            <FaSignOutAlt
+              onClick={handleSignOut}
+              style={{
+                cursor: "pointer",
+                fontSize: "1.5rem",
+                color: "#dc3545", // Color rojo como el botón de "Logout"
+                marginRight: "15px",
+              }}
+              title="Cerrar sesión"
+            />
+
+            {/* Icono de Pagar Servicio */}
+            <Link to="/pago-servicio">
+              <FaMoneyBillAlt
+                style={{
+                  cursor: "pointer",
+                  fontSize: "1.5rem",
+                  color: "#ffc107", // Color amarillo como el botón de "Pagar servicio"
+                  marginRight: "15px",
+                }}
+                title="Pagar servicio"
+              />
+            </Link>
+
+            {/* Icono de Notificaciones */}
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <FaBell
+                onClick={handleShow}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "1.5rem",
+                  marginRight: "10px",
+                }}
+                title="Notificaciones"
+              />
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-10px",
+                    right: "3px",
+                    background: "red",
+                    color: "white",
+                    borderRadius: "50%",
+                    padding: "2px 6px",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+
+            {/* Modal de notificaciones */}
+            <ModalNotification
+              show={showModal}
+              handleClose={handleClose}
+              ownerId={currentUser.uid}
+            />
+
+            {/* Icono de Usuario */}
+            <div
+              className="user-icon-wrapper"
+              onMouseEnter={() => setShowProfileCard(true)}
+              onMouseLeave={() => setShowProfileCard(false)}
+            >
+              <div className="user-icon">
+                {userAccount?.profileImage ? (
+                  <img
+                    src={userAccount.profileImage}
+                    alt="User Profile"
+                    width="40"
+                    height="40"
+                    style={{ borderRadius: "50%" }}
+                  />
+                ) : (
+                  <span className="user-icon-content">
+                    {currentUser ? currentUser.displayName.charAt(0) : "T"}
+                  </span>
+                )}
+              </div>
+              {showProfileCard && currentUser && userAccount && (
+                <div className="profile-card">
+                  <div className="profile-card-content">
+                    {userAccount?.profileImage ? (
+                      <img
+                        src={userAccount.profileImage}
+                        alt="User Profile"
+                        width="40"
+                        height="40"
+                        style={{ borderRadius: "50%" }}
+                      />
+                    ) : (
+                      <span className="user-icon-content">
+                        {currentUser ? currentUser.displayName.charAt(0) : "T"}
                       </span>
                     )}
+                    <p>{currentUser.displayName}</p>
+                    <p>{currentUser.email}</p>
+                    <p>
+                      {userAccount.phoneNumber || "No phone number available"}
+                    </p>
+                    <Link to="/editar-perfil" className="edit-profile">
+                      Editar perfil
+                    </Link>
                   </div>
-                     
-                  <ModalNotification show={showModal} handleClose={handleClose} ownerId={currentUser.uid} />
-                </div>
-              ) : (
-                <div>
-                  <Link className="btn btn-success me-md-2" to="/login">Login</Link>
-                  <Link className="btn btn-primary" to="/crear-cuenta">Crear cuenta</Link>
                 </div>
               )}
             </div>
           </div>
-        </div>
-      </nav>
+        ) : (
+          <div>
+            <Link className="btn btn-success me-md-2" to="/login">
+              Login
+            </Link>
+            <Link className="btn btn-primary" to="/crear-cuenta">
+              Crear cuenta
+            </Link>
+          </div>
+        )}
+      </div>
     </header>
   );
 };
