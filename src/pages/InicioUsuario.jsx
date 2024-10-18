@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from "../components/Sidebar";
 import {Tarjetas} from "../components/Tarjetas"; 
-import {Operaciones} from "../components/Operaciones"; 
 import {Pagos} from "../components/Pagos"; 
 import {Historial} from "../components/Historial"; 
 import { EscanearQR } from '../components/EscanearQR';
@@ -16,8 +15,6 @@ export const InicioUsuario = () => {
         switch (selectedOption) {
             case 'tarjetas':
                 return <Tarjetas />;
-            case 'operaciones':
-                return <Operaciones />;
             case 'pagos':
                 return <Pagos />;
             case 'historial':
