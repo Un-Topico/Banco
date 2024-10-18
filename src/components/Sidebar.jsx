@@ -21,6 +21,9 @@ const Sidebar = ({ selectedOption, onSelect }) => {
                     <li className={selectedOption === 'pagos' ? 'active' : ''} onClick={() => onSelect('pagos')}>
                         <FaTools /> Pagos de servicios
                     </li>
+                    <li className={selectedOption === 'escanearQR' ? 'active' : ''} onClick={() => onSelect('escanearQR')}>
+                        <FaTools /> Escanear Codigo QR
+                    </li>
                     <li className={selectedOption === 'historial' ? 'active' : ''} onClick={() => onSelect('historial')}>
                         <FaHistory /> Historial de transacciones
                     </li>

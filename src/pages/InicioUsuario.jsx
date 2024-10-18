@@ -4,7 +4,7 @@ import {Tarjetas} from "../components/Tarjetas";
 import {Operaciones} from "../components/Operaciones"; 
 import {Pagos} from "../components/Pagos"; 
 import {Historial} from "../components/Historial"; 
-
+import { EscanearQR } from '../components/EscanearQR';
 export const InicioUsuario = () => {
     const [selectedOption, setSelectedOption] = useState('tarjetas'); // Opción inicial
 
@@ -18,6 +18,8 @@ export const InicioUsuario = () => {
                 return <Pagos />;
             case 'historial':
                 return <Historial />;
+                case 'escanearQR':
+                return <EscanearQR />;
             default:
                 return <Tarjetas />;
         }
