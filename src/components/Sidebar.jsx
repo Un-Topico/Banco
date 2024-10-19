@@ -7,7 +7,7 @@ const Sidebar = ({ selectedOption, onSelect }) => {
         <div className="sidebar">
             <div className="sidebar-header">
                 <h2>Untopico</h2>
-                <p>Proyecto de software</p>
+                <p>La mejor banca en linea</p>
             </div>
             <div className="menu-section">
                 <h3>DETALLES</h3>

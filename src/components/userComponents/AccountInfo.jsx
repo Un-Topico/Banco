@@ -34,14 +34,15 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
 
   return (
     <>
-      <Card.Body>
+      <Card.Body className="text-start">
+        {/* Aquí quitamos la clase centrada y usamos text-start para alinear a la izquierda */}
         <Card.Text>
           {selectedCard && (
             <>
-              <p><strong>Nombre:</strong> {selectedCard.cardHolderName}</p>
-              <p><strong>CLABE:</strong> {selectedCard.clabeNumber}</p>
-              <p><strong>Saldo:</strong> ${selectedCard.balance} MXN</p>
-              <p><strong>Tipo de cuenta:</strong> {selectedCard.accountType}</p>
+              <p className="mb-1"><strong>Nombre:</strong> {selectedCard.cardHolderName}</p>
+              <p className="mb-1"><strong>CLABE:</strong> {selectedCard.clabeNumber}</p>
+              <p className="mb-1"><strong>Saldo:</strong> ${selectedCard.balance} MXN</p>
+              <p className="mb-1"><strong>Tipo de cuenta:</strong> {selectedCard.accountType}</p>
             </>
           )}
         </Card.Text>
@@ -50,22 +51,23 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
             <Button
               variant="primary"
               onClick={() => downloadPDF(accountData, transactions, selectedCard)}
+              className="me-2 mt-2"
             >
-              <FaDownload className="me-2" /> Descargar Estado de Cuenta {/* Icono de descarga */}
+              <FaDownload className="me-2" /> Descargar Estado de Cuenta
             </Button>
             <Button
               variant="warning"
-              className="ms-2"
-              onClick={() => setShowUpdateModal(true)} // Abrir el modal de actualización
+              className="ms-2 mt-2"
+              onClick={() => setShowUpdateModal(true)}
             >
-              <FaEdit className="me-2" /> Actualizar Tarjeta {/* Icono de edición */}
+              <FaEdit className="me-2" /> Actualizar Tarjeta
             </Button>
             <Button
               variant="danger"
-              className="ms-2"
+              className="ms-2 mt-2"
               onClick={() => setShowModal(true)}
             >
-              <FaTrashAlt className="me-2" /> Eliminar Tarjeta {/* Icono de eliminar */}
+              <FaTrashAlt className="me-2" /> Eliminar Tarjeta
             </Button>
           </>
         )}
@@ -109,7 +111,7 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
           show={showUpdateModal}
           handleClose={() => setShowUpdateModal(false)}
           cardData={selectedCard}
-          onCardUpdated={() => setShowUpdateModal(false)} // Refresca después de la actualización
+          onCardUpdated={() => setShowUpdateModal(false)}
         />
       )}
     </>

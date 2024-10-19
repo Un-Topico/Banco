@@ -1,14 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import { useAuth } from '../auth/authContext';
-import { getUserRole, getUserAccount, subscribeToUserCards, getTransactionsByCardId } from '../api/profileApi';
+import { getUserAccount, subscribeToUserCards, getTransactionsByCardId } from '../api/profileApi';
 import CardComponent from '../components/cardComponents/Card';
 import { AccountInfo } from '../components/userComponents/AccountInfo';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
-import { app } from '../firebaseConfig';
-
-// Inicializar Firestore
-const db = getFirestore(app);
 
 export const Tarjetas = () => {
   const { currentUser } = useAuth();
@@ -21,7 +16,6 @@ export const Tarjetas = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Obtener datos de la cuenta
         const account = await getUserAccount(currentUser.uid);
         if (!account) {
           setError("No se encontró la cuenta del usuario.");
@@ -29,13 +23,11 @@ export const Tarjetas = () => {
         }
         setAccountData(account);
 
-        // Suscribirse a las tarjetas del usuario
         const unsubscribe = subscribeToUserCards(currentUser.uid, ({ cards }) => {
           setCards(cards);
           setError(null);
         });
 
-        // Cleanup: elimina el listener cuando el componente se desmonte
         return () => unsubscribe();
       } catch (error) {
         console.error("Error al obtener los datos del usuario:", error);
@@ -73,27 +65,41 @@ export const Tarjetas = () => {
       {error && <Alert variant="danger">{error}</Alert>}
 
       <Row>
-        {cards.length === 0 ? (
-          <Col>
-            <p>No tienes tarjetas agregadas.</p>
-          </Col>
-        ) : (
-          cards.map((card) => (
-            <Col md={4} key={card.id} className="mb-4">
-              <CardComponent card={card} onClick={() => handleCardSelect(card)} />
-            </Col>
-          ))
-        )}
-      </Row>
+        {/* Tarjetas (máximo 3 por fila) */}
+        <Col md={12}>
+          <Row>
+            {cards.length === 0 ? (
+              <Col>
+                <p>No tienes tarjetas agregadas.</p>
+              </Col>
+            ) : (
+              cards.map((card) => (
+                <Col md={6} key={card.id} className="mb-4">
+                  <CardComponent
+                    card={card}
+                    onClick={() => handleCardSelect(card)}
+                    isActive={selectedCard && selectedCard.cardId === card.cardId} // Pasa el estado activo
+                  />
+                </Col>
+              ))
+            )}
+          </Row>
+        </Col>
 
-      {selectedCard && (
-        <AccountInfo 
-          accountData={accountData} 
-          selectedCard={selectedCard} 
-          transactions={transactions} 
-          onCardDelete={() => setSelectedCard(null)} // Función para actualizar el estado al eliminar
-        />
-      )}
+        {/* Información de la tarjeta seleccionada */}
+        <Col md={12}>
+          {selectedCard ? (
+            <AccountInfo 
+              accountData={accountData} 
+              selectedCard={selectedCard} 
+              transactions={transactions} 
+              onCardDelete={() => setSelectedCard(null)} 
+            />
+          ) : (
+            <p>Selecciona una tarjeta para ver más información.</p>
+          )}
+        </Col>
+      </Row>
     </Container>
   );
 };
