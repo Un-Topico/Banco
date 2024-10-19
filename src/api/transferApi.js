@@ -127,7 +127,7 @@ import {
   
       // Guardar la transferencia en la colección 'transfers'
       const transferId = `transfer_${Date.now()}`;
-      const transferRef = doc(db, 'transfers', transferId);
+      const transferRef = doc(db, 'transferencias', transferId);
   
       await setDoc(transferRef, {
         transfer_id: transferId,

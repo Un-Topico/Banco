@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import {  subscribeToUserCards } from '../api/profileApi';
-import CardComponent from '../components/cardComponents/Card';
+import { SelectedCardComponent } from './cardComponents/SelectedCard';
 import { TransactionHistory } from '../components/transactionComponents/TransactionHistory';
 import { useAuth } from '../auth/authContext';
 
@@ -63,7 +63,11 @@ export const Historial = () => {
         ) : (
           cards.map((card) => (
             <Col md={4} key={card.id} className="mb-4">
-              <CardComponent card={card} onClick={() => handleCardSelect(card)} />
+             <SelectedCardComponent
+                card={card}
+                onClick={() => handleCardSelect(card)}
+                isActive={selectedCard && selectedCard.id === card.id}
+              />
             </Col>
           ))
         )}
