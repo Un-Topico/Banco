@@ -9,17 +9,20 @@ import {
   Modal, 
   Spinner 
 } from 'react-bootstrap';
-import { getFirestore, doc, setDoc, collection, addDoc } from 'firebase/firestore';
-import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import {  reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de que estas funciones estén definidas
-import { useAuth } from '../../auth/authContext'; // Asumiendo que tienes un contexto de autenticación
+import { getFirestore } from 'firebase/firestore';
+import { useAuth } from '../../auth/authContext'; // Asegúrate de que esta ruta sea correcta
+import { 
+  initiateReauthentication, 
+  proceedWithWithdrawal, 
+  reauthenticateWithEmail 
+} from '../../api/withdrawApi'; // Ajusta la ruta según tu estructura de carpetas
 
 export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [loading, setLoading] = useState(false);
   const [showReauthModal, setShowReauthModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // Nuevo estado para el modal de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -34,8 +37,9 @@ export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
 
     if (decimalCheck) {
       setMonto(formattedValue);
-      onDepositAmountChange(formattedValue); // Llamar al manejador para actualizar el monto en el componente padre
+      onDepositAmountChange(formattedValue ? parseFloat(formattedValue) : 0); // Actualizar el monto en el componente padre
     }
+    // Si no pasa la validación, no actualizar el estado
   };
 
   // Función para manejar el clic en "Realizar Retiro" que abre el modal de confirmación
@@ -66,64 +70,41 @@ export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
   // Función para proceder con la reautenticación después de la confirmación
   const handleConfirmProceed = async () => {
     setShowConfirmModal(false);
-    await initiateReauthentication();
-  };
-
-  // Función para iniciar la reautenticación
-  const initiateReauthentication = async () => {
     try {
-      // Determinar el método de inicio de sesión
-      const providerData = currentUser.providerData;
-      const isGoogleUser = providerData.some(provider => provider.providerId === 'google.com');
+      const reauthResult = await initiateReauthentication(currentUser);
 
-      if (isGoogleUser) {
-        // Reautenticación con Google
-        const reauthResult = await reauthenticateWithGoogle();
-
-        if (reauthResult.success) {
-          await proceedWithRetiro();
-        } else {
-          setError(reauthResult.message);
-        }
-      } else {
-        // Reautenticación con correo y contraseña
+      if (reauthResult.requiresPassword) {
         setShowReauthModal(true);
+      } else if (reauthResult.success) {
+        await handleWithdrawal();
+      } else {
+        setError(reauthResult.message || 'Reautenticación fallida.');
       }
     } catch (err) {
-      console.error(err);
-      setError('Error en la reautenticación.');
+      setError(err.message);
     }
   };
 
-  const proceedWithRetiro = async () => {
+  // Función para manejar el retiro utilizando la API
+  const handleWithdrawal = async () => {
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
       const parsedMonto = parseFloat(monto);
-      const newBalance = selectedCard.balance - parsedMonto;
 
-      // Actualizar el balance de la tarjeta
-      const cardRef = doc(db, 'cards', selectedCard.id);
-      await setDoc(cardRef, { balance: newBalance }, { merge: true });
-
-      // Agregar la transacción
-      await addDoc(collection(db, 'transactions'), {
-        transaction_id: `transaction_${Date.now()}`,
-        card_id: selectedCard.id,
-        transaction_type: 'Retiro',
-        amount: parsedMonto,
-        transaction_date: new Date(),
-        description: descripcion || 'Sin descripción',
-        status: 'sent',
-        ownerId: selectedCard.ownerId,
+      await proceedWithWithdrawal({
+        db,
+        selectedCard,
+        monto: parsedMonto,
+        descripcion,
       });
 
       setSuccess('El retiro se ha realizado con éxito.');
       setMonto('');
       setDescripcion('');
-      onDepositAmountChange(0); // Resetear el monto en el componente padre
+      onDepositAmountChange(0);
     } catch (err) {
       console.error(err);
       setError(`Hubo un error al realizar el retiro: ${err.message}`);
@@ -132,20 +113,25 @@ export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
     }
   };
 
+  // Función para manejar el envío de la contraseña para reautenticación
   const handlePasswordSubmit = async () => {
     setError(null);
+    setLoading(true);
     try {
-      const credential = EmailAuthProvider.credential(currentUser.email, passwordInput);
-      await reauthenticateWithCredential(currentUser, credential);
+      await reauthenticateWithEmail({
+        email: currentUser.email,
+        password: passwordInput,
+      });
 
       setShowReauthModal(false);
       setPasswordInput('');
 
-      // Autenticación exitosa, proceder con el retiro
-      await proceedWithRetiro();
+      await handleWithdrawal();
     } catch (err) {
       console.error(err);
       setError('Contraseña incorrecta. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,10 +148,12 @@ export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
             <Form.Group controlId="monto">
               <Form.Label>Monto</Form.Label>
               <Form.Control
-                type="text"
+                type="text" // Cambiado a 'text' para mejor control con regex
                 placeholder="Ingrese el monto"
                 value={monto}
-                onChange={(e) => handleMontoChange(e.target.value)} // Cambiar a la nueva función
+                onChange={(e) => handleMontoChange(e.target.value)}
+                inputMode="decimal"
+                pattern="^\d+(\.\d{0,2})?$"
                 required
               />
             </Form.Group>
@@ -185,7 +173,7 @@ export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
               variant="primary" 
               className="mt-4 w-100" 
               onClick={handleRetiroClick} 
-              disabled={loading || !monto || parseFloat(monto) <= 0} // Deshabilitar si el monto no es válido
+              disabled={loading || !monto || parseFloat(monto) <= 0}
             >
               {loading ? (
                 <>
@@ -250,9 +238,21 @@ export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
           <Button 
             variant="primary" 
             onClick={handlePasswordSubmit} 
-            disabled={!passwordInput}
+            disabled={!passwordInput || loading}
           >
-            Reautenticar y Retirar
+            {loading ? (
+              <>
+                <Spinner 
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                /> Reautenticando...
+              </>
+            ) : (
+              'Reautenticar y Retirar'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

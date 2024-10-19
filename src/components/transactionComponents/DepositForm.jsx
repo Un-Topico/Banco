@@ -1,3 +1,5 @@
+// src/components/DepositForm.jsx
+
 import React, { useState } from 'react';
 import { 
   Container, 
@@ -7,28 +9,28 @@ import {
   Button, 
   Alert, 
   Modal, 
-  Spinner
+  Spinner 
 } from 'react-bootstrap';
-import { getFirestore, doc, setDoc, collection, addDoc } from 'firebase/firestore';
-import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de que estas funciones estén definidas
-import { useAuth } from '../../auth/authContext'; // Asumiendo que tienes un contexto de autenticación
+import { getFirestore } from 'firebase/firestore';
+import { useAuth } from '../../auth/authContext'; // Asegúrate de que esta ruta sea correcta
+import { 
+  initiateReauthentication, 
+  proceedWithDeposit, 
+  reauthenticateWithEmail 
+} from '../../api/depositApi'; // Ajusta la ruta según tu estructura de carpetas
 
 export const DepositForm = ({ selectedCard, onDepositAmountChange }) => {
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [loading, setLoading] = useState(false);
   const [showReauthModal, setShowReauthModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // Nuevo estado para el modal de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
   const { currentUser } = useAuth();
   const db = getFirestore();
-
-  // Expresión regular para validar monto: números positivos con hasta 2 decimales
-  const montoRegex = /^\d+(\.\d{0,2})?$/;
 
   // Función para manejar el cambio en el input de monto
   const handleMontoInput = (e) => {
@@ -42,6 +44,7 @@ export const DepositForm = ({ selectedCard, onDepositAmountChange }) => {
     }
 
     // Validar con regex
+    const montoRegex = /^\d+(\.\d{0,2})?$/;
     if (montoRegex.test(value)) {
       setMonto(value);
       onDepositAmountChange(parseFloat(value));
@@ -71,37 +74,23 @@ export const DepositForm = ({ selectedCard, onDepositAmountChange }) => {
   // Función para proceder con la reautenticación después de la confirmación
   const handleConfirmProceed = async () => {
     setShowConfirmModal(false);
-    await initiateReauthentication();
-  };
-
-  // Función para iniciar la reautenticación
-  const initiateReauthentication = async () => {
     try {
-      // Determinar el método de inicio de sesión
-      const providerData = currentUser.providerData;
-      const isGoogleUser = providerData.some(provider => provider.providerId === 'google.com');
+      const reauthResult = await initiateReauthentication(currentUser);
 
-      if (isGoogleUser) {
-        // Reautenticación con Google
-        const reauthResult = await reauthenticateWithGoogle();
-
-        if (reauthResult.success) {
-          await proceedWithDeposit();
-        } else {
-          setError(reauthResult.message);
-        }
-      } else {
-        // Reautenticación con correo y contraseña
+      if (reauthResult.requiresPassword) {
         setShowReauthModal(true);
+      } else if (reauthResult.success) {
+        await handleDeposit();
+      } else {
+        setError(reauthResult.message || 'Reautenticación fallida.');
       }
     } catch (err) {
-      console.error(err);
-      setError('Error en la reautenticación.');
+      setError(err.message);
     }
   };
 
-  // Función para proceder con el depósito
-  const proceedWithDeposit = async () => {
+  // Función para manejar el depósito utilizando la API
+  const handleDeposit = async () => {
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -109,33 +98,17 @@ export const DepositForm = ({ selectedCard, onDepositAmountChange }) => {
     try {
       const parsedMonto = parseFloat(monto);
 
-      // Verificar que parsedMonto tiene máximo 2 decimales
-      if (!Number.isFinite(parsedMonto) || parsedMonto <= 0 || !montoRegex.test(monto)) {
-        throw new Error('Monto inválido. Asegúrate de ingresar un número positivo con máximo 2 decimales.');
-      }
-
-      const newBalance = selectedCard.balance + parsedMonto;
-
-      // Actualizar el balance de la tarjeta
-      const cardRef = doc(db, 'cards', selectedCard.id);
-      await setDoc(cardRef, { balance: newBalance }, { merge: true });
-
-      // Agregar la transacción
-      await addDoc(collection(db, 'transactions'), {
-        transaction_id: `transaction_${Date.now()}`,
-        card_id: selectedCard.id,
-        transaction_type: 'Deposito',
-        amount: parsedMonto,
-        transaction_date: new Date(),
-        description: descripcion || 'Sin descripción',
-        status: 'received',
-        ownerId: selectedCard.ownerId,
+      await proceedWithDeposit({
+        db,
+        selectedCard,
+        monto: parsedMonto,
+        descripcion,
       });
 
       setSuccess('El depósito se ha realizado con éxito.');
       setMonto('');
       setDescripcion('');
-      onDepositAmountChange(0); // Reset deposit amount in parent
+      onDepositAmountChange(0);
     } catch (err) {
       console.error(err);
       setError(`Hubo un error al realizar el depósito: ${err.message}`);
@@ -147,17 +120,22 @@ export const DepositForm = ({ selectedCard, onDepositAmountChange }) => {
   // Función para manejar el envío de la contraseña para reautenticación
   const handlePasswordSubmit = async () => {
     setError(null);
+    setLoading(true);
     try {
-      const credential = EmailAuthProvider.credential(currentUser.email, passwordInput);
-      await reauthenticateWithCredential(currentUser, credential);
+      await reauthenticateWithEmail({
+        email: currentUser.email,
+        password: passwordInput,
+      });
 
       setShowReauthModal(false);
       setPasswordInput('');
 
-      await proceedWithDeposit();
+      await handleDeposit();
     } catch (err) {
       console.error(err);
       setError('Contraseña incorrecta. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -199,7 +177,7 @@ export const DepositForm = ({ selectedCard, onDepositAmountChange }) => {
               variant="primary" 
               className="mt-4 w-100" 
               onClick={handleDepositoClick} 
-              disabled={loading || !monto || parseFloat(monto) <= 0} // Deshabilita el botón si no hay monto ingresado o es inválido
+              disabled={loading || !monto || parseFloat(monto) <= 0}
             >
               {loading ? (
                 <>
@@ -264,9 +242,21 @@ export const DepositForm = ({ selectedCard, onDepositAmountChange }) => {
           <Button 
             variant="primary" 
             onClick={handlePasswordSubmit} 
-            disabled={!passwordInput}
+            disabled={!passwordInput || loading}
           >
-            Reautenticar y Depositar
+            {loading ? (
+              <>
+                <Spinner 
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                /> Reautenticando...
+              </>
+            ) : (
+              'Reautenticar y Depositar'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

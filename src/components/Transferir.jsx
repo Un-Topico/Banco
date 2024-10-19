@@ -26,7 +26,6 @@ export const Transferir = () => {
         // Cleanup: elimina el listener cuando el componente se desmonte
         return () => unsubscribe();
       } catch (error) {
-        console.error("Error al obtener las tarjetas del usuario:", error);
         setError("Hubo un error al cargar las tarjetas.");
       }
     };
@@ -49,9 +48,7 @@ export const Transferir = () => {
   return (
     <Container className="text-center mt-4 mb-4">
       <h1>Realizar una Transferencia</h1>
-
       {error && <Alert variant="danger">{error}</Alert>}
-
       <Row>
         {cards.length === 0 ? (
           <Col>
@@ -59,11 +56,11 @@ export const Transferir = () => {
           </Col>
         ) : (
           cards.map((card) => (
-            <Col md={4} key={card.id} className="mb-4">
+            <Col md={6} key={card.id} className="mb-4">
               <SelectedCardComponent
                 card={card}
                 onClick={() => handleCardSelect(card)}
-                isSelected={selectedCard && selectedCard.id === card.id}
+                isActive={selectedCard && selectedCard.id === card.id}
               />
             </Col>
           ))
