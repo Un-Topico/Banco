@@ -7,8 +7,7 @@ import {
   Button, 
   Alert, 
   Modal, 
-  Spinner, 
-  Card 
+  Spinner
 } from 'react-bootstrap';
 import { getFirestore, doc, setDoc, collection, addDoc } from 'firebase/firestore';
 import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import { subscribeToUserCards } from '../api/profileApi';
-import CardComponent from './cardComponents/Card';
+import { SelectedCardComponent } from './cardComponents/SelectedCard';
 import { QrDepositForm } from './transactionComponents/QrDepositForm';
 import { useAuth } from '../auth/authContext';
 
@@ -48,7 +48,7 @@ export const DepositarQR = () => {
         ) : (
           cards.map((card) => (
             <Col md={4} key={card.id} className="mb-4">
-              <CardComponent
+              <SelectedCardComponent
                 card={card}
                 onClick={() => handleCardSelect(card)}
                 isSelected={selectedCard && selectedCard.id === card.id}

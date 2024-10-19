@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
-import { getUserAccount, subscribeToUserCards, getTransactionsByCardId } from '../api/profileApi';
+import {  subscribeToUserCards } from '../api/profileApi';
 import CardComponent from '../components/cardComponents/Card';
 import { TransactionHistory } from '../components/transactionComponents/TransactionHistory';
 import { useAuth } from '../auth/authContext';
@@ -10,7 +10,6 @@ export const Historial = () => {
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
   const [error, setError] = useState(null);
-  const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -36,8 +35,6 @@ export const Historial = () => {
     const fetchTransactions = async () => {
       if (selectedCard) {
         try {
-          const trans = await getTransactionsByCardId(selectedCard.cardId);
-          setTransactions(trans);
         } catch (error) {
           console.error("Error al obtener transacciones:", error);
           setError("Hubo un error al cargar las transacciones.");

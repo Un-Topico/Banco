@@ -11,7 +11,7 @@ export const SelectedCardComponent = ({ card, onClick, isActive }) => {
       <Card.Body>
         <Card.Title>Tarjeta {card.cardNumber}</Card.Title>
         <Card.Text>
-          <strong>Disponible:</strong> $ {card.balance}
+          <strong>Saldo:</strong> ${card.balance}
         </Card.Text>
       </Card.Body>
     </Card>

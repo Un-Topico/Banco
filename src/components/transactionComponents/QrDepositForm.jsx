@@ -3,7 +3,7 @@ import { Button, Alert, Container, Row, Col, InputGroup, FormControl, Modal, For
 import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../auth/authContext';
 import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth';
-import { verifyCardOwnershipAndBalance, saveQrCode } from '../../api/qrDepositApi'; // Importar funciones de la API
+import {  saveQrCode } from '../../api/qrDepositApi'; // Importar funciones de la API
 
 export const QrDepositForm = ({ selectedCardId }) => { // Eliminamos onBalanceUpdate
   const [amount, setAmount] = useState('');
@@ -54,8 +54,6 @@ export const QrDepositForm = ({ selectedCardId }) => { // Eliminamos onBalanceUp
         throw new Error('Usuario no autenticado.');
       }
 
-      // Verificar la tarjeta y el saldo del usuario
-      const cardData = await verifyCardOwnershipAndBalance(selectedCardId, currentUser.uid, parsedAmount);
 
       // Generar un ID único para la transacción
       const transactionId = `qr_${Date.now()}_${Math.floor(Math.random() * 1000)}`;

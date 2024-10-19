@@ -1,5 +1,3 @@
-// src/components/transactionComponents/TransferForm.jsx
-
 import React, { useState, useEffect } from 'react';
 import { 
   Container, 
@@ -22,12 +20,10 @@ import {
   getDocs 
 } from 'firebase/firestore';
 import { 
-  getAuth, 
   reauthenticateWithCredential, 
   EmailAuthProvider 
 } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
-import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth';
+import { reauthenticateWithGoogle } from '../../auth/auth';
 import { useAuth } from '../../auth/authContext';
 import Contacts from '../userComponents/Contacts';
 
@@ -45,8 +41,6 @@ export const TransferForm = ({ selectedCard, onFormChange }) => {
 
   const { currentUser } = useAuth();
   const db = getFirestore();
-  const navigate = useNavigate();
-
   // Validaciones
   const [isFormValid, setIsFormValid] = useState(false);
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaMoneyCheckAlt, FaCreditCard, FaTools, FaHistory, FaQrcode, FaDollarSign, FaFileInvoiceDollar, FaRegMoneyBillAlt, FaCode, FaFileAlt } from 'react-icons/fa';
+import {  FaCreditCard, FaTools, FaHistory, FaQrcode, FaDollarSign, FaFileInvoiceDollar, FaRegMoneyBillAlt } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ selectedOption, onSelect }) => {

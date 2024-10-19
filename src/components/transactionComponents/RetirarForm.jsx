@@ -10,8 +10,8 @@ import {
   Spinner 
 } from 'react-bootstrap';
 import { getFirestore, doc, setDoc, collection, addDoc } from 'firebase/firestore';
-import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de que estas funciones estén definidas
+import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import {  reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de que estas funciones estén definidas
 import { useAuth } from '../../auth/authContext'; // Asumiendo que tienes un contexto de autenticación
 
 export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
