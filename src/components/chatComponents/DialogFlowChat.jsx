@@ -10,7 +10,6 @@ import {
   sendMessageToDialogFlow,
   updateHumanSupportStatus,
 } from "../../api/chatApi";
-
 const DialogFlowChat = () => {
   const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
