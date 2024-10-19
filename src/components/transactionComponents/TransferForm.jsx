@@ -1,6 +1,6 @@
 // src/components/transactionComponents/TransferForm.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Container, 
   Row, 
@@ -26,86 +26,60 @@ import {
   reauthenticateWithCredential, 
   EmailAuthProvider 
 } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom'; // Reemplazado useRouter con useNavigate
-import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de que estas funciones estén definidas
-import { useAuth } from '../../auth/authContext'; // Asumiendo que tienes un contexto de autenticación
-import Contacts from '../userComponents/Contacts'; // Asegúrate de adaptar el componente Contacts para web
+import { useNavigate } from 'react-router-dom';
+import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth';
+import { useAuth } from '../../auth/authContext';
+import Contacts from '../userComponents/Contacts';
 
-export const TransferForm = ({ selectedCard }) => {
+export const TransferForm = ({ selectedCard, onFormChange }) => {
   const [email, setEmail] = useState('');
   const [clabe, setClabe] = useState('');
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [loading, setLoading] = useState(false);
   const [showReauthModal, setShowReauthModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // Nuevo estado para el modal de confirmación
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const { currentUser } = useAuth();
   const db = getFirestore();
-  const navigate = useNavigate(); // Inicialización de useNavigate
+  const navigate = useNavigate();
 
-  // Función para obtener la tarjeta del destinatario por correo electrónico
-  const getCardDocByEmail = async (email) => {
-    const accountsRef = collection(db, 'accounts');
-    const q = query(accountsRef, where('email', '==', email));
-    const querySnapshot = await getDocs(q);
+  // Validaciones
+  const [isFormValid, setIsFormValid] = useState(false);
 
-    if (querySnapshot.empty) {
-      throw new Error('No se encontró una cuenta asociada a este correo electrónico.');
-    }
+  useEffect(() => {
+    // Validar si el formulario es válido
+    const recipientInfo = email || clabe;
+    const parsedMonto = parseFloat(monto);
 
-    const recipientAccount = querySnapshot.docs[0].data();
-    const recipientOwnerId = recipientAccount.ownerId;
+    const montoValido =
+      monto &&
+      !isNaN(parsedMonto) &&
+      parsedMonto > 0 &&
+      parsedMonto <= selectedCard.balance &&
+      /^(\d+(\.\d{0,2})?)?$/.test(monto);
 
-    const cardsRef = collection(db, 'cards');
-    const cardQuery = query(cardsRef, where('ownerId', '==', recipientOwnerId));
-    const cardSnapshot = await getDocs(cardQuery);
+    const recipientValid = recipientInfo && recipientInfo.trim() !== '';
 
-    if (cardSnapshot.empty) {
-      throw new Error('El destinatario no tiene una tarjeta asociada.');
-    }
+    setIsFormValid(montoValido && recipientValid);
+  }, [email, clabe, monto, selectedCard]);
 
-    return cardSnapshot.docs[0];
-  };
+  // Actualizar el formulario en el componente padre
+  useEffect(() => {
+    const recipientInfo = email || clabe;
+    onFormChange({ recipientInfo, amount: monto });
+  }, [email, clabe, monto]);
 
-  // Función para obtener la tarjeta del destinatario por CLABE
-  const getCardDocByClabe = async (clabe) => {
-    const cardsRef = collection(db, 'cards');
-    const q = query(cardsRef, where('clabeNumber', '==', clabe));
-    const querySnapshot = await getDocs(q);
+  // Función para manejar cambios en el monto
+  const handleMontoChange = (value) => {
+    const formattedValue = value.replace(/[^0-9.]/g, ''); // Remover caracteres no numéricos excepto el punto
+    const decimalCheck = /^(\d+(\.\d{0,2})?)?$/.test(formattedValue); // Verificar que tenga un máximo de 2 decimales
 
-    if (querySnapshot.empty) {
-      throw new Error('No se encontró una tarjeta asociada a este número CLABE.');
-    }
-
-    return querySnapshot.docs[0];
-  };
-
-  // Función para enviar mensaje al destinatario
-  const sendMessage = async (phoneNumber, amount) => {
-    try {
-      const response = await fetch(
-        'https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-ab5e80b6-8190-4404-9b75-ead553014c5a/twilio-package/send-message',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: phoneNumber,
-            body: `Has recibido una transferencia de ${amount} MXN.`,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Error en la respuesta de la API');
-      }
-    } catch (error) {
-      console.error('Error al enviar el mensaje:', error);
+    if (decimalCheck) {
+      setMonto(formattedValue);
     }
   };
 
@@ -179,12 +153,30 @@ export const TransferForm = ({ selectedCard }) => {
 
     try {
       const parsedMonto = parseFloat(monto);
+
+      // Validaciones en el backend
+      if (isNaN(parsedMonto) || parsedMonto <= 0) {
+        throw new Error('El monto debe ser un número válido mayor que cero.');
+      }
+
+      if (!/^(\d+(\.\d{0,2})?)?$/.test(monto)) {
+        throw new Error('El monto no puede tener más de 2 decimales.');
+      }
+
+      if (parsedMonto > selectedCard.balance) {
+        throw new Error('No tienes suficiente saldo para realizar esta transferencia.');
+      }
+
       let recipientCardDoc;
 
       if (clabe) {
         recipientCardDoc = await getCardDocByClabe(clabe);
       } else if (email) {
         recipientCardDoc = await getCardDocByEmail(email);
+      }
+
+      if (!recipientCardDoc) {
+        throw new Error('No se encontró la tarjeta del destinatario.');
       }
 
       const newBalance = selectedCard.balance - parsedMonto;
@@ -258,11 +250,74 @@ export const TransferForm = ({ selectedCard }) => {
       setClabe('');
       setMonto('');
       setDescripcion('');
+      onFormChange({ recipientInfo: '', amount: '' }); // Resetear el formulario en el componente padre
     } catch (error) {
       console.error(error);
       setError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para obtener la tarjeta del destinatario por correo electrónico
+  const getCardDocByEmail = async (email) => {
+    const accountsRef = collection(db, 'accounts');
+    const q = query(accountsRef, where('email', '==', email));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      throw new Error('No se encontró una cuenta asociada a este correo electrónico.');
+    }
+
+    const recipientAccount = querySnapshot.docs[0].data();
+    const recipientOwnerId = recipientAccount.ownerId;
+
+    const cardsRef = collection(db, 'cards');
+    const cardQuery = query(cardsRef, where('ownerId', '==', recipientOwnerId));
+    const cardSnapshot = await getDocs(cardQuery);
+
+    if (cardSnapshot.empty) {
+      throw new Error('El destinatario no tiene una tarjeta asociada.');
+    }
+
+    return cardSnapshot.docs[0];
+  };
+
+  // Función para obtener la tarjeta del destinatario por CLABE
+  const getCardDocByClabe = async (clabe) => {
+    const cardsRef = collection(db, 'cards');
+    const q = query(cardsRef, where('clabeNumber', '==', clabe));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      throw new Error('No se encontró una tarjeta asociada a este número CLABE.');
+    }
+
+    return querySnapshot.docs[0];
+  };
+
+  // Función para enviar mensaje al destinatario
+  const sendMessage = async (phoneNumber, amount) => {
+    try {
+      const response = await fetch(
+        'https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-ab5e80b6-8190-4404-9b75-ead553014c5a/twilio-package/send-message',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: phoneNumber,
+            body: `Has recibido una transferencia de ${amount} MXN.`,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error en la respuesta de la API');
+      }
+    } catch (error) {
+      console.error('Error al enviar el mensaje:', error);
     }
   };
 
@@ -334,12 +389,10 @@ export const TransferForm = ({ selectedCard }) => {
             <Form.Group controlId="monto" className="mt-3">
               <Form.Label>Monto</Form.Label>
               <Form.Control
-                type="number"
+                type="text"
                 placeholder="Ingrese el monto"
                 value={monto}
-                onChange={(e) => setMonto(e.target.value)}
-                min="0"
-                step="0.01"
+                onChange={(e) => handleMontoChange(e.target.value)}
                 required
               />
             </Form.Group>
@@ -364,7 +417,7 @@ export const TransferForm = ({ selectedCard }) => {
               variant="primary" 
               className="mt-4 w-100" 
               onClick={handleTransferenciaClick} 
-              disabled={loading}
+              disabled={loading || !isFormValid}
             >
               {loading ? (
                 <>

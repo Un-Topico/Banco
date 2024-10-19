@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import { subscribeToUserCards } from '../api/profileApi';
-import CardComponent from '../components/cardComponents/Card';
+import { SelectedCardComponent } from './cardComponents/SelectedCard';
 import { DepositForm } from './transactionComponents/DepositForm';
 import { useAuth } from '../auth/authContext';
+import DepositSummary from './cardComponents/DepositSummary'; // Asegúrate de que la ruta sea correcta
 
 export const Depositar = () => {
   const { currentUser } = useAuth();
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
   const [error, setError] = useState(null);
+  const [depositAmount, setDepositAmount] = useState(0); // Estado para el monto del depósito
 
   useEffect(() => {
     const fetchUserCards = () => {
       try {
-        // Suscribirse a las tarjetas del usuario
         const unsubscribe = subscribeToUserCards(currentUser.uid, ({ cards }) => {
           setCards(cards);
           setError(null);
         });
 
-        // Cleanup: elimina el listener cuando el componente se desmonte
         return () => unsubscribe();
       } catch (error) {
         console.error("Error al obtener las tarjetas del usuario:", error);
@@ -33,6 +33,10 @@ export const Depositar = () => {
 
   const handleCardSelect = (card) => {
     setSelectedCard(card);
+  };
+
+  const handleDepositAmountChange = (amount) => {
+    setDepositAmount(amount);
   };
 
   return (
@@ -48,22 +52,32 @@ export const Depositar = () => {
           </Col>
         ) : (
           cards.map((card) => (
-            <Col md={4} key={card.id} className="mb-4">
-              <CardComponent
+            <Col md={6} key={card.id} className="mb-4">
+              <SelectedCardComponent
                 card={card}
                 onClick={() => handleCardSelect(card)}
-                isSelected={selectedCard && selectedCard.id === card.id}
+                isActive={selectedCard && selectedCard.id === card.id}
               />
             </Col>
           ))
         )}
       </Row>
 
-      {selectedCard ? (
-        <DepositForm selectedCard={selectedCard} />
-      ) : (
-        <Alert variant="info">Por favor, selecciona una tarjeta para continuar.</Alert>
-      )}
+      <Row>
+        {selectedCard ? (
+          <>
+            <DepositForm 
+              selectedCard={selectedCard} 
+              onDepositAmountChange={handleDepositAmountChange} // Pasa la función para cambiar el monto
+            />
+            {depositAmount > 0 && ( // Mostrar resumen solo si hay un monto ingresado
+              <DepositSummary selectedCard={selectedCard} depositAmount={depositAmount} />
+            )}
+          </>
+        ) : (
+          <Alert variant="info">Por favor, selecciona una tarjeta para continuar.</Alert>
+        )}
+      </Row>
     </Container>
   );
 };

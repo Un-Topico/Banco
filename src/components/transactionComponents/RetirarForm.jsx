@@ -14,7 +14,7 @@ import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from 'fireba
 import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de que estas funciones estén definidas
 import { useAuth } from '../../auth/authContext'; // Asumiendo que tienes un contexto de autenticación
 
-export const RetirarForm = ({ selectedCard }) => {
+export const RetirarForm = ({ selectedCard, onDepositAmountChange }) => {
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,6 +26,17 @@ export const RetirarForm = ({ selectedCard }) => {
 
   const { currentUser } = useAuth();
   const db = getFirestore();
+
+  // Función para manejar el cambio en el monto
+  const handleMontoChange = (value) => {
+    const formattedValue = value.replace(/[^0-9.]/g, ''); // Remover caracteres no numéricos excepto el punto
+    const decimalCheck = /^(\d+(\.\d{0,2})?)?$/.test(formattedValue); // Verificar que tenga un máximo de 2 decimales
+
+    if (decimalCheck) {
+      setMonto(formattedValue);
+      onDepositAmountChange(formattedValue); // Llamar al manejador para actualizar el monto en el componente padre
+    }
+  };
 
   // Función para manejar el clic en "Realizar Retiro" que abre el modal de confirmación
   const handleRetiroClick = () => {
@@ -112,6 +123,7 @@ export const RetirarForm = ({ selectedCard }) => {
       setSuccess('El retiro se ha realizado con éxito.');
       setMonto('');
       setDescripcion('');
+      onDepositAmountChange(0); // Resetear el monto en el componente padre
     } catch (err) {
       console.error(err);
       setError(`Hubo un error al realizar el retiro: ${err.message}`);
@@ -150,12 +162,10 @@ export const RetirarForm = ({ selectedCard }) => {
             <Form.Group controlId="monto">
               <Form.Label>Monto</Form.Label>
               <Form.Control
-                type="number"
+                type="text"
                 placeholder="Ingrese el monto"
                 value={monto}
-                onChange={(e) => setMonto(e.target.value)}
-                min="0"
-                step="0.01"
+                onChange={(e) => handleMontoChange(e.target.value)} // Cambiar a la nueva función
                 required
               />
             </Form.Group>
@@ -175,7 +185,7 @@ export const RetirarForm = ({ selectedCard }) => {
               variant="primary" 
               className="mt-4 w-100" 
               onClick={handleRetiroClick} 
-              disabled={loading}
+              disabled={loading || !monto || parseFloat(monto) <= 0} // Deshabilitar si el monto no es válido
             >
               {loading ? (
                 <>

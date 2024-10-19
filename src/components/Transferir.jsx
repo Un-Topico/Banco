@@ -1,16 +1,17 @@
-// src/components/Transferir.jsx
-
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import { subscribeToUserCards } from '../api/profileApi';
-import CardComponent from '../components/cardComponents/Card';
+import { SelectedCardComponent } from './cardComponents/SelectedCard';
 import { TransferForm } from './transactionComponents/TransferForm';
 import { useAuth } from '../auth/authContext';
+import ResumenTransferencia from './cardComponents/ResumenTransferencia';
 
 export const Transferir = () => {
   const { currentUser } = useAuth();
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [recipientInfo, setRecipientInfo] = useState('');
+  const [amount, setAmount] = useState('');
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -39,6 +40,12 @@ export const Transferir = () => {
     setSelectedCard(card);
   };
 
+  // Función para manejar los cambios en el formulario
+  const handleFormChange = (data) => {
+    setRecipientInfo(data.recipientInfo);
+    setAmount(data.amount);
+  };
+
   return (
     <Container className="text-center mt-4 mb-4">
       <h1>Realizar una Transferencia</h1>
@@ -53,7 +60,7 @@ export const Transferir = () => {
         ) : (
           cards.map((card) => (
             <Col md={4} key={card.id} className="mb-4">
-              <CardComponent
+              <SelectedCardComponent
                 card={card}
                 onClick={() => handleCardSelect(card)}
                 isSelected={selectedCard && selectedCard.id === card.id}
@@ -64,7 +71,17 @@ export const Transferir = () => {
       </Row>
 
       {selectedCard ? (
-        <TransferForm selectedCard={selectedCard} />
+        <>
+          <TransferForm selectedCard={selectedCard} onFormChange={handleFormChange} />
+          {/* Mostrar ResumenTransferencia solo si se han ingresado el destinatario y el monto */}
+          {recipientInfo && amount && (
+            <ResumenTransferencia
+              selectedCard={selectedCard}
+              recipientInfo={recipientInfo}
+              amount={amount}
+            />
+          )}
+        </>
       ) : (
         <Alert variant="info">Por favor, selecciona una tarjeta para continuar.</Alert>
       )}

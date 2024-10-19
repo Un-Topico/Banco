@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import { subscribeToUserCards } from '../api/profileApi';
-import CardComponent from '../components/cardComponents/Card';
+import { SelectedCardComponent } from './cardComponents/SelectedCard';
 import { RetirarForm } from './transactionComponents/RetirarForm';
 import { useAuth } from '../auth/authContext';
+import ResumenRetiro from './cardComponents/ResumenRetiro';
 
 export const Retirar = () => {
   const { currentUser } = useAuth();
   const [cards, setCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [depositAmount, setDepositAmount] = useState(0); // Nuevo estado para el monto
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -35,9 +37,14 @@ export const Retirar = () => {
     setSelectedCard(card);
   };
 
+  // Función para manejar el monto depositado
+  const handleDepositAmountChange = (amount) => {
+    setDepositAmount(amount);
+  };
+
   return (
     <Container className="text-center mt-4 mb-4">
-      <h1>Realizar un Depósito</h1>
+      <h1>Realizar un Retiro</h1>
 
       {error && <Alert variant="danger">{error}</Alert>}
 
@@ -49,10 +56,10 @@ export const Retirar = () => {
         ) : (
           cards.map((card) => (
             <Col md={4} key={card.id} className="mb-4">
-              <CardComponent
+              <SelectedCardComponent
                 card={card}
                 onClick={() => handleCardSelect(card)}
-                isSelected={selectedCard && selectedCard.id === card.id}
+                isActive={selectedCard && selectedCard.id === card.id}
               />
             </Col>
           ))
@@ -60,9 +67,20 @@ export const Retirar = () => {
       </Row>
 
       {selectedCard ? (
-        <RetirarForm selectedCard={selectedCard} />
+        <RetirarForm 
+          selectedCard={selectedCard} 
+          onDepositAmountChange={handleDepositAmountChange} // Pasar el manejador de cambio de monto
+        />
       ) : (
         <Alert variant="info">Por favor, selecciona una tarjeta para continuar.</Alert>
+      )}
+
+      {/* Mostrar ResumenRetiro solo si se ha ingresado un monto válido */}
+      {depositAmount > 0 && selectedCard && (
+        <ResumenRetiro 
+          selectedCard={selectedCard} 
+          depositAmount={depositAmount} 
+        />
       )}
     </Container>
   );

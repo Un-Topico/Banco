@@ -7,14 +7,15 @@ import {
   Button, 
   Alert, 
   Modal, 
-  Spinner 
+  Spinner, 
+  Card 
 } from 'react-bootstrap';
 import { getFirestore, doc, setDoc, collection, addDoc } from 'firebase/firestore';
-import { getAuth, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { reauthenticateUser, reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de que estas funciones estén definidas
+import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { reauthenticateWithGoogle } from '../../auth/auth'; // Asegúrate de que estas funciones estén definidas
 import { useAuth } from '../../auth/authContext'; // Asumiendo que tienes un contexto de autenticación
 
-export const DepositForm = ({ selectedCard }) => {
+export const DepositForm = ({ selectedCard, onDepositAmountChange }) => {
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,28 @@ export const DepositForm = ({ selectedCard }) => {
 
   const { currentUser } = useAuth();
   const db = getFirestore();
+
+  // Expresión regular para validar monto: números positivos con hasta 2 decimales
+  const montoRegex = /^\d+(\.\d{0,2})?$/;
+
+  // Función para manejar el cambio en el input de monto
+  const handleMontoInput = (e) => {
+    const value = e.target.value;
+
+    // Permitir campo vacío
+    if (value === '') {
+      setMonto('');
+      onDepositAmountChange(0);
+      return;
+    }
+
+    // Validar con regex
+    if (montoRegex.test(value)) {
+      setMonto(value);
+      onDepositAmountChange(parseFloat(value));
+    }
+    // Si no pasa la validación, no actualizar el estado
+  };
 
   // Función para manejar el clic en "Depositar" que abre el modal de confirmación
   const handleDepositoClick = () => {
@@ -78,6 +101,7 @@ export const DepositForm = ({ selectedCard }) => {
     }
   };
 
+  // Función para proceder con el depósito
   const proceedWithDeposit = async () => {
     setLoading(true);
     setError(null);
@@ -85,6 +109,12 @@ export const DepositForm = ({ selectedCard }) => {
 
     try {
       const parsedMonto = parseFloat(monto);
+
+      // Verificar que parsedMonto tiene máximo 2 decimales
+      if (!Number.isFinite(parsedMonto) || parsedMonto <= 0 || !montoRegex.test(monto)) {
+        throw new Error('Monto inválido. Asegúrate de ingresar un número positivo con máximo 2 decimales.');
+      }
+
       const newBalance = selectedCard.balance + parsedMonto;
 
       // Actualizar el balance de la tarjeta
@@ -106,6 +136,7 @@ export const DepositForm = ({ selectedCard }) => {
       setSuccess('El depósito se ha realizado con éxito.');
       setMonto('');
       setDescripcion('');
+      onDepositAmountChange(0); // Reset deposit amount in parent
     } catch (err) {
       console.error(err);
       setError(`Hubo un error al realizar el depósito: ${err.message}`);
@@ -114,6 +145,7 @@ export const DepositForm = ({ selectedCard }) => {
     }
   };
 
+  // Función para manejar el envío de la contraseña para reautenticación
   const handlePasswordSubmit = async () => {
     setError(null);
     try {
@@ -143,12 +175,12 @@ export const DepositForm = ({ selectedCard }) => {
             <Form.Group controlId="monto">
               <Form.Label>Monto</Form.Label>
               <Form.Control
-                type="number"
+                type="text" // Cambiado a 'text' para mejor control con regex
                 placeholder="Ingrese el monto"
                 value={monto}
-                onChange={(e) => setMonto(e.target.value)}
-                min="0"
-                step="0.01"
+                onChange={handleMontoInput}
+                inputMode="decimal"
+                pattern="^\d+(\.\d{0,2})?$"
                 required
               />
             </Form.Group>
@@ -168,7 +200,7 @@ export const DepositForm = ({ selectedCard }) => {
               variant="primary" 
               className="mt-4 w-100" 
               onClick={handleDepositoClick} 
-              disabled={loading}
+              disabled={loading || !monto || parseFloat(monto) <= 0} // Deshabilita el botón si no hay monto ingresado o es inválido
             >
               {loading ? (
                 <>
