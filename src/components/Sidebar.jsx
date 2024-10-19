@@ -41,6 +41,9 @@ const Sidebar = ({ selectedOption, onSelect }) => {
                     <li className={selectedOption === 'historial' ? 'active' : ''} onClick={() => onSelect('historial')}>
                         <FaHistory /> Historial de transacciones
                     </li>
+                    <li className={selectedOption === 'historialPagos' ? 'active' : ''} onClick={() => onSelect('historialPagos')}>
+                        <FaHistory /> Historial de pagos
+                    </li>
                 </ul>
             </div>
            

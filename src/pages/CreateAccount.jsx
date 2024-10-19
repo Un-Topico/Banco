@@ -31,7 +31,7 @@ export const CreateAccount = () => {
     } else {
       const checkUser = async (currentUser) => {
         const check = await checkUserAccount(currentUser);
-        if (check) navigate("/perfil");
+        if (check) navigate("/inicio-usuario");
       };
       checkUser(user); // Solo se ejecuta si hay un usuario
 
@@ -82,7 +82,7 @@ export const CreateAccount = () => {
 
       await setDoc(accountDocRef, accountData);
 
-      navigate("/perfil"); // Redirige al perfil después de crear la cuenta
+      navigate("/inicio-usuario"); // Redirige al perfil después de crear la cuenta
     } catch (error) {
       console.error("Error al crear la cuenta:", error);
     }

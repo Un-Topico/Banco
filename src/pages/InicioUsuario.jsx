@@ -8,6 +8,8 @@ import { Depositar } from '../components/Depositar';
 import { Transferir } from '../components/Transferir';
 import { Retirar } from '../components/Retirar';
 import { DepositarQR } from '../components/DepositarQR';
+import { PaymentDetails } from './PaymentDetails';
+import DialogFlowChat from '../components/chatComponents/DialogFlowChat';
 export const InicioUsuario = () => {
     const [selectedOption, setSelectedOption] = useState('tarjetas'); // Opción inicial
 
@@ -29,6 +31,8 @@ export const InicioUsuario = () => {
                 return <Retirar />;
                 case 'transferir':
                 return <Transferir />;
+                case 'historialPagos':
+                    return <PaymentDetails />;
             default:
                 return <Tarjetas />;
         }
@@ -40,6 +44,7 @@ export const InicioUsuario = () => {
             <div className="main-content" style={{ marginLeft: '250px', padding: '20px' }}>
                 {renderComponent()}
             </div>
+            <DialogFlowChat/>
         </div>
     );
 };

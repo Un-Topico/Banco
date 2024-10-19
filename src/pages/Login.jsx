@@ -17,7 +17,7 @@ export const Login = () => {
 
   useEffect(() => {
     if (currentUser) {
-      navigate('/perfil');
+      navigate('/inicio-usuario');
     }
   }, [currentUser, navigate]);
 
@@ -31,7 +31,7 @@ export const Login = () => {
 
     const result = await signInWithEmail(email, password, captchaToken); // Pasa el captchaToken al backend
     if (result.success) {
-      navigate("/perfil");
+      navigate("/inicio-usuario");
     } else {
       setErrorMessage(result.message);
     }

@@ -192,13 +192,15 @@ export const Header = () => {
             >
               <div className="user-icon">
                 {userAccount?.profileImage ? (
-                  <img
-                    src={userAccount.profileImage}
-                    alt="User Profile"
-                    width="40"
-                    height="40"
-                    style={{ borderRadius: "50%" }}
-                  />
+                  <Link to="/inicio-usuario">
+                    <img
+                      src={userAccount.profileImage}
+                      alt="User Profile"
+                      width="40"
+                      height="40"
+                      style={{ borderRadius: "50%" }}
+                    />
+                  </Link>
                 ) : (
                   <span className="user-icon-content">
                     {currentUser ? currentUser.displayName.charAt(0) : "T"}
@@ -209,13 +211,15 @@ export const Header = () => {
                 <div className="profile-card">
                   <div className="profile-card-content">
                     {userAccount?.profileImage ? (
-                      <img
-                        src={userAccount.profileImage}
-                        alt="User Profile"
-                        width="40"
-                        height="40"
-                        style={{ borderRadius: "50%" }}
-                      />
+                      <Link to="/inicio-usuario">
+                        <img
+                          src={userAccount.profileImage}
+                          alt="User Profile"
+                          width="40"
+                          height="40"
+                          style={{ borderRadius: "50%" }}
+                        />
+                      </Link>
                     ) : (
                       <span className="user-icon-content">
                         {currentUser ? currentUser.displayName.charAt(0) : "T"}

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Profile } from "../pages/Profile";
 import { CreateAccount } from '../pages/CreateAccount';
 import AdminUsers from "../components/userComponents/AdminUsers";
 import { TransactionDetail } from "../components/transactionComponents/TransactionDetail";
@@ -9,7 +8,6 @@ import ServicePaymentForm from '../pages/ServicePaymentForm';
 import { InicioUsuario } from '../pages/InicioUsuario';
 import { EditarPerfil } from '../pages/EditarPerfil';
 export const privateRoutes = [
-    { path: "/perfil", element: <Profile />, protected:true },
     { path: "/transaccion/:id", element: <TransactionDetail />, protected:true },
     { path: "/configurar-cuenta", element: <CreateAccount />, protected:true },
     { path: "/admin/users", element: <AdminUsers />, protected:true },
