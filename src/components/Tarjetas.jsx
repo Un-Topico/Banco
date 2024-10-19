@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Alert, Card } from 'react-bootstrap';
 import { useAuth } from '../auth/authContext';
 import { getUserAccount, subscribeToUserCards, getTransactionsByCardId } from '../api/profileApi';
 import CardComponent from '../components/cardComponents/Card';
 import { AccountInfo } from '../components/userComponents/AccountInfo';
+import { AddCardModal } from '../components/cardComponents/AddCardModal'; // Asegúrate de que la ruta sea correcta
 
 export const Tarjetas = () => {
   const { currentUser } = useAuth();
@@ -12,6 +13,7 @@ export const Tarjetas = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [accountData, setAccountData] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [modalShow, setModalShow] = useState(false); // Estado para manejar el modal
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -58,6 +60,9 @@ export const Tarjetas = () => {
     setSelectedCard(card);
   };
 
+  const handleShowModal = () => setModalShow(true);
+  const handleCloseModal = () => setModalShow(false);
+
   return (
     <Container className="text-center mt-4 mb-4">
       <h1>Mis Tarjetas</h1>
@@ -65,12 +70,14 @@ export const Tarjetas = () => {
       {error && <Alert variant="danger">{error}</Alert>}
 
       <Row>
-        {/* Tarjetas (máximo 3 por fila) */}
         <Col md={12}>
           <Row>
             {cards.length === 0 ? (
               <Col>
                 <p>No tienes tarjetas agregadas.</p>
+                <button className="btn btn-link" onClick={handleShowModal}>
+                  Añadir Nueva Tarjeta
+                </button>
               </Col>
             ) : (
               cards.map((card) => (
@@ -78,15 +85,25 @@ export const Tarjetas = () => {
                   <CardComponent
                     card={card}
                     onClick={() => handleCardSelect(card)}
-                    isActive={selectedCard && selectedCard.cardId === card.cardId} // Pasa el estado activo
+                    isActive={selectedCard && selectedCard.cardId === card.cardId}
                   />
                 </Col>
               ))
             )}
+
+            {/* Tarjeta para añadir nueva tarjeta */}
+            <Col md={6} className="mb-4">
+              <Card style={{ cursor: 'pointer' }} onClick={handleShowModal}>
+                <Card.Body>
+                  <Card.Text>
+                    <button className="btn btn-link">Añadir Nueva Tarjeta</button>
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
           </Row>
         </Col>
 
-        {/* Información de la tarjeta seleccionada */}
         <Col md={12}>
           {selectedCard ? (
             <AccountInfo 
@@ -100,6 +117,9 @@ export const Tarjetas = () => {
           )}
         </Col>
       </Row>
+
+      {/* Modal para agregar una nueva tarjeta */}
+      <AddCardModal show={modalShow} onHide={handleCloseModal} />
     </Container>
   );
 };
