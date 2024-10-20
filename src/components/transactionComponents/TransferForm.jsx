@@ -57,7 +57,7 @@ export const TransferForm = ({ selectedCard, onFormChange }) => {
   useEffect(() => {
     const recipientInfo = email || clabe;
     onFormChange({ recipientInfo, amount: monto });
-  }, [email, clabe, monto]);
+  }, [email, clabe, monto, onFormChange]);
 
   // Función para manejar cambios en el monto
   const handleMontoChange = (value) => {
