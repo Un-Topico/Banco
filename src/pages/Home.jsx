@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import DialogFlowChat from "../components/chatComponents/DialogFlowChat";
 import '../styles/home.css';
 import Background from '../components/Background';
+import { Footer } from '../components/Footer';
 
 export const Home = () => {
     return (
@@ -12,7 +13,7 @@ export const Home = () => {
       
       <div className="container-fluid home-container">
         {/* Sección de bienvenida con texto e imagen */}
-        <div className="row align-items-center my-5">
+        <div className="row align-items-center">
           <div className="col-md-6">
             <h1 className="display-4"><strong>UnTópico</strong></h1>
             <p className="lead">Un banco a tu medida.</p>
@@ -26,7 +27,7 @@ export const Home = () => {
             <img
               src="https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fliberacion.jpg?alt=media&token=62cb6736-0427-4808-a945-04019972cb71"
               alt="Persona disfrutando de la libertad financiera"
-              className="img-fluid"
+              className="img-fluid rounded float-end my-3"
             />
           </div>
         </div>
@@ -145,9 +146,39 @@ export const Home = () => {
           </div>
         </div>
 
+         {/* Sección promocional móvil */}
+         <section className="section-promocion-movil-container mt-5">
+          <div className="container text-center">
+            <div className="row align-items-center">
+              {/* Texto de promoción */}
+              <div className="col-md-6 mb-4">
+                <h2 className="display-5">Descarga nuestra aplicación móvil</h2>
+                <p className="lead">
+                  Lleva tu banco en la palma de tu mano. Realiza transacciones, consulta
+                  saldos y mucho más con nuestra app para dispositivos móviles.
+                </p>
+                <div className="d-flex justify-content-center">
+                  <a href="#playStore" className="btn btn-primary btn-lg me-3">Google Play</a>
+                  <a href="#appStore" className="btn btn-secondary btn-lg">App Store</a>
+                </div>
+              </div>
+              {/* Imagen promocional */}
+              <div className="col-md-6">
+                <img
+                  src='https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/img%2Fmobile.png?alt=media&token=e01ecbd7-4dde-4c91-9d8f-91d6794bf037'
+                  alt="Promoción móvil"
+                  className="img-fluid"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         <DialogFlowChat />
+        <Footer />
       </div>
       
       </Background>
+      
     );
 }
