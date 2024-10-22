@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { getFirestore, collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
-import { app } from "../../firebaseConfig";
 import { Table, Container, Row, Col, Form, Alert, Pagination } from "react-bootstrap";
+import { listenToTransactions } from "../../api/transactionHistoryApi"; // Importar la API
 
 export const TransactionHistory = ({ selectedCardId }) => {
   const [transactions, setTransactions] = useState([]);
@@ -9,9 +8,8 @@ export const TransactionHistory = ({ selectedCardId }) => {
   const [startDate, setStartDate] = useState(""); // Estado para la fecha de inicio
   const [endDate, setEndDate] = useState(""); // Estado para la fecha de fin
   const [error, setError] = useState(null); // Estado para mostrar errores
-  const [currentPage, setCurrentPage] = useState(1); // Estado para la pagina actual
-  const transactionsPerPage = 5; // Definir el numero de transacciones por pagina
-  const db = getFirestore(app);
+  const [currentPage, setCurrentPage] = useState(1); // Estado para la página actual
+  const transactionsPerPage = 5; // Definir el número de transacciones por página
 
   useEffect(() => {
     // No hacer nada si no hay una tarjeta seleccionada
@@ -20,40 +18,15 @@ export const TransactionHistory = ({ selectedCardId }) => {
       return;
     }
 
-    // Construir la consulta basada en los filtros seleccionados
-    let q = query(
-      collection(db, "transactions"),
-      where("card_id", "==", selectedCardId)
-    );
-
-    if (filter !== "all") {
-      q = query(
-        q,
-        where("status", "==", filter)
-      );
-    }
-
-    if (startDate && endDate) {
-      q = query(
-        q,
-        where("transaction_date", ">=", new Date(startDate)),
-        where("transaction_date", "<=", new Date(endDate))
-      );
-    }
-
-    // Agregar ordenación por fecha
-    q = query(q, orderBy("transaction_date", "desc"));
-
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const transactionsData = [];
-        querySnapshot.forEach((doc) => {
-          transactionsData.push({ ...doc.data(), id: doc.id });
-        });
-
+    // Llamar a la API para obtener las transacciones
+    const unsubscribe = listenToTransactions(
+      selectedCardId,
+      filter,
+      startDate,
+      endDate,
+      (transactionsData) => {
         setTransactions(transactionsData);
-        setError(null); // Limpiar el error si la consulta tiene éxito
+        setError(null);
       },
       (error) => {
         console.error("Error al obtener transacciones:", error);
@@ -61,16 +34,16 @@ export const TransactionHistory = ({ selectedCardId }) => {
       }
     );
 
-    // Cleanup listener on unmount
+    // Limpiar el listener al desmontar el componente
     return () => unsubscribe();
-  }, [db, selectedCardId, filter, startDate, endDate]); // Añadido startDate y endDate como dependencias
+  }, [selectedCardId, filter, startDate, endDate]);
 
-  // Obtener las transacciones de la pagina actual
+  // Obtener las transacciones de la página actual
   const indexOfLastTransaction = currentPage * transactionsPerPage;
   const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
   const currentTransactions = transactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
 
-  // Cambiar de pagina
+  // Cambiar de página
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (

@@ -19,7 +19,6 @@ export const CreateAccount = () => {
   const db = getFirestore(app);
   const auth = getAuth(app);
   const [name, setName] = useState("");
-  const [accountType, setAccountType] = useState("Ahorro");
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
   const [status, setStatus] = useState(true);
@@ -32,7 +31,7 @@ export const CreateAccount = () => {
     } else {
       const checkUser = async (currentUser) => {
         const check = await checkUserAccount(currentUser);
-        if (check) navigate("/perfil");
+        if (check) navigate("/inicio-usuario");
       };
       checkUser(user); // Solo se ejecuta si hay un usuario
 
@@ -69,7 +68,6 @@ export const CreateAccount = () => {
 
       const accountData = {
         accountId: accountId,
-        accountType: accountType,
         name: name,
         balance: 100, // Saldo inicial
         ownerId: userUid,
@@ -84,7 +82,7 @@ export const CreateAccount = () => {
 
       await setDoc(accountDocRef, accountData);
 
-      navigate("/perfil"); // Redirige al perfil después de crear la cuenta
+      navigate("/inicio-usuario"); // Redirige al perfil después de crear la cuenta
     } catch (error) {
       console.error("Error al crear la cuenta:", error);
     }
@@ -121,17 +119,6 @@ export const CreateAccount = () => {
             />
           </Form.Group>
 
-          <Form.Group controlId="accountType" className="mb-3">
-            <Form.Label>Tipo de Cuenta</Form.Label>
-            <Form.Control
-              as="select"
-              value={accountType}
-              onChange={(e) => setAccountType(e.target.value)}
-            >
-              <option value="Ahorro">Ahorro</option>
-              <option value="Corriente">Corriente</option>
-            </Form.Control>
-          </Form.Group>
         </Form>
         {/* Mostrar el formulario de tarjeta solo si no está guardada */}
         

@@ -2,56 +2,56 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { FaCommentAlt, FaTimes } from "react-icons/fa";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../../auth/authContext";
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  arrayUnion,
-  onSnapshot,
-} from "firebase/firestore";
-import { app } from "../../firebaseConfig";
 import "../../styles/Chat.css";
-
+import {
+  getChatDocRef,
+  subscribeToChat,
+  saveMessageToDB,
+  sendMessageToDialogFlow,
+  updateHumanSupportStatus,
+} from "../../api/chatApi";
 const DialogFlowChat = () => {
-  const db = getFirestore(app);
+  const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isHumanSupport, setIsHumanSupport] = useState(false);
+  const [hasSentHumanResponse, setHasSentHumanResponse] = useState(false);
   const chatEndRef = useRef(null);
   const notificationSoundRef = useRef(
     new Audio(
       "https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12"
     )
   );
-  const { currentUser } = useAuth();
-  const [isHumanSupport, setIsHumanSupport] = useState(false);
-  const [hasSentHumanResponse, setHasSentHumanResponse] = useState(false);
+
+  // Ref para rastrear la longitud anterior de mensajes
+  const prevMessagesLengthRef = useRef(0);
 
   // Memoriza la referencia al documento del chat
   const chatDocRef = useMemo(() => {
-    return doc(collection(db, "chats"), currentUser?.uid);
-  }, [db, currentUser?.uid]);
+    if (currentUser?.uid) {
+      return getChatDocRef(currentUser.uid);
+    }
+    return null;
+  }, [currentUser?.uid]);
 
   useEffect(() => {
-    if (isOpen && currentUser) {
-      const unsubscribe = onSnapshot(chatDocRef, (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const chatData = docSnapshot.data();
-          const newMessages = chatData.messages || [];
-          setIsHumanSupport(chatData.isHumanSupport || false);
-          if (newMessages.length > messages.length) {
-            notificationSoundRef.current.play();
-          }
-          setMessages(newMessages);
-        } else {
-          setMessages([]);
+    if (isOpen && chatDocRef) {
+      const unsubscribe = subscribeToChat(chatDocRef, ({ messages, isHumanSupport }) => {
+        // Reproducir sonido si hay nuevos mensajes
+        if (messages.length > prevMessagesLengthRef.current) {
+          notificationSoundRef.current.play();
         }
+        // Actualizar la referencia de la longitud anterior
+        prevMessagesLengthRef.current = messages.length;
+        setMessages(messages);
+        setIsHumanSupport(isHumanSupport);
       });
+
       return () => unsubscribe();
     }
-  }, [isOpen, chatDocRef, currentUser, messages.length]);
+  }, [isOpen, chatDocRef]);
 
   useEffect(() => {
     const scrollToBottom = () => {
@@ -66,119 +66,66 @@ const DialogFlowChat = () => {
     }
   }, [messages]);
 
-  const sendMessageToDialogFlow = async (message) => {
-    const requestBody = {
-      message: message,
-      sessionId: currentUser.uid,
-    };
-
-    try {
-      const response = await fetch(
-        "https://faas-sfo3-7872a1dd.doserverless.co/api/v1/web/fn-ab5e80b6-8190-4404-9b75-ead553014c5a/dialogflow-package/send-dialogflow",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Error al comunicarse con la función de Digital Ocean");
-      }
-
-      const text = await response.text();
-      if (text) {
-        const data = JSON.parse(text);
-        return data.response;
-      } else {
-        throw new Error("Respuesta vacía del servidor.");
-      }
-    } catch (error) {
-      console.error("Error en la solicitud:", error);
-      return "Error al recibir respuesta del bot.";
-    }
-  };
-
-  const saveMessageToDB = async (messageObject) => {
-    try {
-      await setDoc(
-        chatDocRef,
-        {
-          messages: arrayUnion(messageObject),
-        },
-        { merge: true }
-      );
-    } catch (error) {
-      console.error("Error guardando mensaje en la base de datos: ", error);
-    }
-  };
-
-  const sendMessage = async (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      const userMessage = {
-        text: newMessage,
-        createdAt: new Date(),
-        userId: currentUser.uid,
-        userName: currentUser.name,
-      };
-
-      setMessages((prevMessages) => [...prevMessages, userMessage]);
+    if (newMessage.trim() && chatDocRef && currentUser) {
       setIsSending(true);
-      await saveMessageToDB(userMessage);
 
-      // Detectar si el usuario quiere hablar con soporte humano
-      if (
-        newMessage.toLowerCase().includes("hablar con soporte") ||
-        newMessage.toLowerCase().includes("quiero un agente") ||
-        newMessage.toLowerCase().includes("soporte")
-      ) {
-        setIsHumanSupport(true);
-        setHasSentHumanResponse(false);
-
-        const botMessage = {
-          text: "Te estamos conectando con un agente humano. Por favor, espera.",
+      try {
+        // Crear el objeto del mensaje del usuario
+        const userMessage = {
+          text: newMessage,
           createdAt: new Date(),
-          userId: "bot",
-          userName: "UnBot",
+          userId: currentUser.uid,
+          userName: currentUser.displayName || "Usuario",
         };
 
-        await saveMessageToDB(botMessage);
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-        setNewMessage("");
-        setIsSending(false);
+        // Guarda el mensaje en la base de datos
+        await saveMessageToDB(chatDocRef, userMessage);
 
-        // Actualizar en la base de datos que el usuario está en soporte humano
-        await setDoc(chatDocRef, { isHumanSupport: true }, { merge: true });
-        return;
-      }
+        // Detectar si el usuario quiere hablar con soporte humano
+        const lowerCaseMessage = newMessage.toLowerCase();
+        if (
+          lowerCaseMessage.includes("hablar con soporte") ||
+          lowerCaseMessage.includes("quiero un agente") ||
+          lowerCaseMessage.includes("soporte")
+        ) {
+          setIsHumanSupport(true);
+          setHasSentHumanResponse(false);
 
-      // Si el modo soporte humano está activo, no envíes mensajes a DialogFlow
-      if (isHumanSupport) {
-        if (!hasSentHumanResponse) {
           const botMessage = {
-            text: "Un agente humano responderá tu mensaje.",
+            text: "Te estamos conectando con un agente humano. Por favor, espera.",
             createdAt: new Date(),
             userId: "bot",
-            userName: "Soporte",
+            userName: "UnBot",
           };
 
-          // Guardar el mensaje en la base de datos
-          await saveMessageToDB(botMessage);
-          // Solo actualiza el estado al final
-          setMessages((prevMessages) => [...prevMessages, botMessage]);
-          setHasSentHumanResponse(true);
-        }
-        setNewMessage("");
-        setIsSending(false);
-        return;
-      }
+          await saveMessageToDB(chatDocRef, botMessage);
 
-      // Si no está en modo soporte humano, enviar el mensaje a DialogFlow
-      try {
-        const botReply = await sendMessageToDialogFlow(newMessage);
+          // Actualizar en la base de datos que el usuario está en soporte humano
+          await updateHumanSupportStatus(chatDocRef, true);
+          return;
+        }
+
+        // Si el modo soporte humano está activo, no envíes mensajes a DialogFlow
+        if (isHumanSupport) {
+          if (!hasSentHumanResponse) {
+            const botMessage = {
+              text: "Un agente humano responderá tu mensaje.",
+              createdAt: new Date(),
+              userId: "bot",
+              userName: "Soporte",
+            };
+
+            // Guardar el mensaje en la base de datos
+            await saveMessageToDB(chatDocRef, botMessage);
+            setHasSentHumanResponse(true);
+          }
+          return;
+        }
+
+        // Si no está en modo soporte humano, enviar el mensaje a DialogFlow
+        const botReply = await sendMessageToDialogFlow(currentUser.uid, newMessage);
         const botMessage = {
           text: botReply,
           createdAt: new Date(),
@@ -186,9 +133,7 @@ const DialogFlowChat = () => {
           userName: "UnBot",
         };
 
-        await saveMessageToDB(botMessage);
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-        notificationSoundRef.current.play();
+        await saveMessageToDB(chatDocRef, botMessage);
       } catch (error) {
         console.error(error);
         const errorMessage = {
@@ -198,8 +143,7 @@ const DialogFlowChat = () => {
           userName: "UnBot",
         };
 
-        await saveMessageToDB(errorMessage);
-        setMessages((prevMessages) => [...prevMessages, errorMessage]);
+        await saveMessageToDB(chatDocRef, errorMessage);
       } finally {
         setNewMessage("");
         setIsSending(false);
@@ -260,7 +204,7 @@ const DialogFlowChat = () => {
             ))}
             <div ref={chatEndRef} />
           </div>
-          <form onSubmit={sendMessage} className="message-form">
+          <form onSubmit={handleSendMessage} className="message-form">
             <input
               type="text"
               value={newMessage}

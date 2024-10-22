@@ -1,0 +1,68 @@
+html, body {
+    height: 100%; /* Asegúrate de que el html y body ocupen todo el alto */
+    margin: 0; /* Elimina el margen por defecto */
+}
+
+.app {
+    display: flex; /* Usa flexbox para alinear el sidebar y el contenido */
+    height: 100%; /* Asegura que la app ocupe todo el alto */
+}
+
+.sidebar {
+    width: 250px;
+    height: 100vh; /* Asegura que el sidebar ocupe todo el alto de la ventana */
+    background-color: #ffffff; /* Color de fondo */
+    border-right: 1px solid #e0e0e0; /* Borde derecho */
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    position: fixed; /* Fija el sidebar para que no se desplace al hacer scroll */
+}
+
+.sidebar-header {
+    margin-bottom: 20px;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.sidebar-header p {
+    margin: 5px 0 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.menu-section {
+    margin-bottom: 20px;
+}
+
+.menu-section h3 {
+    font-size: 1rem;
+    color: #333;
+}
+
+.menu-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.menu-section li {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    color: #333;
+    cursor: pointer;
+}
+
+.menu-section li:hover {
+    background-color: #f0f0f0; /* Fondo al pasar el mouse */
+}
+
+.menu-section li.active {
+    background-color: #e0f7fa; /* Fondo para el elemento activo */
+}
+
+.menu-section li svg {
+    margin-right: 10px; /* Espaciado entre el ícono y el texto */
+}

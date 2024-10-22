@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Badge } from 'react-bootstrap'; // Puedes importar ambos desde react-bootstrap
-import { markNotificationAsRead } from '../../services/transactionService'; 
+import { Modal, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot } from 'firebase/firestore'; // Importar onSnapshot
-import { getFirestore } from 'firebase/firestore';
-import '../../styles/Notification.css'
-
-const db = getFirestore();
+import { listenToNotifications, markNotificationAsRead } from '../../api/notificationApi'; // Importar las funciones de la API
+import '../../styles/Notification.css';
 
 const ModalNotification = ({ show, handleClose, ownerId }) => {
   const [notifications, setNotifications] = useState([]);
@@ -14,27 +10,11 @@ const ModalNotification = ({ show, handleClose, ownerId }) => {
 
   useEffect(() => {
     let unsubscribe;
-    
-    const fetchNotifications = () => {
-      if (ownerId) {
-        const q = query(
-          collection(db, "notifications"), 
-          where("ownerId", "==", ownerId)
-        );
 
-        // Usamos onSnapshot para obtener las notificaciones en tiempo real
-        unsubscribe = onSnapshot(q, (snapshot) => {
-          const notificationsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          setNotifications(notificationsData);
-        });
-      }
-    };
-
-    if (show) {
-      fetchNotifications();
+    if (show && ownerId) {
+      unsubscribe = listenToNotifications(ownerId, (notificationsData) => {
+        setNotifications(notificationsData);
+      });
     }
 
     // Limpiar la suscripción cuando el componente se desmonte o se cierre el modal
@@ -46,7 +26,7 @@ const ModalNotification = ({ show, handleClose, ownerId }) => {
   const handleNotificationClick = async (notificationId, transfer_id) => {
     await markNotificationAsRead(notificationId);
     handleClose(); // Cierra el modal después de hacer clic en una notificación
-    navigate("/transaccion/"+transfer_id); // Navega a la transferencia correspondiente
+    navigate("/transaccion/" + transfer_id); // Navega a la transferencia correspondiente
   };
 
   return (

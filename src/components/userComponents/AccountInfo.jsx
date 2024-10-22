@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Card, Button, Modal, Form } from "react-bootstrap";
 import { downloadPDF } from "../../utils/downloadPDF";
 import { reauthenticateUser, reauthenticateWithGoogle } from "../../auth/auth";
-import { auth } from "../../auth/auth"; // Importa auth desde tu archivo de autenticación
+import { auth } from "../../auth/auth";
 import { deleteCard } from "../../auth/deleteCard";
-import UpdateCardModal from "../cardComponents/UpdateCardModal"; // Importar el modal de actualización de tarjeta
+import UpdateCardModal from "../cardComponents/UpdateCardModal";
 import { FaDownload, FaTrashAlt, FaEdit } from "react-icons/fa";
 
 export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDelete }) => {
@@ -34,41 +34,44 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
 
   return (
     <>
-        <Card.Body>
-          <Card.Text>
-            {selectedCard && (
-              <>
-                <p><strong>CLABE:</strong> {selectedCard.clabeNumber}</p>
-                <p><strong>Saldo:</strong> ${selectedCard.balance} MXN</p>
-              </>
-            )}
-          </Card.Text>
+      <Card.Body className="text-start">
+        {/* Aquí quitamos la clase centrada y usamos text-start para alinear a la izquierda */}
+        <Card.Text>
           {selectedCard && (
             <>
-              <Button
-                variant="primary"
-                onClick={() => downloadPDF(accountData, transactions, selectedCard)}
-              >
-                <FaDownload className="me-2" /> Descargar Estado de Cuenta {/* Icono de descarga */}
-              </Button>
-              <Button
-                variant="warning"
-                className="ms-2"
-                onClick={() => setShowUpdateModal(true)} // Abrir el modal de actualización
-              >
-                <FaEdit className="me-2" /> Actualizar Tarjeta {/* Icono de edición */}
-              </Button>
-              <Button
-                variant="danger"
-                className="ms-2"
-                onClick={() => setShowModal(true)}
-              >
-                <FaTrashAlt className="me-2" /> Eliminar Tarjeta {/* Icono de eliminar */}
-              </Button>
-             
+              <p className="mb-1"><strong>Nombre:</strong> {selectedCard.cardHolderName}</p>
+              <p className="mb-1"><strong>CLABE:</strong> {selectedCard.clabeNumber}</p>
+              <p className="mb-1"><strong>Saldo:</strong> ${selectedCard.balance} MXN</p>
+              <p className="mb-1"><strong>Tipo de cuenta:</strong> {selectedCard.accountType}</p>
             </>
           )}
-        </Card.Body>
+        </Card.Text>
+        {selectedCard && (
+          <>
+            <Button
+              variant="primary"
+              onClick={() => downloadPDF(accountData, transactions, selectedCard)}
+              className="me-2 mt-2"
+            >
+              <FaDownload className="me-2" /> Descargar Estado de Cuenta
+            </Button>
+            <Button
+              variant="warning"
+              className="ms-2 mt-2"
+              onClick={() => setShowUpdateModal(true)}
+            >
+              <FaEdit className="me-2" /> Actualizar Tarjeta
+            </Button>
+            <Button
+              variant="danger"
+              className="ms-2 mt-2"
+              onClick={() => setShowModal(true)}
+            >
+              <FaTrashAlt className="me-2" /> Eliminar Tarjeta
+            </Button>
+          </>
+        )}
+      </Card.Body>
 
       {/* Modal para solicitar la contraseña antes de eliminar */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
@@ -108,7 +111,7 @@ export const AccountInfo = ({ accountData, selectedCard, transactions, onCardDel
           show={showUpdateModal}
           handleClose={() => setShowUpdateModal(false)}
           cardData={selectedCard}
-          onCardUpdated={() => setShowUpdateModal(false)} // Refresca después de la actualización
+          onCardUpdated={() => setShowUpdateModal(false)}
         />
       )}
     </>

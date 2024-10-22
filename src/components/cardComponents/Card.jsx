@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, Col } from 'react-bootstrap';
 const CardComponent = ({ card, onClick, isActive }) => {
   return (
-    <Col md={4} className="mb-4">
+    <Col >
       <Card
         onClick={() => onClick(card)}
         style={{ cursor: 'pointer' }}

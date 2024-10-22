@@ -1,4 +1,3 @@
-// auth.js
 import { getAuth, GoogleAuthProvider, signInWithPopup, updatePassword, setPersistence, browserLocalPersistence, sendPasswordResetEmail, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { app } from "../firebaseConfig";
 import { getFirestore, collection, query, where, getDocs, setDoc, doc } from "firebase/firestore";
