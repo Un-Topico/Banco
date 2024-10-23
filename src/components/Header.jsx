@@ -182,7 +182,7 @@ export const Header = () => {
             >
               <div className="user-icon">
                 {userAccount?.profileImage ? (
-                  <Link to="/inicio-usuario">
+                  <a href="/inicio-usuario">
                     <img
                       src={userAccount.profileImage}
                       alt="User Profile"
@@ -190,7 +190,7 @@ export const Header = () => {
                       height="40"
                       style={{ borderRadius: "50%" }}
                     />
-                  </Link>
+                  </a>
                 ) : (
                   <span className="user-icon-content">
                     {currentUser ? currentUser.displayName.charAt(0) : "T"}
@@ -201,7 +201,7 @@ export const Header = () => {
                 <div className="profile-card">
                   <div className="profile-card-content">
                     {userAccount?.profileImage ? (
-                      <Link to="/inicio-usuario">
+                      <a href="/inicio-usuario">
                         <img
                           src={userAccount.profileImage}
                           alt="User Profile"
@@ -209,7 +209,7 @@ export const Header = () => {
                           height="40"
                           style={{ borderRadius: "50%" }}
                         />
-                      </Link>
+                      </a>
                     ) : (
                       <span className="user-icon-content">
                         {currentUser ? currentUser.displayName.charAt(0) : "T"}
