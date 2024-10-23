@@ -193,7 +193,7 @@ export const Header = () => {
                   </a>
                 ) : (
                   <span className="user-icon-content">
-                    {currentUser ? currentUser.displayName.charAt(0) : "T"}
+                    {currentUser && currentUser.displayName ? currentUser.displayName.charAt(0) : "T"}
                   </span>
                 )}
               </div>
