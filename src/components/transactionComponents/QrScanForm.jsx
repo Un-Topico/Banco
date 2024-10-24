@@ -119,6 +119,7 @@ export const QrScanForm = () => {
 
   return (
     <Container>
+      <h1 className='text-center'>Escanear codigo QR</h1>
       <Row className="justify-content-center">
         <Col md={6}>
           {error && <Alert variant="danger">{error}</Alert>}

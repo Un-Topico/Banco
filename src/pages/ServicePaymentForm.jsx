@@ -133,7 +133,7 @@ const ServicePaymentForm = () => {
   const isFormComplete = selectedService && paymentAmount > 0 && referenceNumber && selectedCard && hasSufficientFunds;
 
   return (
-    <Container className="my-3">
+    <Container className="my-3 w-100">
       <h2>Pago de Servicios</h2>
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">Pago realizado con éxito</Alert>}

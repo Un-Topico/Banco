@@ -41,7 +41,7 @@ export const InicioUsuario = () => {
     return (
         <div style={{ display: 'flex' }}>
             <Sidebar selectedOption={selectedOption} onSelect={setSelectedOption} />
-            <div className="main-content" style={{ marginLeft: '250px', padding: '20px' }}>
+            <div className="w-100" style={{ marginLeft: '250px', padding: '20px' }}>
                 {renderComponent()}
             </div>
             <DialogFlowChat/>
