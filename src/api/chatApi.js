@@ -1,4 +1,3 @@
-// src/api/chatApi.js
 import { getFirestore, collection, doc, setDoc, arrayUnion, onSnapshot } from "firebase/firestore";
 import { app } from "../firebaseConfig";
 
@@ -10,6 +9,16 @@ import { app } from "../firebaseConfig";
 export const getChatDocRef = (userId) => {
   const db = getFirestore(app);
   return doc(collection(db, "chats"), userId);
+};
+
+/**
+ * Obtiene la referencia al documento de chat para usuarios invitados.
+ * @returns {DocumentReference} - Referencia al documento de chat de invitados.
+ */
+export const getGuestChatDocRef = () => {
+  const db = getFirestore(app);
+  const guestId = `invitado-${Date.now()}`; // Usar el timestamp como ID
+  return doc(collection(db, "chats"), guestId);
 };
 
 /**

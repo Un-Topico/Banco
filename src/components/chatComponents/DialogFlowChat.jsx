@@ -5,45 +5,42 @@ import { useAuth } from "../../auth/authContext";
 import "../../styles/Chat.css";
 import {
   getChatDocRef,
+  getGuestChatDocRef,
   subscribeToChat,
   saveMessageToDB,
   sendMessageToDialogFlow,
   updateHumanSupportStatus,
 } from "../../api/chatApi";
+
 const DialogFlowChat = () => {
   const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  // eslint-disable-next-line no-unused-vars
+  const [userName, setUserName] = useState(currentUser ? currentUser.displayName : "Invitado");
   const [isSending, setIsSending] = useState(false);
   const [isHumanSupport, setIsHumanSupport] = useState(false);
   const [hasSentHumanResponse, setHasSentHumanResponse] = useState(false);
   const chatEndRef = useRef(null);
-  const notificationSoundRef = useRef(
-    new Audio(
-      "https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12"
-    )
-  );
+  const notificationSoundRef = useRef(new Audio("https://firebasestorage.googleapis.com/v0/b/untopico-b888c.appspot.com/o/audio%2Fnoti.mp3?alt=media&token=0fa14d31-e7dd-4592-8b27-70d1fb93ea12"));
 
-  // Ref para rastrear la longitud anterior de mensajes
   const prevMessagesLengthRef = useRef(0);
 
-  // Memoriza la referencia al documento del chat
   const chatDocRef = useMemo(() => {
-    if (currentUser?.uid) {
-      return getChatDocRef(currentUser.uid);
-    }
-    return null;
+    return currentUser?.uid ? getChatDocRef(currentUser.uid) : getGuestChatDocRef();
   }, [currentUser?.uid]);
 
   useEffect(() => {
     if (isOpen && chatDocRef) {
       const unsubscribe = subscribeToChat(chatDocRef, ({ messages, isHumanSupport }) => {
-        // Reproducir sonido si hay nuevos mensajes
         if (messages.length > prevMessagesLengthRef.current) {
-          notificationSoundRef.current.play();
+          try {
+            notificationSoundRef.current.play();
+          } catch (error) {
+            console.error("Error al reproducir el sonido de notificación:", error);
+          }
         }
-        // Actualizar la referencia de la longitud anterior
         prevMessagesLengthRef.current = messages.length;
         setMessages(messages);
         setIsHumanSupport(isHumanSupport);
@@ -60,7 +57,6 @@ const DialogFlowChat = () => {
       }
     };
 
-    // Solo llama a scrollToBottom si hay nuevos mensajes
     if (messages.length > 0) {
       scrollToBottom();
     }
@@ -68,22 +64,19 @@ const DialogFlowChat = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (newMessage.trim() && chatDocRef && currentUser) {
+    if (newMessage.trim() && chatDocRef) {
       setIsSending(true);
 
       try {
-        // Crear el objeto del mensaje del usuario
         const userMessage = {
           text: newMessage,
           createdAt: new Date(),
-          userId: currentUser.uid,
-          userName: currentUser.displayName || "Usuario",
+          userId: currentUser ? currentUser.uid : "Invitado", 
+          userName: userName,
         };
 
-        // Guarda el mensaje en la base de datos
         await saveMessageToDB(chatDocRef, userMessage);
 
-        // Detectar si el usuario quiere hablar con soporte humano
         const lowerCaseMessage = newMessage.toLowerCase();
         if (
           lowerCaseMessage.includes("hablar con soporte") ||
@@ -101,13 +94,10 @@ const DialogFlowChat = () => {
           };
 
           await saveMessageToDB(chatDocRef, botMessage);
-
-          // Actualizar en la base de datos que el usuario está en soporte humano
           await updateHumanSupportStatus(chatDocRef, true);
           return;
         }
 
-        // Si el modo soporte humano está activo, no envíes mensajes a DialogFlow
         if (isHumanSupport) {
           if (!hasSentHumanResponse) {
             const botMessage = {
@@ -117,15 +107,14 @@ const DialogFlowChat = () => {
               userName: "Soporte",
             };
 
-            // Guardar el mensaje en la base de datos
             await saveMessageToDB(chatDocRef, botMessage);
             setHasSentHumanResponse(true);
           }
           return;
         }
 
-        // Si no está en modo soporte humano, enviar el mensaje a DialogFlow
-        const botReply = await sendMessageToDialogFlow(currentUser.uid, newMessage);
+        const userId = currentUser ? currentUser.uid : "Invitado"; // Usa "guest" si no hay usuario autenticado
+        const botReply = await sendMessageToDialogFlow(userId, newMessage);
         const botMessage = {
           text: botReply,
           createdAt: new Date(),
@@ -135,7 +124,7 @@ const DialogFlowChat = () => {
 
         await saveMessageToDB(chatDocRef, botMessage);
       } catch (error) {
-        console.error(error);
+        console.error("Error al enviar el mensaje:", error);
         const errorMessage = {
           text: "Error al recibir respuesta del bot.",
           createdAt: new Date(),
@@ -173,16 +162,11 @@ const DialogFlowChat = () => {
               <FaTimes />
             </button>
           </div>
-          <div
-            className="chat-messages"
-            style={{ maxHeight: "300px", overflowY: "auto" }}
-          >
+          <div className="chat-messages" style={{ maxHeight: "300px", overflowY: "auto" }}>
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`message ${
-                  msg.userId === currentUser.uid ? "sent" : "received"
-                }`}
+                className={`message ${msg.userId === (currentUser ? currentUser.uid : "Invitado") ? "sent" : "received"}`}
               >
                 <div className="message-header">
                   <strong>{msg.userName}</strong>
