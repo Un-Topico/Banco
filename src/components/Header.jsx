@@ -71,7 +71,7 @@ export const Header = () => {
   }, [currentUser, db]);
 
   return (
-    <header className="header">
+    <header className="header" data-testid="header">
       <div className="logo">
         <Link className="navbar-brand" to="/">
           <img
