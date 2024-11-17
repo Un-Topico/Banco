@@ -5,7 +5,7 @@ import { TextEncoder, TextDecoder } from 'util';
 import { ReadableStream } from 'stream/web';
 import fetch, { Headers, Request, Response } from 'node-fetch';
 
-// Mock for HTMLCanvasElement.prototype.getContext
+// Mock para HTMLCanvasElement.prototype.getContext
 beforeAll(() => {
   Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
     value: () => ({
@@ -27,38 +27,36 @@ beforeAll(() => {
       translate: jest.fn(),
       transform: jest.fn(),
       measureText: jest.fn(() => ({ width: 0 })),
-      // Add more methods as needed
     }),
     writable: false,
   });
 });
 
-// Polyfills for TextEncoder and TextDecoder
+// Polyfills para TextEncoder y TextDecoder
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-// Polyfill for ReadableStream
+// Polyfill para ReadableStream
 global.ReadableStream = ReadableStream;
 
-// Polyfills for fetch (Headers, Request, Response)
+// Polyfills para fetch (Headers, Request, Response)
 global.fetch = fetch;
 global.Headers = Headers;
 global.Request = Request;
 global.Response = Response;
 
-// Mock firebaseConfig.js
+// Mock de firebaseConfig.js
 jest.mock('./firebaseConfig', () => ({
   app: { name: 'mocked-app' }, // Mocked app object
 }));
 
-// Mock firebase/app
+// Mock de firebase/app
 jest.mock('firebase/app', () => ({
   initializeApp: jest.fn(() => ({ name: 'mocked-app' })),
 }));
 
-// Mock firebase/auth
+// Mock de firebase/auth
 jest.mock('firebase/auth', () => {
-  // Define a mocked auth object
   const mockAuth = {
     currentUser: {
       uid: '12345',
@@ -66,21 +64,18 @@ jest.mock('firebase/auth', () => {
       email: 'testuser@example.com',
     },
     signOut: jest.fn(() => Promise.resolve()),
-    // Mock other methods as needed
   };
 
-  // Define a class for GoogleAuthProvider
   class MockGoogleAuthProvider {
     constructor() {}
-    // Add methods if necessary
   }
 
   return {
-    __esModule: true, // For proper ES6 module handling
+    __esModule: true,
     getAuth: jest.fn(() => mockAuth),
     onAuthStateChanged: jest.fn((authInstance, callback) => {
       callback(mockAuth.currentUser);
-      return jest.fn(); // Mock unsubscribe function
+      return jest.fn();
     }),
     GoogleAuthProvider: MockGoogleAuthProvider,
     signInWithPopup: jest.fn(() => Promise.resolve({
@@ -92,11 +87,10 @@ jest.mock('firebase/auth', () => {
     signInWithEmailAndPassword: jest.fn(() => Promise.resolve({
       user: mockAuth.currentUser,
     })),
-    // Mock other functions as needed
   };
 });
 
-// Mock firebase/firestore
+// Mock de firebase/firestore
 jest.mock('firebase/firestore', () => ({
   getFirestore: jest.fn(() => ({})),
   collection: jest.fn(),
@@ -108,33 +102,16 @@ jest.mock('firebase/firestore', () => ({
     empty: true,
     docs: [],
   })),
-  // Mock other Firestore functions as needed
 }));
 
-// Mock components that are not relevant for the test
+// Mock de componentes que no son relevantes para la prueba
 jest.mock('./components/userComponents/ModalNotification', () => () => <div>Mocked ModalNotification</div>);
 
-// Mock jsPDF if necessary
+// Mock de jsPDF si es necesario
 jest.mock('jspdf', () => {
   return jest.fn().mockImplementation(() => ({
     text: jest.fn(),
     addImage: jest.fn(),
     save: jest.fn(),
-    // Add more methods as needed
   }));
-});
-
-// Optional: Silence the warning about ReactDOMTestUtils.act (Not Recommended)
-const originalConsoleError = console.error;
-beforeAll(() => {
-  console.error = (...args) => {
-    if (/ReactDOMTestUtils\.act/.test(args[0])) {
-      return;
-    }
-    originalConsoleError(...args);
-  };
-});
-
-afterAll(() => {
-  console.error = originalConsoleError;
 });

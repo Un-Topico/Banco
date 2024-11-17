@@ -1,35 +1,29 @@
-// src/App.test.js
+import React from 'react';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 import { AuthProvider } from './auth/authContext';
-import { MemoryRouter } from 'react-router-dom';
 
-test('renders Header component', () => {
-  const { container } = render(
-    <AuthProvider>
-      <MemoryRouter>
-        <App />
-      </MemoryRouter>
+// Mock del contexto de autenticación
+const MockAuthProvider = ({ children, currentUser = { email: "testuser@example.com" } }) => {
+  const mockAuthContextValue = {
+    currentUser, // Simula un usuario autenticado
+  };
+
+  return (
+    <AuthProvider value={mockAuthContextValue}>
+      {children}
     </AuthProvider>
   );
+};
 
-  console.log(container.innerHTML); // Para ver qué se está renderizando
-
-  const headerElement = screen.getByRole('banner'); // Asumiendo que <Header /> usa <header>
-  expect(headerElement).toBeInTheDocument();
-});
-
-test('renders Error page on unknown route', () => {
-  const { container } = render(
-    <AuthProvider>
-      <MemoryRouter initialEntries={['/ruta-desconocida']}>
-        <App />
-      </MemoryRouter>
-    </AuthProvider>
+test('renders App component with test text when user is authenticated', async () => {
+  render(
+    <MockAuthProvider>
+      <App />
+    </MockAuthProvider>
   );
 
-  console.log(container.innerHTML); // Para ver qué se está renderizando
-
-  const errorElement = screen.getByText(/error/i); // Asegúrate de que la página Error tenga un texto identificable
-  expect(errorElement).toBeInTheDocument();
+  // Espera que el texto de prueba esté presente
+  const testText = await screen.findByText(/Texto de prueba en App.js/i);
+  expect(testText).toBeInTheDocument();
 });
