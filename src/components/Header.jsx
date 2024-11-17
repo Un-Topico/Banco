@@ -81,7 +81,7 @@ export const Header = () => {
             height="40"
             className="img-fluid"
           />
-          UnTópico
+          UnTopicoBanco
         </Link>
       </div>
       <nav className="nav">

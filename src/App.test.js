@@ -24,6 +24,6 @@ test('renders App component with test text when user is authenticated', async ()
   );
 
   // Espera que el texto de prueba esté presente
-  const testText = await screen.findByText(/Texto de prueba en App.js/i);
+  const testText = await screen.findByText(/UnTopicoBanco/i);
   expect(testText).toBeInTheDocument();
 });
