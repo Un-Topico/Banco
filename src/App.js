@@ -14,7 +14,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Header />
-        <Routes>
+        {/* <Routes>
           {rutas.map((ruta, i) => (
             <Route path={ruta.path} element={ruta.element} key={i} />
           ))}
@@ -27,7 +27,7 @@ function App() {
             />
           ))}
           <Route path="*" element={<Error />} />
-        </Routes>
+        </Routes> */}
       </Router>
     </AuthProvider>
   );
